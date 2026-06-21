@@ -1,0 +1,23 @@
+[project]
+name = "docuharnessx"
+version = "0.0.0"
+description = "Human-centric, role-based GitHub Pages documentation generator built on HarnessX"
+requires-python = ">=3.12"
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["docuharnessx"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
