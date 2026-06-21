@@ -4,6 +4,9 @@ version = "0.0.0"
 description = "Human-centric, role-based GitHub Pages documentation generator built on HarnessX"
 requires-python = ">=3.12"
 dependencies = [
+    # HarnessX is not published on PyPI; pull it directly from the source repo.
+    "harnessx @ git+https://github.com/Darwin-Agent/HarnessX.git",
+    # YAML parser used for the optional --config file and the ontology.yaml seam.
     "pyyaml>=6.0",
 ]
 
@@ -12,9 +15,16 @@ dev = [
     "pytest>=8.0",
 ]
 
+[project.scripts]
+dhx = "docuharnessx.cli:main"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+# Required to declare the harnessx git-URL dependency (not published on PyPI).
+allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["docuharnessx"]
