@@ -89,7 +89,17 @@ on top of two foundations (the ontology and the harness skeleton).
 - [ ] e2e-malware-hashes — run the full pipeline against `/home/mc/Source/malware_hashes`,
       verify a published role-based site and COBESY adoption paths. Dependencies: all above.
 
+## Implementation Status
+
+- **Wave 0 — IMPLEMENTED & MERGED to `main`** (2026-06-21). Both specs complete,
+  reviewer-gated, adversarial GO/NO-GO passed. 428 tests green. `dhx <repo> --out DIR`
+  runs the empty 8-stage pipeline with a HarnessJournal trace; `dhx init` writes
+  `.docuharnessx/ontology.yaml`. The 8 stage modules are no-op stubs awaiting Wave 1+.
+- **Waves 1–4 — specs not yet generated.**
+
 ## Next Step
 
-Run `/kiro-spec-batch` to create requirements/design/tasks for Wave 0 specs first
-(`ontology-engine`, `harness-bundle-skeleton`), then proceed wave by wave.
+Run `/kiro-spec-batch` to create requirements/design/tasks for **Wave 1**
+(`repo-ingestion-analysis`, `classification-coverage-planner`), then implement and
+proceed wave by wave. Each later wave replaces stage stubs in `docuharnessx/stages/`
+one at a time.
