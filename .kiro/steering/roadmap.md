@@ -99,14 +99,26 @@ on top of two foundations (the ontology and the harness skeleton).
   remediations). 1199 tests green. The real `ingest`/`analyze`/`classify`/`plan` stages
   now run: `dhx` scans a repo → `RepoAnalysis` → a project-specific `CoveragePlan`
   (verified end-to-end on `/home/mc/Source/malware_hashes`; adapts to the loaded
-  Vocabulary, not templated). The `write`/`review`/`assemble`/`deploy` stages remain
-  no-op stubs awaiting Waves 2–3.
-- **Waves 2–4 — specs not yet generated.**
+  Vocabulary, not templated).
+- **Wave 2 — IMPLEMENTED & MERGED to `main`** (2026-06-22). cobesy-writer +
+  quality-review-gate, reviewer-gated, adversarial GO/NO-GO passed (0 remediations).
+  1640 tests green. The real `write`/`review` stages now run: `dhx` turns each
+  `PlannedSegment` into a COBESY-structured `Segment` (deterministic blueprint + gated
+  model prose, credential-free fallback) and an LLM-judge gates the 6 COBESY criteria
+  (fail-closed). A CLI follow-up provisions a `FilesystemSegmentStore` so a bare `dhx`
+  run executes the full chain end-to-end — verified on malware_hashes: 8 stages fire,
+  12 segments written as `<id>.md` under `<out>/segments`, `ReviewReport` produced.
+  The `assemble`/`deploy` stages remain no-op stubs awaiting Wave 3.
+- **Wave 3 — specs generated? no (next).** **Wave 4 — not started.**
 
 ## Next Step
 
-Generate + implement **Wave 2** (`cobesy-writer`, `quality-review-gate`) — the
-COBESY-structured segment generation that turns the `CoveragePlan` into written,
-quality-gated content (replaces the `write`/`review` stage stubs). Then Wave 3
-(`mkdocs-site-assembler`, `github-pages-deploy`) and Wave 4 (`e2e-malware-hashes`).
-Each wave replaces stage stubs in `docuharnessx/stages/` one at a time.
+Generate + implement **Wave 3** (`mkdocs-site-assembler`, `github-pages-deploy`) —
+assemble the accepted segments into a Material for MkDocs site and publish it.
+**MULTI-PROJECT REQUIREMENT (locked 2026-06-22):** the site + deploy are per-TARGET-
+project, never hardcoded to DocuHarnessX. Derive `site_name`/`repo_url`/`site_url` +
+the `/<repo>/` Pages base-path from the target's git remote (override via
+`.docuharnessx/` config or flags); default deploy mode = **emit a GitHub Actions
+workflow into the target repo** (it self-publishes Pages on push; `gh-deploy` and
+build-only are alternative modes). Then Wave 4 (`e2e-malware-hashes`). Each wave
+replaces stage stubs in `docuharnessx/stages/` (`assemble`, then `deploy`) one at a time.
