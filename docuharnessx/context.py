@@ -45,6 +45,7 @@ from typing import TYPE_CHECKING
 from harnessx.core.state import State
 
 from docuharnessx.types import (
+    SLOT_ASSEMBLED_SITE,
     SLOT_CLASSIFICATION,
     SLOT_COVERAGE_PLAN,
     SLOT_FILE_INVENTORY,
@@ -70,6 +71,9 @@ if TYPE_CHECKING:  # contract-level types — single re-export site (Req 6.3, 10
     # The frozen output seam the Wave 3 mkdocs-site-assembler consumes verbatim
     # (quality-review-gate Req 7.1, 7.4, 7.5, 7.6).
     from docuharnessx.review.model import ReviewReport
+    # The frozen output seam the Wave 3 github-pages-deploy consumes verbatim
+    # (mkdocs-site-assembler Req 7.1, 7.2, 7.4, 7.5).
+    from docuharnessx.assembler.model import AssembledSite
 
 __all__ = ["RunContext"]
 
@@ -88,6 +92,8 @@ _SLOT_TYPE_COVERAGE_PLAN = "coverage_plan"
 _SLOT_TYPE_WRITTEN_SEGMENTS = "written_segments"
 # quality-review-gate seam extension (task 1.3, append-only).
 _SLOT_TYPE_REVIEW_REPORT = "review_report"
+# mkdocs-site-assembler seam extension (task 1.3, append-only).
+_SLOT_TYPE_ASSEMBLED_SITE = "assembled_site"
 
 
 class RunContext:
@@ -319,3 +325,29 @@ class RunContext:
         branch on "not reviewed yet" without catching exceptions.
         """
         return self._get_content(SLOT_REVIEW_REPORT)
+
+    # ----------------------------------------------------------------- #
+    # AssembledSite output seam (mkdocs-site-assembler Req 7.1, 7.4, 7.5) #
+    # ----------------------------------------------------------------- #
+    # mkdocs-site-assembler seam extension (task 1.3, append-only). The frozen
+    # AssembledSite the Assemble stage publishes is the output seam the downstream
+    # Wave 3 github-pages-deploy consumes verbatim so it can publish the assembled
+    # site without re-deriving its layout or per-target identity (design "context.py
+    # additions"). Typed by the assembler model under TYPE_CHECKING only, keeping the
+    # runtime import surface unchanged.
+
+    def set_assembled_site(self, site: "AssembledSite") -> None:
+        """Record the produced :class:`AssembledSite` at ``SLOT_ASSEMBLED_SITE``."""
+        self._state.set_slot(
+            SLOT_ASSEMBLED_SITE, _SLOT_TYPE_ASSEMBLED_SITE, site
+        )
+
+    def assembled_site(self) -> "AssembledSite | None":
+        """The produced :class:`AssembledSite`, or ``None`` when the slot is unset.
+
+        Returns an explicit ``None`` when read before the Assemble stage has run
+        (mkdocs-site-assembler Req 7.4) rather than raising, matching the other
+        accessors' absent-slot semantics (Req 6.5), so the downstream deploy stage can
+        branch on "not assembled yet" without catching exceptions.
+        """
+        return self._get_content(SLOT_ASSEMBLED_SITE)

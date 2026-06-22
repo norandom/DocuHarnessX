@@ -501,9 +501,9 @@ _CANONICAL_STAGE_CLASSES: tuple[str, ...] = (
 # no-op stubs for repo-ingestion-analysis but are made real by
 # classification-coverage-planner (tasks 4.2 and 4.3); ``write`` is made real by the
 # Wave 2 cobesy-writer (task 3.1); ``review`` is made real by the Wave 2
-# quality-review-gate (task 4.1), so none of those four are in this set any longer.
+# quality-review-gate (task 4.1); ``assemble`` is made real by the Wave 3
+# mkdocs-site-assembler (task 5.1), so none of those five are in this set any longer.
 _NOOP_STAGE_NAMES: tuple[str, ...] = (
-    "assemble",
     "deploy",
 )
 
@@ -563,10 +563,11 @@ def test_remaining_stub_stages_remain_pass_through_noops() -> None:
 def test_only_real_stages_override_on_step_end() -> None:
     # Defensive: the real processors (Ingest/Analyze from repo-ingestion-analysis,
     # Classify/Plan from classification-coverage-planner tasks 4.2/4.3, Write from the
-    # Wave 2 cobesy-writer task 3.1, Review from the Wave 2 quality-review-gate task 4.1)
-    # override on_step_end to do real slot I/O; the remaining stubs stay no-op base
-    # subclasses, confirming each spec touched exactly the stage modules it owns (design
-    # "Modified Files").
+    # Wave 2 cobesy-writer task 3.1, Review from the Wave 2 quality-review-gate task 4.1,
+    # Assemble from the Wave 3 mkdocs-site-assembler task 5.1) override on_step_end to do
+    # real slot I/O; the remaining stubs stay no-op base subclasses, confirming each spec
+    # touched exactly the stage modules it owns (design "Modified Files").
+    from docuharnessx.stages.assemble import AssembleStage
     from docuharnessx.stages.base import NoOpStage
     from docuharnessx.stages.review import ReviewStage
 
@@ -576,6 +577,7 @@ def test_only_real_stages_override_on_step_end() -> None:
     assert issubclass(PlanStage, NoOpStage)
     assert issubclass(WriteStage, NoOpStage)
     assert issubclass(ReviewStage, NoOpStage)
+    assert issubclass(AssembleStage, NoOpStage)
     # The real stages override on_step_end (real work); the remaining stubs do not.
     assert "on_step_end" in vars(IngestStage)
     assert "on_step_end" in vars(AnalyzeStage)
@@ -583,6 +585,7 @@ def test_only_real_stages_override_on_step_end() -> None:
     assert "on_step_end" in vars(PlanStage)
     assert "on_step_end" in vars(WriteStage)
     assert "on_step_end" in vars(ReviewStage)
+    assert "on_step_end" in vars(AssembleStage)
     for stage_name in _NOOP_STAGE_NAMES:
         module = importlib.import_module(f"docuharnessx.stages.{stage_name}")
         cls = getattr(module, f"{stage_name.capitalize()}Stage")

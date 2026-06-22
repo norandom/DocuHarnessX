@@ -35,6 +35,7 @@ __all__ = [
     "SLOT_COVERAGE_PLAN",
     "SLOT_WRITTEN_SEGMENTS",
     "SLOT_REVIEW_REPORT",
+    "SLOT_ASSEMBLED_SITE",
 ]
 
 # The eight canonical pipeline stages, constrained at the type level. The order
@@ -133,3 +134,14 @@ SLOT_WRITTEN_SEGMENTS: str = "docuharnessx.written_segments"
 #: the downstream Wave 3 ``mkdocs-site-assembler`` consumes so it assembles exactly the
 #: segments that passed the COBESY quality gate (quality-review-gate Req 7.1, 7.4, 7.5).
 SLOT_REVIEW_REPORT: str = "docuharnessx.review_report"
+
+# --- mkdocs-site-assembler seam extension (task 1.3, append-only) ------------- #
+# Added by the Wave 3 ``mkdocs-site-assembler`` spec as an append-only extension of this
+# ``harness-bundle-skeleton``-owned module (mkdocs-site-assembler Req 7.5). No existing slot
+# key, ``StageName``, or ``STAGE_NAMES`` entry is modified.
+
+#: Slot key for the frozen ``AssembledSite`` the Assemble stage publishes — the output seam
+#: the downstream Wave 3 ``github-pages-deploy`` consumes verbatim so it can publish the
+#: assembled site without re-deriving its layout or per-target identity
+#: (mkdocs-site-assembler Req 7.1, 7.4, 7.5).
+SLOT_ASSEMBLED_SITE: str = "docuharnessx.assembled_site"

@@ -8,6 +8,10 @@ dependencies = [
     "harnessx @ git+https://github.com/Darwin-Agent/HarnessX.git",
     # YAML parser used for the optional --config file and the ontology.yaml seam.
     "pyyaml>=6.0",
+    # Material for MkDocs site generator: the assembler emits a buildable
+    # MkDocs source tree and the deploy stage runs `mkdocs build` (Req 8.3).
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
 ]
 
 [project.optional-dependencies]
