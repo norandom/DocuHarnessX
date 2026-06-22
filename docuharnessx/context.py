@@ -53,12 +53,16 @@ from docuharnessx.types import (
     SLOT_SEGMENT_STORE,
     SLOT_TARGET_REPO,
     SLOT_VOCABULARY,
+    SLOT_WRITTEN_SEGMENTS,
 )
 
 if TYPE_CHECKING:  # contract-level types — single re-export site (Req 6.3, 10.5)
     from docuharnessx._ontology import SegmentStore, Vocabulary
     # The frozen output seam consumed by the downstream planner (Req 7.2, 7.3).
     from docuharnessx.analysis.model import RepoAnalysis
+    # The frozen output seam the Wave 2 quality-review-gate consumes verbatim
+    # (cobesy-writer Req 7.1, 7.4, 7.5).
+    from docuharnessx.composition import WrittenSegments
     # classification-coverage-planner value objects: the internal Classify -> Plan
     # handoff and the frozen output plan (planner spec Req 7.1-7.5).
     from docuharnessx.planning.model import Classification, CoveragePlan
@@ -76,6 +80,8 @@ _SLOT_TYPE_REPO_ANALYSIS = "repo_analysis"
 # classification-coverage-planner seam extension (task 4.1, append-only).
 _SLOT_TYPE_CLASSIFICATION = "classification"
 _SLOT_TYPE_COVERAGE_PLAN = "coverage_plan"
+# cobesy-writer seam extension (task 1.2, append-only).
+_SLOT_TYPE_WRITTEN_SEGMENTS = "written_segments"
 
 
 class RunContext:
@@ -255,3 +261,29 @@ class RunContext:
         semantics (Req 6.5).
         """
         return self._get_content(SLOT_COVERAGE_PLAN)
+
+    # ----------------------------------------------------------------- #
+    # WrittenSegments output seam (cobesy-writer Req 7.1, 7.3, 7.4, 7.5) #
+    # ----------------------------------------------------------------- #
+    # cobesy-writer seam extension (task 1.2, append-only). The frozen
+    # WrittenSegments the Write stage publishes is the output seam the downstream
+    # Wave 2 quality-review-gate consumes verbatim, so it judges exactly the
+    # segments the writer produced (design "context.py additions"). Typed by the
+    # composition model under TYPE_CHECKING only, keeping the runtime import
+    # surface unchanged.
+
+    def set_written_segments(self, written: "WrittenSegments") -> None:
+        """Record the produced :class:`WrittenSegments` at ``SLOT_WRITTEN_SEGMENTS``."""
+        self._state.set_slot(
+            SLOT_WRITTEN_SEGMENTS, _SLOT_TYPE_WRITTEN_SEGMENTS, written
+        )
+
+    def written_segments(self) -> "WrittenSegments | None":
+        """The produced :class:`WrittenSegments`, or ``None`` when the slot is unset.
+
+        Returns an explicit ``None`` when read before the Write stage has run
+        (cobesy-writer Req 7.3) rather than raising, matching the other accessors'
+        absent-slot semantics (Req 6.5), so the downstream review gate can branch
+        on "not written yet" without catching exceptions.
+        """
+        return self._get_content(SLOT_WRITTEN_SEGMENTS)

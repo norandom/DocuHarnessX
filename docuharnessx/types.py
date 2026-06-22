@@ -33,6 +33,7 @@ __all__ = [
     "SLOT_REPO_ANALYSIS",
     "SLOT_CLASSIFICATION",
     "SLOT_COVERAGE_PLAN",
+    "SLOT_WRITTEN_SEGMENTS",
 ]
 
 # The eight canonical pipeline stages, constrained at the type level. The order
@@ -111,3 +112,13 @@ SLOT_CLASSIFICATION: str = "docuharnessx.classification"
 #: Slot key for the frozen ``CoveragePlan`` the Plan stage produces — the output seam
 #: the downstream Wave 2 ``cobesy-writer`` consumes verbatim (Req 7.1, 7.2, 7.3).
 SLOT_COVERAGE_PLAN: str = "docuharnessx.coverage_plan"
+
+# --- cobesy-writer seam extension (task 1.2, append-only) --------------------- #
+# Added by the Wave 2 ``cobesy-writer`` spec as an append-only extension of this
+# ``harness-bundle-skeleton``-owned module (cobesy-writer Req 7.2). No existing slot
+# key, ``StageName``, or ``STAGE_NAMES`` entry is modified.
+
+#: Slot key for the frozen ``WrittenSegments`` the Write stage publishes — the output
+#: seam the downstream Wave 2 ``quality-review-gate`` consumes verbatim so it judges
+#: exactly the segments the writer produced (cobesy-writer Req 7.1, 7.4, 7.5).
+SLOT_WRITTEN_SEGMENTS: str = "docuharnessx.written_segments"
