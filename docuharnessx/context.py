@@ -45,7 +45,9 @@ from typing import TYPE_CHECKING
 from harnessx.core.state import State
 
 from docuharnessx.types import (
+    SLOT_FILE_INVENTORY,
     SLOT_OUTPUT_DIR,
+    SLOT_REPO_ANALYSIS,
     SLOT_SEGMENT_STORE,
     SLOT_TARGET_REPO,
     SLOT_VOCABULARY,
@@ -53,6 +55,8 @@ from docuharnessx.types import (
 
 if TYPE_CHECKING:  # contract-level types — single re-export site (Req 6.3, 10.5)
     from docuharnessx._ontology import SegmentStore, Vocabulary
+    # The frozen output seam consumed by the downstream planner (Req 7.2, 7.3).
+    from docuharnessx.analysis.model import RepoAnalysis
 
 __all__ = ["RunContext"]
 
@@ -61,6 +65,9 @@ __all__ = ["RunContext"]
 _SLOT_TYPE_PATH = "path"
 _SLOT_TYPE_SEGMENT_STORE = "segment_store"
 _SLOT_TYPE_VOCABULARY = "vocabulary"
+# repo-ingestion-analysis seam extension (task 1.4, append-only).
+_SLOT_TYPE_FILE_INVENTORY = "file_inventory"
+_SLOT_TYPE_REPO_ANALYSIS = "repo_analysis"
 
 
 class RunContext:
@@ -149,3 +156,51 @@ class RunContext:
         by the CLI's ontology-loading step.
         """
         return self._get_content(SLOT_VOCABULARY)
+
+    # ----------------------------------------------------------------- #
+    # File-inventory handoff: Ingest -> Analyze (Req 1.7, 7.3)          #
+    # ----------------------------------------------------------------- #
+    # repo-ingestion-analysis seam extension (task 1.4, append-only). Carries the
+    # classified file inventory the Ingest stage publishes for the Analyze stage
+    # to read instead of re-walking the filesystem (design "context.py
+    # additions"). The slot content is treated opaquely here — the inventory is an
+    # internal analysis type, so this accessor pair stays loosely typed.
+
+    def set_file_inventory(self, inventory: object) -> None:
+        """Record the classified file inventory for the Analyze stage to read."""
+        self._state.set_slot(
+            SLOT_FILE_INVENTORY, _SLOT_TYPE_FILE_INVENTORY, inventory
+        )
+
+    def file_inventory(self) -> object | None:
+        """The file inventory handoff, or ``None`` when the slot is unset.
+
+        Returns an explicit ``None`` before the Ingest stage has published an
+        inventory (Req 6.5 absent-slot semantics), so the Analyze stage can branch
+        on "not set yet" without catching exceptions.
+        """
+        return self._get_content(SLOT_FILE_INVENTORY)
+
+    # ----------------------------------------------------------------- #
+    # RepoAnalysis output seam (Req 7.2, 7.3, 7.4, 7.5)                 #
+    # ----------------------------------------------------------------- #
+    # repo-ingestion-analysis seam extension (task 1.4, append-only). The frozen
+    # RepoAnalysis the Analyze stage writes is the output seam the downstream
+    # classification-coverage-planner consumes verbatim (design "context.py
+    # additions"). Typed by the model under TYPE_CHECKING only, keeping the
+    # runtime import surface unchanged.
+
+    def set_repo_analysis(self, analysis: "RepoAnalysis") -> None:
+        """Record the produced :class:`RepoAnalysis` at ``SLOT_REPO_ANALYSIS``."""
+        self._state.set_slot(
+            SLOT_REPO_ANALYSIS, _SLOT_TYPE_REPO_ANALYSIS, analysis
+        )
+
+    def repo_analysis(self) -> "RepoAnalysis | None":
+        """The produced :class:`RepoAnalysis`, or ``None`` when the slot is unset.
+
+        Returns an explicit ``None`` when read before the Analyze stage has run
+        (Req 7.4) rather than raising, matching the other accessors' absent-slot
+        semantics (Req 6.5).
+        """
+        return self._get_content(SLOT_REPO_ANALYSIS)

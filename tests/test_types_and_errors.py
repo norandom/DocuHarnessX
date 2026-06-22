@@ -91,6 +91,66 @@ def test_slot_key_constants_are_distinct() -> None:
     assert len(set(values)) == len(values), "slot keys must be unique"
 
 
+# --------------------------------------------------------------------------- #
+# types.py — task 1.3 append-only slot keys (repo-ingestion-analysis Req 7.1)
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize(
+    "const_name, expected_value",
+    [
+        ("SLOT_FILE_INVENTORY", "docuharnessx.file_inventory"),
+        ("SLOT_REPO_ANALYSIS", "docuharnessx.repo_analysis"),
+    ],
+)
+def test_new_slot_keys_exist_with_pinned_values(
+    const_name: str, expected_value: str
+) -> None:
+    """The two append-only handoff/output slot keys carry their frozen values."""
+    mod = importlib.import_module("docuharnessx.types")
+    assert hasattr(mod, const_name), f"missing slot-key constant {const_name}"
+    value = getattr(mod, const_name)
+    assert isinstance(value, str)
+    assert value == expected_value
+
+
+def test_new_slot_keys_in_all_exports() -> None:
+    mod = importlib.import_module("docuharnessx.types")
+    exported = set(mod.__all__)
+    assert "SLOT_FILE_INVENTORY" in exported
+    assert "SLOT_REPO_ANALYSIS" in exported
+
+
+def test_all_slot_keys_distinct_including_new_ones() -> None:
+    """Adding the new keys must not collide with any pre-existing slot key."""
+    mod = importlib.import_module("docuharnessx.types")
+    values = [
+        mod.SLOT_TARGET_REPO,
+        mod.SLOT_OUTPUT_DIR,
+        mod.SLOT_SEGMENT_STORE,
+        mod.SLOT_VOCABULARY,
+        mod.SLOT_FILE_INVENTORY,
+        mod.SLOT_REPO_ANALYSIS,
+    ]
+    assert len(set(values)) == len(values), "slot keys must be unique"
+
+
+def test_preexisting_slot_keys_unchanged_by_extension() -> None:
+    """Appending the new keys leaves every pre-existing slot key value intact."""
+    mod = importlib.import_module("docuharnessx.types")
+    assert mod.SLOT_TARGET_REPO == "docuharnessx.target_repo"
+    assert mod.SLOT_OUTPUT_DIR == "docuharnessx.output_dir"
+    assert mod.SLOT_SEGMENT_STORE == "docuharnessx.segment_store"
+    assert mod.SLOT_VOCABULARY == "docuharnessx.vocabulary"
+
+
+def test_stagename_and_stage_names_unchanged_by_extension() -> None:
+    """StageName and STAGE_NAMES are untouched by the append-only slot additions."""
+    mod = importlib.import_module("docuharnessx.types")
+    assert tuple(typing.get_args(mod.StageName)) == CANONICAL_STAGES
+    assert tuple(mod.STAGE_NAMES) == CANONICAL_STAGES
+
+
 def test_types_defines_no_roleid_alias_and_no_fixed_role_list() -> None:
     """Roles come from the loaded Vocabulary; the skeleton must not pin them."""
     mod = importlib.import_module("docuharnessx.types")

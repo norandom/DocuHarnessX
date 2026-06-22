@@ -28,7 +28,9 @@ from docuharnessx.context import RunContext
 # SegmentStore-typed handle.
 from docuharnessx.ontology import InMemorySegmentStore
 from docuharnessx.types import (
+    SLOT_FILE_INVENTORY,
     SLOT_OUTPUT_DIR,
+    SLOT_REPO_ANALYSIS,
     SLOT_SEGMENT_STORE,
     SLOT_TARGET_REPO,
     SLOT_VOCABULARY,
@@ -162,3 +164,97 @@ def test_vocabulary_roles_readable_by_stages() -> None:
     ctx.set_vocabulary(vocab)
     retrieved = ctx.vocabulary()
     assert retrieved.roles == vocab.roles
+
+
+# --------------------------------------------------------------------------- #
+# repo-ingestion-analysis seam accessors (task 1.4, append-only)              #
+# --------------------------------------------------------------------------- #
+# Two new accessor pairs mirror the existing style: the Ingest->Analyze file
+# inventory handoff (SLOT_FILE_INVENTORY) and the frozen RepoAnalysis output
+# (SLOT_REPO_ANALYSIS). Each returns an explicit None when unset (Req 7.3, 7.4,
+# 7.5). The slot is content-agnostic, so opaque sentinels exercise round-trip
+# fidelity without coupling these tests to the analysis model's shape.
+
+
+def test_absent_file_inventory_returns_none() -> None:
+    """Reading the inventory slot before Ingest runs returns None (Req 7.4)."""
+    assert RunContext(_state()).file_inventory() is None
+
+
+def test_file_inventory_round_trip() -> None:
+    ctx = RunContext(_state())
+    assert ctx.file_inventory() is None  # absent before set
+    inventory = object()  # opaque inventory handle; slot is content-agnostic
+    ctx.set_file_inventory(inventory)
+    assert ctx.file_inventory() is inventory
+
+
+def test_file_inventory_written_through_named_slot() -> None:
+    state = _state()
+    inventory = object()
+    RunContext(state).set_file_inventory(inventory)
+    assert state.get_slot(SLOT_FILE_INVENTORY) is not None
+    assert state.get_slot(SLOT_FILE_INVENTORY).content is inventory
+
+
+def test_absent_repo_analysis_returns_none() -> None:
+    """Reading the analysis slot before Analyze runs returns None (Req 7.4)."""
+    assert RunContext(_state()).repo_analysis() is None
+
+
+def test_repo_analysis_round_trip() -> None:
+    ctx = RunContext(_state())
+    assert ctx.repo_analysis() is None  # explicit unset before set (Req 7.4)
+    analysis = object()  # opaque RepoAnalysis stand-in; slot is content-agnostic
+    ctx.set_repo_analysis(analysis)
+    assert ctx.repo_analysis() is analysis
+
+
+def test_repo_analysis_round_trip_with_real_model() -> None:
+    """A frozen RepoAnalysis stored then read back is the same instance."""
+    from docuharnessx.analysis.model import (
+        REPO_ANALYSIS_SCHEMA_VERSION,
+        DocPresence,
+        RepoAnalysis,
+        ScanStats,
+        TestLayout,
+    )
+
+    analysis = RepoAnalysis(
+        schema_version=REPO_ANALYSIS_SCHEMA_VERSION,
+        repo_path="/home/mc/Source/malware_hashes",
+        languages=(),
+        primary_languages=(),
+        total_loc=0,
+        total_files=0,
+        structure=(),
+        entrypoints=(),
+        build_files=(),
+        ci_workflows=(),
+        tests=TestLayout(present=False, frameworks=(), paths=()),
+        dependencies=(),
+        components=(),
+        public_surface=(),
+        docs=DocPresence(
+            has_readme=False, readme_paths=(), doc_dirs=(), other_docs=()
+        ),
+        artifacts=(),
+        scan_stats=ScanStats(
+            files_scanned=0,
+            files_skipped=0,
+            bytes_scanned=0,
+            limit_reached=False,
+            notes=(),
+        ),
+    )
+    ctx = RunContext(_state())
+    ctx.set_repo_analysis(analysis)
+    assert ctx.repo_analysis() is analysis
+
+
+def test_repo_analysis_written_through_named_slot() -> None:
+    state = _state()
+    analysis = object()
+    RunContext(state).set_repo_analysis(analysis)
+    assert state.get_slot(SLOT_REPO_ANALYSIS) is not None
+    assert state.get_slot(SLOT_REPO_ANALYSIS).content is analysis

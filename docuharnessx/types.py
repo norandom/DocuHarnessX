@@ -29,6 +29,8 @@ __all__ = [
     "SLOT_OUTPUT_DIR",
     "SLOT_SEGMENT_STORE",
     "SLOT_VOCABULARY",
+    "SLOT_FILE_INVENTORY",
+    "SLOT_REPO_ANALYSIS",
 ]
 
 # The eight canonical pipeline stages, constrained at the type level. The order
@@ -78,3 +80,18 @@ SLOT_SEGMENT_STORE: str = "docuharnessx.segment_store"
 #: Slot key for the loaded ``Vocabulary`` placed into the run context at run
 #: start so stages can read the active roles/intents/subjects (Req 10.2).
 SLOT_VOCABULARY: str = "docuharnessx.vocabulary"
+
+# --- repo-ingestion-analysis seam extension (task 1.3, append-only) ----------- #
+# Added by the ``repo-ingestion-analysis`` spec as an append-only extension of this
+# ``harness-bundle-skeleton``-owned module (Req 7.1). No existing slot key,
+# ``StageName``, or ``STAGE_NAMES`` entry is modified.
+
+#: Slot key for the inter-stage file inventory handoff (Ingest -> Analyze). The
+#: Ingest stage writes the classified ``FileInventory`` here; the Analyze stage
+#: reads it instead of re-walking the filesystem (Req 1.7).
+SLOT_FILE_INVENTORY: str = "docuharnessx.file_inventory"
+
+#: Slot key for the frozen ``RepoAnalysis`` produced by the Analyze stage — the
+#: output seam the downstream ``classification-coverage-planner`` consumes
+#: (Req 7.1, 7.2).
+SLOT_REPO_ANALYSIS: str = "docuharnessx.repo_analysis"
