@@ -217,6 +217,22 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="ROLES",
         help="Comma-separated subset of roles to generate for.",
     )
+    # github-pages-deploy task 4.3 (append-only): the Deploy-stage publish mode.
+    # Omitted (default None) → the config surface applies the emit-ci-workflow
+    # default (Req 3.2); a supplied value is carried through and validated at the
+    # stage boundary by the deploy-mode resolver (Req 3.3, 3.4).
+    run.add_argument(
+        "--deploy-mode",
+        dest="deploy_mode",
+        metavar="MODE",
+        default=None,
+        help=(
+            "How the Deploy stage publishes the assembled site: 'emit-ci-workflow' "
+            "(default — write mkdocs.yml + docs/ + a Pages workflow into the target "
+            "tree, no push), 'gh-deploy' (push the built site to the target gh-pages "
+            "branch), or 'build-only' (build the static site, no publish)."
+        ),
+    )
 
     # init subcommand (dispatched in task 4.3).
     init = subparsers.add_parser(
@@ -429,6 +445,13 @@ def prepare_run(
     cli_overrides: dict[str, Any] = {
         "out_dir": out_dir,
         "roles": _split_roles(args.roles),
+        # github-pages-deploy task 4.3: thread the --deploy-mode flag into the
+        # config so DocgenConfig.deploy_mode carries the operator's selection. A
+        # None value (flag absent) does not clobber a config-file value, and the
+        # config surface then applies the emit-ci-workflow default (Req 3.2, 3.3).
+        # ``getattr`` keeps the run path tolerant of a namespace built without the
+        # flag (defensive; the run subparser always defines it).
+        "deploy_mode": getattr(args, "deploy_mode", None),
     }
     config = load_config(
         config_path=args.config,
@@ -486,6 +509,37 @@ def _locate_journal_jsonl(out_dir: str, run_id: str) -> str | None:
             if name.endswith(".jsonl") and not name.endswith("_trace.jsonl"):
                 return os.path.join(root, name)
     return None
+
+
+def _thread_deploy_mode(harness: "Harness", deploy_mode: str) -> None:
+    """Place the configured deploy mode on the run harness's Deploy stage(s).
+
+    The Deploy stage (github-pages-deploy task 4.1) reads its mode from a
+    per-instance value via ``getattr(self, "_deploy_mode", None)`` — exactly the way
+    the model config is injected onto each processor at ``Harness.__init__``. This
+    threads the resolved :attr:`DocgenConfig.deploy_mode` onto every
+    :class:`~docuharnessx.stages.deploy.DeployStage` registered on the run harness
+    *before* the run, so the stage runs in the operator-selected mode (Req 3.2, 3.3).
+
+    The DeployStage is located on the harness's live processor table
+    (``harness._rt.processors``, hook-keyed) rather than re-composing the pipeline,
+    so this is purely additive and touches no other stage. The stage's
+    :func:`~docuharnessx.deployer.resolve_deploy_mode` still validates the value at
+    the run boundary, so a bad mode surfaces there as a ``DeployInputError`` (Req
+    3.4) — this CLI step only carries the configured string through. The DeployStage
+    import is deferred to call time so ``dhx --help`` / parser unit tests need no
+    harness wiring, mirroring the other local imports in this module.
+    """
+    from docuharnessx.stages.deploy import DeployStage
+
+    runtime = getattr(harness, "_rt", None)
+    processors = getattr(runtime, "processors", None)
+    if not processors:
+        return
+    for procs in processors.values():
+        for proc in procs:
+            if isinstance(proc, DeployStage):
+                proc._deploy_mode = deploy_mode
 
 
 def orchestrate_run(
@@ -553,6 +607,16 @@ def orchestrate_run(
         prepared.vocabulary,
     )
     run_context.set_segment_store(segment_store)
+
+    # github-pages-deploy task 4.3: thread the configured deploy mode onto the live
+    # Deploy-stage processor instance(s) on the run harness BEFORE the run, so the
+    # stage reads it from its per-instance ``_deploy_mode`` accessor (the same seam
+    # the deploy integration suite drives, and the same per-instance injection
+    # HarnessX itself uses for ``_model_config``). A bare ``dhx <repo>`` run threads
+    # the emit-ci-workflow default; a ``--deploy-mode`` flag threads the selection.
+    # The string's validity is checked at the stage boundary by the deploy-mode
+    # resolver (Req 3.2, 3.3, 3.4).
+    _thread_deploy_mode(prepared.harness, prepared.config.deploy_mode)
 
     steps = _SKELETON_MAX_STEPS if max_steps is None else max_steps
     task = BaseTask(description=task_description, max_steps=steps)

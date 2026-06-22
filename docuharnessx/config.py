@@ -73,8 +73,20 @@ _KNOWN_KEYS: frozenset[str] = frozenset(
         "model",
         "max_cost_usd",
         "max_steps",
+        # github-pages-deploy seam extension (task 4.3, append-only): the deploy
+        # mode the Deploy stage runs in. Validated downstream by the deploy-mode
+        # resolver, not here (see DocgenConfig.deploy_mode).
+        "deploy_mode",
     }
 )
+
+#: The default deploy mode used when no mode is configured (github-pages-deploy
+#: Req 3.2): write ``mkdocs.yml`` + ``docs/`` + a ``.github/workflows/docs.yml``
+#: Pages build-and-deploy workflow into the *target* working tree, with no
+#: push/commit. Kept as a module constant so the surface's default tracks the
+#: deployer's :func:`~docuharnessx.deployer.resolve_deploy_mode` default name in
+#: one place rather than a bare literal scattered through the dataclass.
+_DEFAULT_DEPLOY_MODE: str = "emit-ci-workflow"
 
 
 @dataclass(frozen=True)
@@ -94,6 +106,17 @@ class DocgenConfig:
     model: str | None
     max_cost_usd: float | None
     max_steps: int | None
+    # github-pages-deploy seam extension (task 4.3, append-only). The deploy mode
+    # the Deploy stage runs in, populated from the ``deploy_mode`` config-file key
+    # and the ``--deploy-mode`` CLI override (Req 3.3). Defaults to
+    # ``"emit-ci-workflow"`` when unconfigured (Req 3.2) so a bare ``dhx <repo>``
+    # run deploys in the default mode. The *value* is validated downstream by
+    # :func:`~docuharnessx.deployer.resolve_deploy_mode` at the stage boundary — a
+    # bad mode surfaces there as a ``DeployInputError`` consistent with the other
+    # fatal-input paths — so this surface only carries the configured string. Has a
+    # default so every existing ``DocgenConfig(...)`` construction stays valid
+    # (append-only: the field is last and defaulted).
+    deploy_mode: str = _DEFAULT_DEPLOY_MODE
 
 
 def _load_yaml(config_path: str) -> dict[str, Any]:
@@ -252,6 +275,16 @@ def load_config(
     max_cost_usd = _coerce_cost(_merged_value("max_cost_usd", file_data, cli))
     max_steps = _coerce_steps(_merged_value("max_steps", file_data, cli))
 
+    # github-pages-deploy task 4.3: the deploy mode, from the config file overlaid
+    # with the CLI override (Req 3.3). A non-string value is malformed input and
+    # fails fast (Req 7.6); an absent value falls back to the emit-ci-workflow
+    # default (Req 3.2). The string is carried verbatim — its validity against the
+    # three supported modes is checked downstream by the deploy-mode resolver.
+    deploy_mode = (
+        _coerce_str(_merged_value("deploy_mode", file_data, cli), "deploy_mode")
+        or _DEFAULT_DEPLOY_MODE
+    )
+
     selected = _coerce_roles(_merged_value("roles", file_data, cli))
     if selected is None:
         # Req 7.2: default to all roles in the loaded Vocabulary — never hardcoded.
@@ -266,4 +299,5 @@ def load_config(
         model=model,
         max_cost_usd=max_cost_usd,
         max_steps=max_steps,
+        deploy_mode=deploy_mode,
     )

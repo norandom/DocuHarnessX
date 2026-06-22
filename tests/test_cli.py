@@ -351,3 +351,51 @@ def test_require_harnessx_raises_dependency_error(monkeypatch) -> None:
         cli._require_harnessx()
     assert isinstance(exc.value, DocuHarnessXError)
     assert "harnessx" in str(exc.value)
+
+
+# --------------------------------------------------------------------------- #
+# --deploy-mode flag + threading into DocgenConfig (github-pages-deploy 4.3)   #
+# Req 3.2, 3.3                                                                 #
+# --------------------------------------------------------------------------- #
+
+
+def test_run_parser_exposes_deploy_mode_flag() -> None:
+    """The run subparser accepts --deploy-mode and parses it onto the namespace."""
+    parser = cli.build_parser()
+    ns = parser.parse_args(
+        ["run", "/some/path", "--out", "/o", "--deploy-mode", "build-only"]
+    )
+    assert ns.deploy_mode == "build-only"
+
+
+def test_run_parser_deploy_mode_defaults_to_none_when_absent() -> None:
+    """Omitting --deploy-mode leaves the namespace value None (flag not supplied).
+
+    A None CLI override does not clobber the config-file value, and the config
+    surface then applies the emit-ci-workflow default.
+    """
+    parser = cli.build_parser()
+    ns = parser.parse_args(["run", "/some/path", "--out", "/o"])
+    assert ns.deploy_mode is None
+
+
+def test_prepare_run_threads_deploy_mode_flag_into_config(tmp_path) -> None:
+    """A --deploy-mode flag reaches the bound DocgenConfig.deploy_mode."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    out = tmp_path / "out"
+    args = cli.build_parser().parse_args(
+        ["run", str(target), "--out", str(out), "--deploy-mode", "gh-deploy"]
+    )
+    prepared = cli.prepare_run(args, model_config=_fake_model())
+    assert prepared.config.deploy_mode == "gh-deploy"
+
+
+def test_prepare_run_defaults_deploy_mode_when_flag_absent(tmp_path) -> None:
+    """No --deploy-mode flag → the bound config carries the emit-ci-workflow default."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    out = tmp_path / "out"
+    args = cli.build_parser().parse_args(["run", str(target), "--out", str(out)])
+    prepared = cli.prepare_run(args, model_config=_fake_model())
+    assert prepared.config.deploy_mode == "emit-ci-workflow"

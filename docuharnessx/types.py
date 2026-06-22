@@ -36,6 +36,7 @@ __all__ = [
     "SLOT_WRITTEN_SEGMENTS",
     "SLOT_REVIEW_REPORT",
     "SLOT_ASSEMBLED_SITE",
+    "SLOT_DEPLOY_RESULT",
 ]
 
 # The eight canonical pipeline stages, constrained at the type level. The order
@@ -145,3 +146,14 @@ SLOT_REVIEW_REPORT: str = "docuharnessx.review_report"
 #: assembled site without re-deriving its layout or per-target identity
 #: (mkdocs-site-assembler Req 7.1, 7.4, 7.5).
 SLOT_ASSEMBLED_SITE: str = "docuharnessx.assembled_site"
+
+# --- github-pages-deploy seam extension (task 1.2, append-only) --------------- #
+# Added by the Wave 3 ``github-pages-deploy`` spec as an append-only extension of this
+# ``harness-bundle-skeleton``-owned module (github-pages-deploy Req 8.4). No existing slot
+# key, ``StageName``, or ``STAGE_NAMES`` entry is modified.
+
+#: Slot key for the frozen ``DeployResult`` the Deploy stage publishes — the auditable
+#: output seam recorded in the run journal (and readable by any downstream consumer) so a
+#: run records exactly which mode/status/Pages-URL the deploy produced
+#: (github-pages-deploy Req 8.1, 8.4).
+SLOT_DEPLOY_RESULT: str = "docuharnessx.deploy_result"

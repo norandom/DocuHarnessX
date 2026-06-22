@@ -48,6 +48,7 @@ from docuharnessx.types import (
     SLOT_ASSEMBLED_SITE,
     SLOT_CLASSIFICATION,
     SLOT_COVERAGE_PLAN,
+    SLOT_DEPLOY_RESULT,
     SLOT_FILE_INVENTORY,
     SLOT_OUTPUT_DIR,
     SLOT_REPO_ANALYSIS,
@@ -74,6 +75,9 @@ if TYPE_CHECKING:  # contract-level types — single re-export site (Req 6.3, 10
     # The frozen output seam the Wave 3 github-pages-deploy consumes verbatim
     # (mkdocs-site-assembler Req 7.1, 7.2, 7.4, 7.5).
     from docuharnessx.assembler.model import AssembledSite
+    # The frozen deploy seam this spec owns — recorded in the journal and the
+    # SLOT_DEPLOY_RESULT slot by the Deploy stage (github-pages-deploy Req 8.1, 8.4).
+    from docuharnessx.deployer.model import DeployResult
 
 __all__ = ["RunContext"]
 
@@ -94,6 +98,8 @@ _SLOT_TYPE_WRITTEN_SEGMENTS = "written_segments"
 _SLOT_TYPE_REVIEW_REPORT = "review_report"
 # mkdocs-site-assembler seam extension (task 1.3, append-only).
 _SLOT_TYPE_ASSEMBLED_SITE = "assembled_site"
+# github-pages-deploy seam extension (task 1.2, append-only).
+_SLOT_TYPE_DEPLOY_RESULT = "deploy_result"
 
 
 class RunContext:
@@ -351,3 +357,29 @@ class RunContext:
         branch on "not assembled yet" without catching exceptions.
         """
         return self._get_content(SLOT_ASSEMBLED_SITE)
+
+    # ----------------------------------------------------------------- #
+    # DeployResult output seam (github-pages-deploy Req 8.1, 8.2, 8.4)  #
+    # ----------------------------------------------------------------- #
+    # github-pages-deploy seam extension (task 1.2, append-only). The frozen
+    # DeployResult the Deploy stage publishes is the auditable deploy seam recorded
+    # in the run journal and at SLOT_DEPLOY_RESULT so a run records exactly which
+    # mode/status/Pages-URL the deploy produced (design "Data seam additions"). Typed
+    # by the deployer model under TYPE_CHECKING only, keeping the runtime import
+    # surface unchanged.
+
+    def set_deploy_result(self, result: "DeployResult") -> None:
+        """Record the produced :class:`DeployResult` at ``SLOT_DEPLOY_RESULT``."""
+        self._state.set_slot(
+            SLOT_DEPLOY_RESULT, _SLOT_TYPE_DEPLOY_RESULT, result
+        )
+
+    def deploy_result(self) -> "DeployResult | None":
+        """The produced :class:`DeployResult`, or ``None`` when the slot is unset.
+
+        Returns an explicit ``None`` when read before the Deploy stage has run
+        (github-pages-deploy Req 8.4) rather than raising, matching the other
+        accessors' absent-slot semantics (Req 6.5), so a consumer can branch on
+        "not deployed yet" without catching exceptions.
+        """
+        return self._get_content(SLOT_DEPLOY_RESULT)

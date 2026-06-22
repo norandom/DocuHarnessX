@@ -79,6 +79,23 @@ CANONICAL_STAGE_ORDER: tuple[str, ...] = (
     "deploy",
 )
 
+# The seven stages that record a ``stage_participated`` journal marker *unconditionally* on a
+# credential-free run. The eighth stage, ``deploy`` (github-pages-deploy task 4.1, the real
+# pipeline finale), runs ``mkdocs build`` build validation in its default emit-ci-workflow mode
+# and only journals its participation *after* a successful deploy (Req 7.1, 7.3, 8.2). That build
+# requires the ``mkdocs`` tooling at run time and a buildable site, so the deploy marker is
+# environment-conditional and is asserted separately from the always-firing content chain rather
+# than coupling this e2e to mkdocs availability.
+CONTENT_STAGE_ORDER: tuple[str, ...] = (
+    "ingest",
+    "analyze",
+    "classify",
+    "plan",
+    "write",
+    "review",
+    "assemble",
+)
+
 _ONTOLOGY_RELPATH = os.path.join(".docuharnessx", "ontology.yaml")
 
 
@@ -203,9 +220,13 @@ def test_e2e_bare_form_via_production_argv_none_path(tmp_path, monkeypatch, caps
     assert code == 0, "bare form at the argv=None production path must run and exit 0"
     journals = _find_journal_jsonl(str(out))
     assert journals, "the bare-form production run must write a HarnessJournal trace"
-    # And the run is real: all eight stages fire in canonical order. The CLI provisions
-    # the segment store before the run, so ``write`` and ``review`` fire too.
-    assert _stages_that_fired(str(out)) == list(CANONICAL_STAGE_ORDER)
+    # And the run is real: the seven content stages fire in canonical order. The CLI provisions
+    # the segment store before the run, so ``write`` and ``review`` fire too. The eighth stage,
+    # ``deploy``, journals only after a successful mkdocs build validation (tooling-conditional),
+    # so it is asserted as an optional trailing marker rather than a hard requirement here.
+    fired = _stages_that_fired(str(out))
+    assert fired[: len(CONTENT_STAGE_ORDER)] == list(CONTENT_STAGE_ORDER), fired
+    assert fired in (list(CONTENT_STAGE_ORDER), list(CANONICAL_STAGE_ORDER)), fired
 
 
 def test_e2e_journal_records_run_start_and_end(tmp_path) -> None:
@@ -272,9 +293,14 @@ def test_e2e_journal_records_all_eight_stages_in_canonical_order(tmp_path) -> No
 
     # Read the actual run's trace and collect the per-stage participation markers
     # the stages emitted as they FIRED, in the order they fired. With the CLI-provisioned
-    # segment store, all eight canonical stages fire.
+    # segment store, the seven content stages fire in canonical order. The eighth stage,
+    # ``deploy``, journals its participation only after a successful ``mkdocs build`` validation
+    # (its default emit-ci-workflow mode, Req 7.1/7.3/8.2); that build needs the ``mkdocs``
+    # tooling and a buildable site at run time, so the deploy marker is an environment-conditional
+    # trailing entry rather than a hard requirement of this content-chain assertion.
     fired = _stages_that_fired(str(out))
-    assert fired == list(CANONICAL_STAGE_ORDER), fired
+    assert fired[: len(CONTENT_STAGE_ORDER)] == list(CONTENT_STAGE_ORDER), fired
+    assert fired in (list(CONTENT_STAGE_ORDER), list(CANONICAL_STAGE_ORDER)), fired
 
 
 def test_e2e_run_populates_written_segments_and_review_report(tmp_path) -> None:

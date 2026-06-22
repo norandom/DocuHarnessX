@@ -220,3 +220,62 @@ def test_exit_code_for_reason_maps_done_to_zero_and_others_nonzero() -> None:
         assert cli.exit_code_for_reason(reason) != 0
     # An unrecognised reason is conservatively non-zero (never silently 0).
     assert cli.exit_code_for_reason("some-unexpected-reason") != 0
+
+
+# --------------------------------------------------------------------------- #
+# Deploy-mode threading: orchestrate_run reaches the Deploy stage (Req 3.2,3.3) #
+# github-pages-deploy task 4.3                                                  #
+# --------------------------------------------------------------------------- #
+# The Deploy stage reads its mode from a per-instance ``_deploy_mode`` value
+# (getattr(self, "_deploy_mode", None)), exactly the way the integration suite
+# sets it. orchestrate_run threads the configured DocgenConfig.deploy_mode onto
+# the live DeployStage processor instance(s) on the run harness BEFORE the run, so
+# a bare `dhx <repo>` run reaches the stage with the emit-ci-workflow default and
+# a `--deploy-mode` flag reaches it with the selected mode — without any network.
+
+
+def _deploy_stages(prepared) -> list:
+    """Return the live DeployStage processor instances on the prepared harness."""
+    from docuharnessx.stages.deploy import DeployStage
+
+    found: list = []
+    for procs in prepared.harness._rt.processors.values():
+        for proc in procs:
+            if isinstance(proc, DeployStage):
+                found.append(proc)
+    return found
+
+
+def test_orchestrate_run_threads_default_deploy_mode_to_stage(tmp_path) -> None:
+    """A run with no --deploy-mode reaches the Deploy stage with the default mode."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    out = tmp_path / "out"
+    args = cli.build_parser().parse_args(["run", str(target), "--out", str(out)])
+    prepared = cli.prepare_run(args, model_config=_fake_model())
+
+    cli.orchestrate_run(prepared)
+
+    stages = _deploy_stages(prepared)
+    assert stages, "the composed pipeline must register a DeployStage"
+    # The resolved mode reaches the stage via its per-instance accessor.
+    for stage in stages:
+        assert stage._deploy_mode_value() == "emit-ci-workflow"
+
+
+def test_orchestrate_run_threads_selected_deploy_mode_to_stage(tmp_path) -> None:
+    """A --deploy-mode flag reaches the Deploy stage with that mode."""
+    target = tmp_path / "repo"
+    target.mkdir()
+    out = tmp_path / "out"
+    args = cli.build_parser().parse_args(
+        ["run", str(target), "--out", str(out), "--deploy-mode", "build-only"]
+    )
+    prepared = cli.prepare_run(args, model_config=_fake_model())
+
+    cli.orchestrate_run(prepared)
+
+    stages = _deploy_stages(prepared)
+    assert stages, "the composed pipeline must register a DeployStage"
+    for stage in stages:
+        assert stage._deploy_mode_value() == "build-only"

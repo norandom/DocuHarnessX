@@ -275,3 +275,74 @@ def test_non_string_roles_value_raises_configerror(tmp_path) -> None:
     path = _write_yaml(tmp_path, "roles: 5\n")
     with pytest.raises(ConfigError):
         _config().load_config(config_path=path, cli_overrides=None, vocabulary=vocab)
+
+
+# --------------------------------------------------------------------------- #
+# deploy_mode field (github-pages-deploy task 4.3; Req 3.2, 3.3)               #
+# --------------------------------------------------------------------------- #
+# The deploy-mode selection is appended to the configuration surface so the
+# Deploy stage can read the operator's mode. The field defaults to the
+# "emit-ci-workflow" mode (Req 3.2) and is populated from the YAML config file
+# and a CLI override (Req 3.3). The configured *value* is validated downstream by
+# the deploy-mode resolver (so a bad value surfaces as a DeployInputError at the
+# stage boundary), not here — the config surface only carries it.
+
+
+def test_deploy_mode_defaults_to_emit_ci_workflow() -> None:
+    """Req 3.2: an unconfigured deploy mode defaults to emit-ci-workflow."""
+    vocab = _vocab("alpha")
+    cfg = _config().load_config(config_path=None, cli_overrides=None, vocabulary=vocab)
+    assert cfg.deploy_mode == "emit-ci-workflow"
+
+
+def test_deploy_mode_loads_from_yaml(tmp_path) -> None:
+    """Req 3.3: a deploy_mode set in the --config YAML is carried through."""
+    vocab = _vocab("alpha")
+    path = _write_yaml(tmp_path, "deploy_mode: build-only\n")
+    cfg = _config().load_config(config_path=path, cli_overrides=None, vocabulary=vocab)
+    assert cfg.deploy_mode == "build-only"
+
+
+def test_deploy_mode_cli_override_wins_over_yaml(tmp_path) -> None:
+    """Req 3.3/7.4: a CLI deploy_mode override wins over the YAML value."""
+    vocab = _vocab("alpha")
+    path = _write_yaml(tmp_path, "deploy_mode: build-only\n")
+    cfg = _config().load_config(
+        config_path=path,
+        cli_overrides={"deploy_mode": "gh-deploy"},
+        vocabulary=vocab,
+    )
+    assert cfg.deploy_mode == "gh-deploy"
+
+
+def test_deploy_mode_cli_none_does_not_override_yaml(tmp_path) -> None:
+    """Req 7.4: a None CLI deploy_mode (flag absent) keeps the YAML value."""
+    vocab = _vocab("alpha")
+    path = _write_yaml(tmp_path, "deploy_mode: build-only\n")
+    cfg = _config().load_config(
+        config_path=path,
+        cli_overrides={"deploy_mode": None},
+        vocabulary=vocab,
+    )
+    assert cfg.deploy_mode == "build-only"
+
+
+def test_deploy_mode_value_is_not_validated_by_config(tmp_path) -> None:
+    """The config surface carries the value verbatim; validation is downstream.
+
+    A value the surface does not recognise is NOT rejected here (Req 3.4 is the
+    resolver's job at the stage boundary) — the field just carries the configured
+    string so the resolver can name the bad value with the full valid-mode list.
+    """
+    vocab = _vocab("alpha")
+    path = _write_yaml(tmp_path, "deploy_mode: not-a-real-mode\n")
+    cfg = _config().load_config(config_path=path, cli_overrides=None, vocabulary=vocab)
+    assert cfg.deploy_mode == "not-a-real-mode"
+
+
+def test_non_string_deploy_mode_raises_configerror(tmp_path) -> None:
+    """A non-string deploy_mode is malformed input and fails fast (Req 7.6)."""
+    vocab = _vocab("alpha")
+    path = _write_yaml(tmp_path, "deploy_mode: 5\n")
+    with pytest.raises(ConfigError):
+        _config().load_config(config_path=path, cli_overrides=None, vocabulary=vocab)

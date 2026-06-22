@@ -502,10 +502,10 @@ _CANONICAL_STAGE_CLASSES: tuple[str, ...] = (
 # classification-coverage-planner (tasks 4.2 and 4.3); ``write`` is made real by the
 # Wave 2 cobesy-writer (task 3.1); ``review`` is made real by the Wave 2
 # quality-review-gate (task 4.1); ``assemble`` is made real by the Wave 3
-# mkdocs-site-assembler (task 5.1), so none of those five are in this set any longer.
-_NOOP_STAGE_NAMES: tuple[str, ...] = (
-    "deploy",
-)
+# mkdocs-site-assembler (task 5.1); ``deploy`` is made real by the Wave 3
+# github-pages-deploy (task 4.1) — the pipeline finale — so the set is now empty:
+# every one of the eight stages is a real, slot-touching stage.
+_NOOP_STAGE_NAMES: tuple[str, ...] = ()
 
 
 def _is_stage_target(target: str) -> bool:
@@ -545,7 +545,12 @@ def test_make_docgen_still_composes_with_canonical_order_unchanged() -> None:
 def test_remaining_stub_stages_remain_pass_through_noops() -> None:
     # The stages no spec yet owns must still be genuine pass-throughs: driving each
     # yields the same content-free event unchanged (Req 8.2). ``classify`` left this
-    # set when classification-coverage-planner task 4.2 made it a real stage.
+    # set when classification-coverage-planner task 4.2 made it a real stage; ``deploy``
+    # left it when github-pages-deploy task 4.1 made the finale real, so the set is now
+    # empty — every stage is a real, slot-touching stage and none remain a no-op stub.
+    assert _NOOP_STAGE_NAMES == (), (
+        "all eight stages are now real; the no-op stub set should be empty"
+    )
     event = _step_end_event("run-noop", 1)
 
     async def _collect(proc: Processor) -> list[Any]:
@@ -569,6 +574,7 @@ def test_only_real_stages_override_on_step_end() -> None:
     # touched exactly the stage modules it owns (design "Modified Files").
     from docuharnessx.stages.assemble import AssembleStage
     from docuharnessx.stages.base import NoOpStage
+    from docuharnessx.stages.deploy import DeployStage
     from docuharnessx.stages.review import ReviewStage
 
     assert issubclass(IngestStage, NoOpStage)
@@ -578,7 +584,10 @@ def test_only_real_stages_override_on_step_end() -> None:
     assert issubclass(WriteStage, NoOpStage)
     assert issubclass(ReviewStage, NoOpStage)
     assert issubclass(AssembleStage, NoOpStage)
-    # The real stages override on_step_end (real work); the remaining stubs do not.
+    assert issubclass(DeployStage, NoOpStage)
+    # The real stages override on_step_end (real work). With github-pages-deploy task 4.1 the
+    # ``deploy`` finale is real too, so all eight stages now override on_step_end and the
+    # no-op set is empty.
     assert "on_step_end" in vars(IngestStage)
     assert "on_step_end" in vars(AnalyzeStage)
     assert "on_step_end" in vars(ClassifyStage)
@@ -586,6 +595,7 @@ def test_only_real_stages_override_on_step_end() -> None:
     assert "on_step_end" in vars(WriteStage)
     assert "on_step_end" in vars(ReviewStage)
     assert "on_step_end" in vars(AssembleStage)
+    assert "on_step_end" in vars(DeployStage)
     for stage_name in _NOOP_STAGE_NAMES:
         module = importlib.import_module(f"docuharnessx.stages.{stage_name}")
         cls = getattr(module, f"{stage_name.capitalize()}Stage")
