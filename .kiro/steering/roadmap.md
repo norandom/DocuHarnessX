@@ -108,17 +108,25 @@ on top of two foundations (the ontology and the harness skeleton).
   (fail-closed). A CLI follow-up provisions a `FilesystemSegmentStore` so a bare `dhx`
   run executes the full chain end-to-end — verified on malware_hashes: 8 stages fire,
   12 segments written as `<id>.md` under `<out>/segments`, `ReviewReport` produced.
-  The `assemble`/`deploy` stages remain no-op stubs awaiting Wave 3.
-- **Wave 3 — specs generated? no (next).** **Wave 4 — not started.**
+- **Wave 3 — IMPLEMENTED & MERGED to `main`** (2026-06-22). mkdocs-site-assembler +
+  github-pages-deploy, reviewer-gated, adversarial GO/NO-GO passed. The real
+  `assemble`/`deploy` stages now run: `dhx` assembles the accepted segments into a
+  per-target Material for MkDocs site (site identity + `/<repo>/` base-path from the
+  target git remote) and, by default, emits a GitHub Actions workflow into the target
+  repo (no auto-push; `gh-deploy`/build-only modes too). Verified by real `mkdocs build`.
+- **Wave 4 — IMPLEMENTED & MERGED to `main`** (2026-06-22). e2e-multi-project: a
+  hermetic multi-language e2e suite + a one-off real-repo validation across five
+  targets — malware_hashes (Go), DocuHarnessX (Python dogfood), pallets/click (Python),
+  expressjs/express (JS), BurntSushi/ripgrep (Rust). All five produced buildable,
+  per-project sites with the correct `/<repo>/` base-path + emitted CI workflow. GO,
+  0 remediations. Suite: **2147 passed**.
 
-## Next Step
+## Status: COMPLETE
 
-Generate + implement **Wave 3** (`mkdocs-site-assembler`, `github-pages-deploy`) —
-assemble the accepted segments into a Material for MkDocs site and publish it.
-**MULTI-PROJECT REQUIREMENT (locked 2026-06-22):** the site + deploy are per-TARGET-
-project, never hardcoded to DocuHarnessX. Derive `site_name`/`repo_url`/`site_url` +
-the `/<repo>/` Pages base-path from the target's git remote (override via
-`.docuharnessx/` config or flags); default deploy mode = **emit a GitHub Actions
-workflow into the target repo** (it self-publishes Pages on push; `gh-deploy` and
-build-only are alternative modes). Then Wave 4 (`e2e-malware-hashes`). Each wave
-replaces stage stubs in `docuharnessx/stages/` (`assemble`, then `deploy`) one at a time.
+All 9 specs across 5 waves are implemented, validated, and merged. `dhx <repo> --out DIR`
+runs the full 8-stage pipeline (ingest → analyze → classify → plan → write → review →
+assemble → deploy) and produces a publishable, per-project Material for MkDocs site +
+CI workflow — proven generic across Go/Python/JS/Rust (malware_hashes is just one
+example). Open follow-up (non-blocking, see memory): primary-language detection uses
+raw-LOC max incl. docs/config, so a doc-heavy repo can report a markup language as
+primary — consider weighting primary to source/code languages.
