@@ -10,13 +10,16 @@ observable journal trace.
 
 Two acceptance cases:
 
-1. **Clean run on an empty pipeline.** ``dhx run <target-repo> --out DIR`` against
+1. **Clean run on the real pipeline.** ``dhx run <target-repo> --out DIR`` against
    a directory target runs the composed pipeline start to finish: a HarnessJournal
    JSONL trace is written under ``DIR`` recording run start *and* end, all eight
    pipeline stages actually FIRE in canonical order (asserted on the run's own
-   ``_trace.jsonl`` — each no-op stage records a ``processor_trigger`` participation
-   marker as it executes, without modifying generated content), and the process
-   exits ``0`` (Req 4.8, 8.1, 8.2).
+   ``_trace.jsonl`` — each stage records a ``processor_trigger`` participation
+   marker as it executes, without modifying generated content), the Write stage
+   publishes a written set to ``SLOT_WRITTEN_SEGMENTS`` and the Review stage
+   publishes a well-formed report to ``SLOT_REVIEW_REPORT``, and the process exits
+   ``0`` (Req 4.8, 8.1, 8.2). The CLI provisions a ``FilesystemSegmentStore`` rooted
+   at ``<DIR>/segments`` before the run, so write/review/assemble see it.
 2. **``dhx init`` produces a loadable ontology.** ``dhx init --default`` in a fresh
    temp project writes a ``.docuharnessx/ontology.yaml`` that the ``ontology-engine``
    ``load_vocabulary`` loader accepts without error (Req 9.1, 9.5).
@@ -49,8 +52,15 @@ import sys
 from harnessx.core.model_config import ModelConfig
 
 from docuharnessx import cli
-from docuharnessx._ontology import Vocabulary, default_profile, load_vocabulary
+from docuharnessx._ontology import (
+    SegmentStore,
+    Vocabulary,
+    default_profile,
+    load_vocabulary,
+)
 from docuharnessx.bundle import make_docgen
+from docuharnessx.composition import WrittenSegments
+from docuharnessx.review.model import REVIEW_REPORT_SCHEMA_VERSION, ReviewReport
 
 from _fakes import FakeProvider
 
@@ -67,20 +77,6 @@ CANONICAL_STAGE_ORDER: tuple[str, ...] = (
     "review",
     "assemble",
     "deploy",
-)
-
-# The stages that emit a participation marker in the *current* CLI run. The CLI
-# provisions the target-repo, output-dir, and vocabulary slots but does not yet place a
-# SegmentStore handle in the run context, so the now-real Write stage (Wave 2
-# cobesy-writer, task 3.1) correctly halts on the missing store slot (Req 2.4) and is
-# skipped rather than participating; with no SLOT_WRITTEN_SEGMENTS published, the now-real
-# Review stage (Wave 2 quality-review-gate, task 4.1) in turn halts on the missing
-# written-segments slot (Req 2.3) and is likewise skipped. Until the CLI provisions a
-# segment store and the upstream chain produces a written set (a CLI orchestration concern,
-# out of these specs' boundaries), neither ``write`` nor ``review`` fires.
-# ``assemble``/``deploy`` are still no-op stubs that participate normally.
-_STAGES_THAT_FIRE_TODAY: tuple[str, ...] = tuple(
-    name for name in CANONICAL_STAGE_ORDER if name not in ("write", "review")
 )
 
 _ONTOLOGY_RELPATH = os.path.join(".docuharnessx", "ontology.yaml")
@@ -207,9 +203,9 @@ def test_e2e_bare_form_via_production_argv_none_path(tmp_path, monkeypatch, caps
     assert code == 0, "bare form at the argv=None production path must run and exit 0"
     journals = _find_journal_jsonl(str(out))
     assert journals, "the bare-form production run must write a HarnessJournal trace"
-    # And the run is real: the provisioned stages fire in canonical order. ``write``
-    # halts on the not-yet-provisioned segment-store slot (Req 2.4), so it is skipped.
-    assert _stages_that_fired(str(out)) == list(_STAGES_THAT_FIRE_TODAY)
+    # And the run is real: all eight stages fire in canonical order. The CLI provisions
+    # the segment store before the run, so ``write`` and ``review`` fire too.
+    assert _stages_that_fired(str(out)) == list(CANONICAL_STAGE_ORDER)
 
 
 def test_e2e_journal_records_run_start_and_end(tmp_path) -> None:
@@ -249,10 +245,9 @@ def test_e2e_journal_records_all_eight_stages_in_canonical_order(tmp_path) -> No
     drives on the ``step_end`` hook; on execution it records its participation by
     emitting a ``processor_trigger`` event (``action='stage_participated'``) to the
     run journal — without modifying any generated content. We read the journal's
-    ``_trace.jsonl`` the run wrote and assert the provisioned stages appear in canonical
-    order. The now-real Write stage halts on the not-yet-provisioned segment-store slot
-    (Req 2.4) and is skipped, so the firing set is the canonical order minus ``write``
-    until the CLI provisions a segment store (a CLI orchestration concern).
+    ``_trace.jsonl`` the run wrote and assert all eight stages appear in canonical
+    order. The CLI provisions a ``FilesystemSegmentStore`` before the run, so the
+    now-real Write and Review stages fire alongside the rest of the chain.
 
     Regression guard: the prior implementation defined the stage classes locally to
     a factory, so each serialized to the unimportable ``stages.base.<X>Stage`` path
@@ -261,6 +256,10 @@ def test_e2e_journal_records_all_eight_stages_in_canonical_order(tmp_path) -> No
     """
     target = tmp_path / "repo"
     target.mkdir()
+    # A couple of real files so the upstream chain (ingest -> analyze -> classify ->
+    # plan) activates cells and the Write stage has planned segments to write.
+    (target / "README.md").write_text("# sample repo\n", encoding="utf-8")
+    (target / "main.py").write_text("print('hello')\n", encoding="utf-8")
     out = tmp_path / "out"
 
     code = cli.main(
@@ -272,11 +271,93 @@ def test_e2e_journal_records_all_eight_stages_in_canonical_order(tmp_path) -> No
     assert _find_journal_jsonl(str(out))
 
     # Read the actual run's trace and collect the per-stage participation markers
-    # the stages emitted as they FIRED, in the order they fired. ``write`` halts on the
-    # not-yet-provisioned segment-store slot (Req 2.4) and is skipped, so the firing set
-    # is the canonical order minus ``write`` until CLI store provisioning lands.
+    # the stages emitted as they FIRED, in the order they fired. With the CLI-provisioned
+    # segment store, all eight canonical stages fire.
     fired = _stages_that_fired(str(out))
-    assert fired == list(_STAGES_THAT_FIRE_TODAY), fired
+    assert fired == list(CANONICAL_STAGE_ORDER), fired
+
+
+def test_e2e_run_populates_written_segments_and_review_report(tmp_path) -> None:
+    """A real run publishes SLOT_WRITTEN_SEGMENTS and a well-formed SLOT_REVIEW_REPORT.
+
+    With the CLI-provisioned ``FilesystemSegmentStore`` the now-real Write stage fires
+    and publishes a :class:`~docuharnessx.composition.WrittenSegments` to
+    ``SLOT_WRITTEN_SEGMENTS`` (write ran and produced segments), and the now-real Review
+    stage fires and publishes a :class:`~docuharnessx.review.model.ReviewReport` to
+    ``SLOT_REVIEW_REPORT`` (review ran and produced a report). Plain ``FakeProvider``
+    content is not valid judge JSON, so the review gate correctly fail-closed-rejects
+    every segment (default-reject on an unparseable verdict, Req fail-closed) — so we
+    assert the report EXISTS and is well-formed (not that any segment was accepted).
+    Drives the prepared-run -> orchestrate-run path so we can read the run context's
+    slots directly. Credential-free (the no-network fake provider).
+    """
+    target = tmp_path / "repo"
+    target.mkdir()
+    (target / "README.md").write_text("# sample repo\n", encoding="utf-8")
+    (target / "main.py").write_text("print('hello')\n", encoding="utf-8")
+    out = tmp_path / "out"
+
+    parser = cli.build_parser()
+    args = parser.parse_args(["run", str(target), "--out", str(out)])
+    prepared = cli.prepare_run(args, model_config=_fake_model())
+    outcome = cli.orchestrate_run(prepared)
+
+    assert outcome.exit_code == 0
+    run_context = outcome.run_context
+
+    # Write ran and produced segments: SLOT_WRITTEN_SEGMENTS is populated with a
+    # well-formed WrittenSegments carrying at least one written segment.
+    written = run_context.written_segments()
+    assert isinstance(written, WrittenSegments), written
+    assert len(written.segments) >= 1, written
+    # Each written segment is also persisted as an inspectable <id>.md artifact under
+    # the CLI-provisioned <out>/segments store directory.
+    segments_dir = out / "segments"
+    assert segments_dir.is_dir()
+    for segment in written.segments:
+        assert (segments_dir / f"{segment.id}.md").is_file()
+
+    # Review ran and produced a well-formed report: SLOT_REVIEW_REPORT is populated.
+    report = run_context.review_report()
+    assert isinstance(report, ReviewReport), report
+    assert report.schema_version == REVIEW_REPORT_SCHEMA_VERSION
+    # One entry per written segment; the aggregate counts agree with the entries.
+    assert len(report.entries) == len(written.segments)
+    assert report.aggregate.judged == len(written.segments)
+    assert report.aggregate.accepted + report.aggregate.rejected == report.aggregate.judged
+    # FakeProvider content is not valid judge JSON, so the gate fail-closed-rejects
+    # every segment: the report is well-formed and the accepted set is empty (the
+    # correct fail-closed outcome, NOT a sign the report is missing).
+    assert report.accepted == ()
+    assert report.aggregate.accepted == 0
+
+
+def test_orchestrate_run_provisions_a_segment_store(tmp_path) -> None:
+    """``orchestrate_run`` provisions a non-None SegmentStore on the run context.
+
+    Focused regression for the CLI orchestration fix: before the run, the CLI must
+    place a concrete ``SegmentStore`` handle in the run context (rooted under the
+    output dir) so the Write/Review/Assemble stages can read it. Asserts the handle is
+    present, conforms to the frozen ``SegmentStore`` port, and is the filesystem store
+    rooted at ``<out>/segments`` (the intended inspectable artifact location).
+    """
+    target = tmp_path / "repo"
+    target.mkdir()
+    out = tmp_path / "out"
+
+    parser = cli.build_parser()
+    args = parser.parse_args(["run", str(target), "--out", str(out)])
+    prepared = cli.prepare_run(args, model_config=_fake_model())
+    outcome = cli.orchestrate_run(prepared)
+
+    store = outcome.run_context.segment_store()
+    assert store is not None, "orchestrate_run must provision a segment store"
+    assert isinstance(store, SegmentStore), type(store)
+    # The frozen store port surface is present on the provisioned handle.
+    for method in ("put", "query", "list_segments", "resolve_cross_links"):
+        assert callable(getattr(store, method, None)), method
+    # The store is rooted at <out>/segments — the inspectable per-segment artifact dir.
+    assert (out / "segments").is_dir()
 
 
 def test_e2e_each_stage_processor_is_a_real_importable_target(tmp_path) -> None:

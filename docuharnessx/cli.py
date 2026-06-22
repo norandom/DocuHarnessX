@@ -523,6 +523,11 @@ def orchestrate_run(
     from harnessx.core.harness import BaseTask
     from harnessx.core.state import State
 
+    # Local ontology import (drift-mitigation: keep ontology-engine coupling local,
+    # mirroring the local HarnessX imports above). The CLI owns the concrete
+    # SegmentStore adapter choice; stages consume only the SegmentStore port.
+    from docuharnessx.ontology import FilesystemSegmentStore
+
     from docuharnessx.context import RunContext
 
     os.makedirs(prepared.out_dir, exist_ok=True)
@@ -535,6 +540,19 @@ def orchestrate_run(
     run_context.set_target_repo(prepared.target_repo)
     run_context.set_output_dir(prepared.out_dir)
     run_context.set_vocabulary(prepared.vocabulary)
+
+    # Provision the SegmentStore the Write stage (Wave 2 cobesy-writer) requires:
+    # a filesystem-backed store rooted at <out_dir>/segments and bound to the loaded
+    # vocabulary, placed in the run context BEFORE the run so write/review/assemble
+    # can read it (Req 6.3, 6.4). Persisting each segment as <id>.md under the output
+    # dir is the intended inspectable artifact. Without this the now-real Write stage
+    # halts on the unset SLOT_SEGMENT_STORE and review has nothing to review — this is
+    # the CLI orchestration concern that wires the store, not a stage-boundary change.
+    segment_store = FilesystemSegmentStore(
+        os.path.join(prepared.out_dir, "segments"),
+        prepared.vocabulary,
+    )
+    run_context.set_segment_store(segment_store)
 
     steps = _SKELETON_MAX_STEPS if max_steps is None else max_steps
     task = BaseTask(description=task_description, max_steps=steps)
