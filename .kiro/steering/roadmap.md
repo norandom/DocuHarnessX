@@ -91,15 +91,22 @@ on top of two foundations (the ontology and the harness skeleton).
 
 ## Implementation Status
 
-- **Wave 0 — IMPLEMENTED & MERGED to `main`** (2026-06-21). Both specs complete,
-  reviewer-gated, adversarial GO/NO-GO passed. 428 tests green. `dhx <repo> --out DIR`
-  runs the empty 8-stage pipeline with a HarnessJournal trace; `dhx init` writes
-  `.docuharnessx/ontology.yaml`. The 8 stage modules are no-op stubs awaiting Wave 1+.
-- **Waves 1–4 — specs not yet generated.**
+- **Wave 0 — IMPLEMENTED & MERGED to `main`** (2026-06-21). ontology-engine +
+  harness-bundle-skeleton. `dhx <repo> --out DIR` runs the 8-stage pipeline + journal;
+  `dhx init` writes `.docuharnessx/ontology.yaml`.
+- **Wave 1 — IMPLEMENTED & MERGED to `main`** (2026-06-22). repo-ingestion-analysis +
+  classification-coverage-planner, reviewer-gated, adversarial GO/NO-GO passed (0
+  remediations). 1199 tests green. The real `ingest`/`analyze`/`classify`/`plan` stages
+  now run: `dhx` scans a repo → `RepoAnalysis` → a project-specific `CoveragePlan`
+  (verified end-to-end on `/home/mc/Source/malware_hashes`; adapts to the loaded
+  Vocabulary, not templated). The `write`/`review`/`assemble`/`deploy` stages remain
+  no-op stubs awaiting Waves 2–3.
+- **Waves 2–4 — specs not yet generated.**
 
 ## Next Step
 
-Run `/kiro-spec-batch` to create requirements/design/tasks for **Wave 1**
-(`repo-ingestion-analysis`, `classification-coverage-planner`), then implement and
-proceed wave by wave. Each later wave replaces stage stubs in `docuharnessx/stages/`
-one at a time.
+Generate + implement **Wave 2** (`cobesy-writer`, `quality-review-gate`) — the
+COBESY-structured segment generation that turns the `CoveragePlan` into written,
+quality-gated content (replaces the `write`/`review` stage stubs). Then Wave 3
+(`mkdocs-site-assembler`, `github-pages-deploy`) and Wave 4 (`e2e-malware-hashes`).
+Each wave replaces stage stubs in `docuharnessx/stages/` one at a time.
