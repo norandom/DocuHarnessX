@@ -73,11 +73,14 @@ CANONICAL_STAGE_ORDER: tuple[str, ...] = (
 # provisions the target-repo, output-dir, and vocabulary slots but does not yet place a
 # SegmentStore handle in the run context, so the now-real Write stage (Wave 2
 # cobesy-writer, task 3.1) correctly halts on the missing store slot (Req 2.4) and is
-# skipped rather than participating. Until the CLI provisions a segment store (a CLI
-# orchestration concern, out of the cobesy-writer boundary), ``write`` does not fire.
-# ``review``/``assemble``/``deploy`` are still no-op stubs that participate normally.
+# skipped rather than participating; with no SLOT_WRITTEN_SEGMENTS published, the now-real
+# Review stage (Wave 2 quality-review-gate, task 4.1) in turn halts on the missing
+# written-segments slot (Req 2.3) and is likewise skipped. Until the CLI provisions a
+# segment store and the upstream chain produces a written set (a CLI orchestration concern,
+# out of these specs' boundaries), neither ``write`` nor ``review`` fires.
+# ``assemble``/``deploy`` are still no-op stubs that participate normally.
 _STAGES_THAT_FIRE_TODAY: tuple[str, ...] = tuple(
-    name for name in CANONICAL_STAGE_ORDER if name != "write"
+    name for name in CANONICAL_STAGE_ORDER if name not in ("write", "review")
 )
 
 _ONTOLOGY_RELPATH = os.path.join(".docuharnessx", "ontology.yaml")

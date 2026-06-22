@@ -34,6 +34,7 @@ __all__ = [
     "SLOT_CLASSIFICATION",
     "SLOT_COVERAGE_PLAN",
     "SLOT_WRITTEN_SEGMENTS",
+    "SLOT_REVIEW_REPORT",
 ]
 
 # The eight canonical pipeline stages, constrained at the type level. The order
@@ -122,3 +123,13 @@ SLOT_COVERAGE_PLAN: str = "docuharnessx.coverage_plan"
 #: seam the downstream Wave 2 ``quality-review-gate`` consumes verbatim so it judges
 #: exactly the segments the writer produced (cobesy-writer Req 7.1, 7.4, 7.5).
 SLOT_WRITTEN_SEGMENTS: str = "docuharnessx.written_segments"
+
+# --- quality-review-gate seam extension (task 1.3, append-only) --------------- #
+# Added by the Wave 2 ``quality-review-gate`` spec as an append-only extension of this
+# ``harness-bundle-skeleton``-owned module (quality-review-gate Req 7.1, 7.2). No existing
+# slot key, ``StageName``, or ``STAGE_NAMES`` entry is modified.
+
+#: Slot key for the frozen ``ReviewReport`` the Review stage publishes — the output seam
+#: the downstream Wave 3 ``mkdocs-site-assembler`` consumes so it assembles exactly the
+#: segments that passed the COBESY quality gate (quality-review-gate Req 7.1, 7.4, 7.5).
+SLOT_REVIEW_REPORT: str = "docuharnessx.review_report"

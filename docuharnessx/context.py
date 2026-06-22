@@ -50,6 +50,7 @@ from docuharnessx.types import (
     SLOT_FILE_INVENTORY,
     SLOT_OUTPUT_DIR,
     SLOT_REPO_ANALYSIS,
+    SLOT_REVIEW_REPORT,
     SLOT_SEGMENT_STORE,
     SLOT_TARGET_REPO,
     SLOT_VOCABULARY,
@@ -66,6 +67,9 @@ if TYPE_CHECKING:  # contract-level types — single re-export site (Req 6.3, 10
     # classification-coverage-planner value objects: the internal Classify -> Plan
     # handoff and the frozen output plan (planner spec Req 7.1-7.5).
     from docuharnessx.planning.model import Classification, CoveragePlan
+    # The frozen output seam the Wave 3 mkdocs-site-assembler consumes verbatim
+    # (quality-review-gate Req 7.1, 7.4, 7.5, 7.6).
+    from docuharnessx.review.model import ReviewReport
 
 __all__ = ["RunContext"]
 
@@ -82,6 +86,8 @@ _SLOT_TYPE_CLASSIFICATION = "classification"
 _SLOT_TYPE_COVERAGE_PLAN = "coverage_plan"
 # cobesy-writer seam extension (task 1.2, append-only).
 _SLOT_TYPE_WRITTEN_SEGMENTS = "written_segments"
+# quality-review-gate seam extension (task 1.3, append-only).
+_SLOT_TYPE_REVIEW_REPORT = "review_report"
 
 
 class RunContext:
@@ -287,3 +293,29 @@ class RunContext:
         on "not written yet" without catching exceptions.
         """
         return self._get_content(SLOT_WRITTEN_SEGMENTS)
+
+    # ----------------------------------------------------------------- #
+    # ReviewReport output seam (quality-review-gate Req 7.1, 7.3-7.6)   #
+    # ----------------------------------------------------------------- #
+    # quality-review-gate seam extension (task 1.3, append-only). The frozen
+    # ReviewReport the Review stage publishes is the output seam the downstream
+    # Wave 3 mkdocs-site-assembler consumes so it assembles exactly the segments
+    # that passed the COBESY quality gate (design "context.py additions"). Typed by
+    # the review model under TYPE_CHECKING only, keeping the runtime import surface
+    # unchanged.
+
+    def set_review_report(self, report: "ReviewReport") -> None:
+        """Record the produced :class:`ReviewReport` at ``SLOT_REVIEW_REPORT``."""
+        self._state.set_slot(
+            SLOT_REVIEW_REPORT, _SLOT_TYPE_REVIEW_REPORT, report
+        )
+
+    def review_report(self) -> "ReviewReport | None":
+        """The produced :class:`ReviewReport`, or ``None`` when the slot is unset.
+
+        Returns an explicit ``None`` when read before the Review stage has run
+        (quality-review-gate Req 7.3) rather than raising, matching the other
+        accessors' absent-slot semantics (Req 6.5), so the downstream assembler can
+        branch on "not reviewed yet" without catching exceptions.
+        """
+        return self._get_content(SLOT_REVIEW_REPORT)

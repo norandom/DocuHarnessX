@@ -369,9 +369,12 @@ def test_clean_model_response_is_used_as_body(tmp_path) -> None:
 
     # The bound provider is consulted by the writer's gated prose step once per planned
     # segment (Req 5.1, a single bounded call per segment). The *same* provider also drives
-    # the run loop's own conversation turn, so the total call count is the run-loop turn
-    # plus one writer call per segment — the writer never adds an uncapped loop (Req 5.3).
-    assert provider.calls == len(plan.segments) + 1
+    # the run loop's own conversation turn AND the now-real downstream Review stage (Wave 2
+    # quality-review-gate, task 4.1), which fires on the same step_end over the writer's
+    # published SLOT_WRITTEN_SEGMENTS and judges each written segment with one bounded call
+    # of its own. So the total call count is the run-loop turn plus one writer call and one
+    # review-judge call per segment (2N+1) — neither stage adds an uncapped loop (Req 5.3).
+    assert provider.calls == 2 * len(plan.segments) + 1
 
     # The model's clean body flows through to every stored Segment (Req 5.1, 5.4): the
     # body is wired from the model, not the deterministic fallback.
