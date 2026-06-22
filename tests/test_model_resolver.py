@@ -116,6 +116,53 @@ def test_config_wins_over_env(monkeypatch: pytest.MonkeyPatch) -> None:
     assert mc.main.model == "claude-sonnet-4-6"
 
 
+# --------------------------------------------------------------------------- #
+# OpenAI-key models route through LiteLLM's openai/ provider prefix
+# (regression: LiteLLM cannot infer the provider for unrecognised ids, e.g.
+# a newly released gpt-5.5, and errors "LLM Provider NOT provided")
+# --------------------------------------------------------------------------- #
+
+
+def test_openai_env_bare_model_gets_openai_prefix(monkeypatch: pytest.MonkeyPatch) -> None:
+    from harnessx.providers.litellm_provider import LiteLLMProvider
+
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-env")
+    monkeypatch.setenv("OPENAI_DEFAULT_MAIN_MODEL", "gpt-5.5")
+
+    mc = _resolver().resolve_model(None)
+    assert isinstance(mc.main, LiteLLMProvider)
+    assert mc.main.model == "openai/gpt-5.5"
+
+
+def test_openai_env_default_model_gets_openai_prefix(monkeypatch: pytest.MonkeyPatch) -> None:
+    from harnessx.providers.litellm_provider import LiteLLMProvider
+
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-env")  # no explicit model -> default
+
+    mc = _resolver().resolve_model(None)
+    assert isinstance(mc.main, LiteLLMProvider)
+    assert mc.main.model == "openai/gpt-4o"
+
+
+def test_openai_env_provider_qualified_model_is_not_double_prefixed(monkeypatch: pytest.MonkeyPatch) -> None:
+    from harnessx.providers.litellm_provider import LiteLLMProvider
+
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-env")
+    monkeypatch.setenv("OPENAI_DEFAULT_MAIN_MODEL", "openai/gpt-5.5")
+
+    mc = _resolver().resolve_model(None)
+    assert isinstance(mc.main, LiteLLMProvider)
+    assert mc.main.model == "openai/gpt-5.5"
+
+
+def test_as_openai_route_helper() -> None:
+    route = _resolver()._as_openai_route
+    assert route("gpt-5.5") == "openai/gpt-5.5"
+    assert route("gpt-4o") == "openai/gpt-4o"
+    assert route("openai/gpt-5.5") == "openai/gpt-5.5"  # already qualified
+    assert route("azure/my-deploy") == "azure/my-deploy"  # other provider kept
+
+
 def test_config_picks_up_matching_env_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
     """A configured Anthropic id still reads its API key from the environment."""
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-config")
@@ -158,7 +205,9 @@ def test_env_openai_fallback_builds_litellm(monkeypatch: pytest.MonkeyPatch) -> 
 
     mc = _resolver().resolve_model(None)
     assert isinstance(mc.main, LiteLLMProvider)
-    assert mc.main.model == "gpt-4o"
+    # OpenAI-key models are routed through LiteLLM's openai/ provider prefix so
+    # ids LiteLLM doesn't recognise (e.g. gpt-5.5) still route to OpenAI.
+    assert mc.main.model == "openai/gpt-4o"
 
 
 def test_env_litellm_fallback_builds_litellm(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -140,6 +140,11 @@ Source: GitHub Actions**. The workflow builds and publishes on the next push.
 
 - **No model configured / `ModelResolutionError`** — set one of the provider API keys in
   step 3 (or a model in `--config`).
+- **`LLM Provider NOT provided` from LiteLLM** — a model id LiteLLM doesn't recognize
+  needs a provider prefix. Models from `OPENAI_API_KEY`/`OPENAI_DEFAULT_MAIN_MODEL` are
+  routed as `openai/<model>` automatically (so a bare `gpt-5.5` works). If you instead
+  set the model in a `--config` YAML, write it provider-qualified, e.g. `openai/gpt-5.5`.
+  OpenAI model ids are lowercase and case-sensitive.
 - **`mkdocs` not found** — make sure the venv is activated (`source .venv/bin/activate`)
   so `mkdocs` is on `PATH`; or invoke `dhx` as `.venv/bin/dhx`.
 - **Vendor/build directories** — the scanner ignores `.git`, `.venv`, `node_modules`,

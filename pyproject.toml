@@ -1,6 +1,6 @@
 [project]
 name = "docuharnessx"
-version = "1.0.0"
+version = "1.0.1"
 description = "Human-centric, role-based GitHub Pages documentation generator built on HarnessX"
 requires-python = ">=3.12"
 dependencies = [

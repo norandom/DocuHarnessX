@@ -100,6 +100,18 @@ def _build_litellm(model: str, api_key: str | None, api_base: str | None) -> "Mo
     return ModelConfig(main=LiteLLMProvider(model, **kwargs))
 
 
+def _as_openai_route(model: str) -> str:
+    """Route an OpenAI-key model through LiteLLM's ``openai/`` provider prefix.
+
+    When the model was resolved from ``OPENAI_API_KEY`` it is, by definition, an
+    OpenAI model — but LiteLLM cannot infer the provider for ids it does not yet
+    recognise (e.g. a newly released ``gpt-5.5``) and errors with "LLM Provider NOT
+    provided". Prefix ``openai/`` so any OpenAI model routes correctly, unless the
+    operator already gave a provider-qualified id (``openai/...``, ``azure/...``).
+    """
+    return model if "/" in model else f"openai/{model}"
+
+
 def _resolve_from_config(model_id: str) -> "ModelConfig":
     """Build a ``ModelConfig`` for an explicitly configured model id (Req 3.2).
 
@@ -132,7 +144,7 @@ def _resolve_from_env() -> "ModelConfig | None":
     openai_model = os.environ.get("OPENAI_DEFAULT_MAIN_MODEL")
     if openai_key or openai_model:
         return _build_litellm(
-            openai_model or _OPENAI_DEFAULT_MODEL,
+            _as_openai_route(openai_model or _OPENAI_DEFAULT_MODEL),
             openai_key,
             os.environ.get("OPENAI_API_BASE"),
         )
