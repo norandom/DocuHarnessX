@@ -31,6 +31,8 @@ __all__ = [
     "SLOT_VOCABULARY",
     "SLOT_FILE_INVENTORY",
     "SLOT_REPO_ANALYSIS",
+    "SLOT_CLASSIFICATION",
+    "SLOT_COVERAGE_PLAN",
 ]
 
 # The eight canonical pipeline stages, constrained at the type level. The order
@@ -95,3 +97,17 @@ SLOT_FILE_INVENTORY: str = "docuharnessx.file_inventory"
 #: output seam the downstream ``classification-coverage-planner`` consumes
 #: (Req 7.1, 7.2).
 SLOT_REPO_ANALYSIS: str = "docuharnessx.repo_analysis"
+
+# --- classification-coverage-planner seam extension (task 4.1, append-only) --- #
+# Added by the ``classification-coverage-planner`` spec as an append-only extension
+# of this ``harness-bundle-skeleton``-owned module (Req 7.1, 7.5). No existing slot
+# key, ``StageName``, or ``STAGE_NAMES`` entry is modified.
+
+#: Slot key for the internal Classify -> Plan handoff (the ``Classification`` value
+#: object). The Classify stage writes it; the Plan stage reads it to materialize the
+#: ``CoveragePlan`` (design "types.py additions"; Req 7.1).
+SLOT_CLASSIFICATION: str = "docuharnessx.classification"
+
+#: Slot key for the frozen ``CoveragePlan`` the Plan stage produces — the output seam
+#: the downstream Wave 2 ``cobesy-writer`` consumes verbatim (Req 7.1, 7.2, 7.3).
+SLOT_COVERAGE_PLAN: str = "docuharnessx.coverage_plan"

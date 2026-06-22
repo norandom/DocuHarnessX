@@ -45,6 +45,8 @@ from typing import TYPE_CHECKING
 from harnessx.core.state import State
 
 from docuharnessx.types import (
+    SLOT_CLASSIFICATION,
+    SLOT_COVERAGE_PLAN,
     SLOT_FILE_INVENTORY,
     SLOT_OUTPUT_DIR,
     SLOT_REPO_ANALYSIS,
@@ -57,6 +59,9 @@ if TYPE_CHECKING:  # contract-level types — single re-export site (Req 6.3, 10
     from docuharnessx._ontology import SegmentStore, Vocabulary
     # The frozen output seam consumed by the downstream planner (Req 7.2, 7.3).
     from docuharnessx.analysis.model import RepoAnalysis
+    # classification-coverage-planner value objects: the internal Classify -> Plan
+    # handoff and the frozen output plan (planner spec Req 7.1-7.5).
+    from docuharnessx.planning.model import Classification, CoveragePlan
 
 __all__ = ["RunContext"]
 
@@ -68,6 +73,9 @@ _SLOT_TYPE_VOCABULARY = "vocabulary"
 # repo-ingestion-analysis seam extension (task 1.4, append-only).
 _SLOT_TYPE_FILE_INVENTORY = "file_inventory"
 _SLOT_TYPE_REPO_ANALYSIS = "repo_analysis"
+# classification-coverage-planner seam extension (task 4.1, append-only).
+_SLOT_TYPE_CLASSIFICATION = "classification"
+_SLOT_TYPE_COVERAGE_PLAN = "coverage_plan"
 
 
 class RunContext:
@@ -204,3 +212,46 @@ class RunContext:
         semantics (Req 6.5).
         """
         return self._get_content(SLOT_REPO_ANALYSIS)
+
+    # ----------------------------------------------------------------- #
+    # Classification handoff: Classify -> Plan (planner Req 7.1, 7.2)   #
+    # ----------------------------------------------------------------- #
+    # classification-coverage-planner seam extension (task 4.1, append-only). The
+    # internal handoff value the Classify stage publishes for the Plan stage to
+    # read (design "context.py additions"). Typed by the planning model under
+    # TYPE_CHECKING only, keeping the runtime import surface unchanged.
+
+    def set_classification(self, classification: "Classification") -> None:
+        """Record the :class:`Classification` handoff at ``SLOT_CLASSIFICATION``."""
+        self._state.set_slot(
+            SLOT_CLASSIFICATION, _SLOT_TYPE_CLASSIFICATION, classification
+        )
+
+    def classification(self) -> "Classification | None":
+        """The Classify -> Plan handoff, or ``None`` when the slot is unset.
+
+        Returns an explicit ``None`` before the Classify stage has published a
+        classification (Req 7.4), matching the other accessors' absent-slot
+        semantics (Req 6.5), so the Plan stage can branch on "not set yet".
+        """
+        return self._get_content(SLOT_CLASSIFICATION)
+
+    # ----------------------------------------------------------------- #
+    # CoveragePlan output seam (planner Req 7.1, 7.2, 7.3, 7.4)         #
+    # ----------------------------------------------------------------- #
+    # classification-coverage-planner seam extension (task 4.1, append-only). The
+    # frozen CoveragePlan the Plan stage writes is the output seam the downstream
+    # Wave 2 cobesy-writer consumes verbatim (design "context.py additions").
+
+    def set_coverage_plan(self, plan: "CoveragePlan") -> None:
+        """Record the produced :class:`CoveragePlan` at ``SLOT_COVERAGE_PLAN``."""
+        self._state.set_slot(SLOT_COVERAGE_PLAN, _SLOT_TYPE_COVERAGE_PLAN, plan)
+
+    def coverage_plan(self) -> "CoveragePlan | None":
+        """The produced :class:`CoveragePlan`, or ``None`` when the slot is unset.
+
+        Returns an explicit ``None`` when read before the Plan stage has run
+        (Req 7.4) rather than raising, matching the other accessors' absent-slot
+        semantics (Req 6.5).
+        """
+        return self._get_content(SLOT_COVERAGE_PLAN)

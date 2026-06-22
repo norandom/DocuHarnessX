@@ -57,7 +57,9 @@ from docuharnessx.analysis.scanner import FileInventory
 from docuharnessx.context import RunContext
 from docuharnessx.stages.analyze import AnalyzeStage, make_analyze_stage
 from docuharnessx.stages.base import STAGE_PARTICIPATION_ACTION
+from docuharnessx.stages.classify import ClassifyStage
 from docuharnessx.stages.ingest import IngestStage, make_ingest_stage
+from docuharnessx.stages.plan import PlanStage
 from docuharnessx.types import (
     SLOT_FILE_INVENTORY,
     SLOT_REPO_ANALYSIS,
@@ -476,7 +478,7 @@ def test_enrichment_disabled_sets_enriched_false_in_journal(tmp_path) -> None:
 
 
 # --------------------------------------------------------------------------- #
-# make_docgen still composes; canonical order preserved; six stages no-ops     #
+# make_docgen still composes; canonical order preserved; stub stages no-ops     #
 # (Req 8.1, 8.2)                                                               #
 # --------------------------------------------------------------------------- #
 
@@ -494,10 +496,11 @@ _CANONICAL_STAGE_CLASSES: tuple[str, ...] = (
     "DeployStage",
 )
 
-# The six stages that must remain untouched no-op stubs after this spec.
+# The stages that must remain untouched no-op stubs. ``classify`` and ``plan`` were
+# no-op stubs for repo-ingestion-analysis but are made real by
+# classification-coverage-planner (tasks 4.2 and 4.3), so they are no longer in this
+# set.
 _NOOP_STAGE_NAMES: tuple[str, ...] = (
-    "classify",
-    "plan",
     "write",
     "review",
     "assemble",
@@ -539,9 +542,10 @@ def test_make_docgen_still_composes_with_canonical_order_unchanged() -> None:
     )
 
 
-def test_six_other_stages_remain_pass_through_noops() -> None:
-    # The six stages this spec does not own must still be genuine pass-throughs:
-    # driving each yields the same content-free event unchanged (Req 8.2).
+def test_remaining_stub_stages_remain_pass_through_noops() -> None:
+    # The stages no spec yet owns must still be genuine pass-throughs: driving each
+    # yields the same content-free event unchanged (Req 8.2). ``classify`` left this
+    # set when classification-coverage-planner task 4.2 made it a real stage.
     event = _step_end_event("run-noop", 1)
 
     async def _collect(proc: Processor) -> list[Any]:
@@ -556,17 +560,23 @@ def test_six_other_stages_remain_pass_through_noops() -> None:
         assert out[0] is event, f"{stage_name} mutated/replaced the lifecycle event"
 
 
-def test_only_ingest_and_analyze_are_real_stages() -> None:
-    # Defensive: the two owned stages are the real processors; the other six remain
-    # the no-op base subclasses (they do no slot I/O), confirming the spec touched
-    # exactly two modules (design "Modified Files").
+def test_only_real_stages_override_on_step_end() -> None:
+    # Defensive: the real processors (Ingest/Analyze from repo-ingestion-analysis,
+    # Classify/Plan from classification-coverage-planner tasks 4.2/4.3) override
+    # on_step_end to do real slot I/O; the remaining stubs stay no-op base subclasses,
+    # confirming each spec touched exactly the stage modules it owns (design "Modified
+    # Files").
     from docuharnessx.stages.base import NoOpStage
 
     assert issubclass(IngestStage, NoOpStage)
     assert issubclass(AnalyzeStage, NoOpStage)
-    # The owned stages override on_step_end (real work); the six others do not.
+    assert issubclass(ClassifyStage, NoOpStage)
+    assert issubclass(PlanStage, NoOpStage)
+    # The real stages override on_step_end (real work); the remaining stubs do not.
     assert "on_step_end" in vars(IngestStage)
     assert "on_step_end" in vars(AnalyzeStage)
+    assert "on_step_end" in vars(ClassifyStage)
+    assert "on_step_end" in vars(PlanStage)
     for stage_name in _NOOP_STAGE_NAMES:
         module = importlib.import_module(f"docuharnessx.stages.{stage_name}")
         cls = getattr(module, f"{stage_name.capitalize()}Stage")
