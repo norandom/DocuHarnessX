@@ -233,6 +233,16 @@ def build_parser() -> argparse.ArgumentParser:
             "branch), or 'build-only' (build the static site, no publish)."
         ),
     )
+    run.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help=(
+            "Show detailed run logs (HarnessX pipeline events and LiteLLM model "
+            "calls). Off by default: only warnings, errors, and the run summary "
+            "are printed."
+        ),
+    )
 
     # init subcommand (dispatched in task 4.3).
     init = subparsers.add_parser(
@@ -255,6 +265,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--force",
         action="store_true",
         help="Overwrite an existing ontology file.",
+    )
+    init.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Show detailed logs (off by default).",
     )
 
     return parser
@@ -830,6 +846,59 @@ def _init_command(args: argparse.Namespace, *, input_fn: "Any" = None) -> int:
     return EXIT_OK
 
 
+def _configure_run_logging(verbose: bool) -> None:
+    """Set console log verbosity for a dispatched command.
+
+    Off by default (``WARNING``): only warnings, errors, and DocuHarnessX's own
+    ``print``-ed run summary reach the console — the HarnessX pipeline-event logs
+    and LiteLLM's debug firehose are suppressed. ``-v``/``--verbose`` raises the
+    level to ``INFO`` and stops silencing LiteLLM, restoring the detailed output.
+
+    Mirrors HarnessX's own CLI logging setup; a safe no-op when HarnessX is not
+    importable (the run path guards that separately via :func:`_require_harnessx`).
+    """
+    import logging as _logging
+
+    level = "INFO" if verbose else "WARNING"
+    try:
+        from harnessx.logging import configure_logging
+
+        configure_logging(level=level)
+    except ImportError:  # pragma: no cover - dependency guarded earlier
+        pass
+
+    # HarnessJournal echoes pipeline events (task_start / step_start /
+    # processor_trigger / …) via structlog, which is separate from loguru and from
+    # the JSONL trace file, and which HarnessX never configures (so it prints at
+    # INFO by default). Filter it here. The ``{run_id}_trace.jsonl`` file is written
+    # by direct file I/O (HarnessJournal._write_trace), so this only quiets the
+    # console echo, never the trace.
+    try:
+        import structlog
+
+        structlog.configure(
+            wrapper_class=structlog.make_filtering_bound_logger(
+                _logging.INFO if verbose else _logging.WARNING
+            )
+        )
+    except Exception:  # pragma: no cover - structlog optional / API drift
+        pass
+
+    if not verbose:
+        import warnings
+
+        _logging.getLogger("LiteLLM").setLevel(_logging.CRITICAL)
+        _logging.getLogger("litellm").setLevel(_logging.CRITICAL)
+        warnings.filterwarnings("ignore", category=UserWarning)
+        try:
+            import litellm
+
+            litellm.suppress_debug_info = True
+            litellm.set_verbose = False
+        except ImportError:  # pragma: no cover - litellm ships with harnessx
+            pass
+
+
 def main(
     argv: Sequence[str] | None = None,
     *,
@@ -877,6 +946,9 @@ def main(
     # A real command was requested — ensure the runtime dependency is present
     # and fail with an explicit, dependency-naming message if not (Req 1.4).
     _require_harnessx()
+
+    # Quiet third-party logging by default; -v/--verbose restores detail.
+    _configure_run_logging(getattr(args, "verbose", False))
 
     try:
         if args.command == "run":

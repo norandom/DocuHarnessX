@@ -89,6 +89,9 @@ The general form (a bare path defaults to the `run` pipeline):
 dhx <path-to-repo> --out <output-dir> [--config config.yaml] [--roles developer,manager] [--deploy-mode MODE]
 ```
 
+By default `dhx` prints only warnings, errors, and a one-line run summary. Add
+`-v` / `--verbose` to see the full HarnessX pipeline events and LiteLLM model calls.
+
 The pipeline runs eight stages: `ingest → analyze → classify → plan → write → review →
 assemble → deploy`. Output under `<output-dir>`:
 
