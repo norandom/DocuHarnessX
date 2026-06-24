@@ -36,7 +36,7 @@ from pathlib import Path
 import pytest
 
 from docuharnessx.assembler import writer as writer_mod
-from docuharnessx.assembler.mkdocs_config import TAGS_INDEX_PATH
+from docuharnessx.assembler.mkdocs_config import HOME_PAGE_PATH, TAGS_INDEX_PATH
 from docuharnessx.assembler.model import (
     ASSEMBLED_SITE_SCHEMA_VERSION,
     AssembledSite,
@@ -222,11 +222,11 @@ def test_one_page_per_accepted_segment(tmp_path: Path) -> None:
 def test_page_count_matches_accepted_count(tmp_path: Path) -> None:
     report = _seeded_report()
     site = assemble_site(report, default_profile(), None, str(tmp_path), _identity())
-    # Count only the per-segment pages (exclude role index pages + tags index).
+    # Count only the per-segment pages (exclude role index pages, the tags index, and the
+    # home landing page).
     docs = Path(site.docs_dir)
-    top_level_md = [
-        p for p in docs.glob("*.md") if p.name != TAGS_INDEX_PATH
-    ]
+    structural = {TAGS_INDEX_PATH, HOME_PAGE_PATH}
+    top_level_md = [p for p in docs.glob("*.md") if p.name not in structural]
     assert len(top_level_md) == len(report.accepted) == site.page_count
 
 

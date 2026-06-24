@@ -57,6 +57,7 @@ import asyncio
 import dataclasses
 import json
 import logging
+import os
 from typing import Any
 
 from docuharnessx.planning.model import CoveragePlan, PlannedSegment
@@ -68,10 +69,22 @@ __all__ = [
 
 _log = logging.getLogger(__name__)
 
-#: Default wall-clock budget for a single relevance model call. A model that does not
-#: answer within this many seconds is treated as a (logged, absorbed) timeout so the
-#: hook can never stall the run (Req 8.4).
-DEFAULT_RELEVANCE_TIMEOUT_S: float = 30.0
+
+def _timeout_from_env(name: str, default: float) -> float:
+    """Positive float seconds from environment variable *name*, else *default*."""
+    raw = os.environ.get(name, "").strip()
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return default
+    return value if value > 0 else default
+
+
+#: Default wall-clock budget for a single relevance model call. A model that does not answer
+#: within this many seconds is treated as a (logged, absorbed) timeout so the hook can never
+#: stall the run (Req 8.4). Sized generously for slow models; raisable/lowerable via
+#: ``DHX_RELEVANCE_TIMEOUT_S``.
+DEFAULT_RELEVANCE_TIMEOUT_S: float = _timeout_from_env("DHX_RELEVANCE_TIMEOUT_S", 120.0)
 
 #: A compact, model-agnostic instruction prompt. The model is shown only the existing
 #: segment keys (no file content) and is constrained to *reordering* them and adding

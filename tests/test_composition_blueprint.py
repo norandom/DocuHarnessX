@@ -220,8 +220,12 @@ def test_scqa_populated_and_tuned_to_role_and_intent() -> None:
     assert bp.scqa.complication.strip()
     assert bp.scqa.question.strip()
     assert bp.scqa.answer.strip()
-    # Tuned to the role label and the intent label.
-    assert "Curious Newcomer" in bp.scqa.situation
+    # The situation is subject-focused and role-free — never second-person "You are a <role>"
+    # (the role is metadata, not reader-facing prose). The role tunes the orientation chunk.
+    assert "You are" not in bp.scqa.situation
+    assert any(
+        "Curious Newcomer" in point for chunk in bp.chunks for point in chunk.points
+    )
     assert "Get Started" in bp.scqa.question or "Get Started" in bp.scqa.complication
 
 

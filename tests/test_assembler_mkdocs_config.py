@@ -109,8 +109,16 @@ _CUSTOM_ROLE_PAGES = (
 
 
 def _load(yaml_text: str) -> dict:
-    """Parse the emitted yaml. Must be valid loadable YAML."""
-    data = yaml.safe_load(yaml_text)
+    """Parse the emitted yaml. Must be valid loadable YAML.
+
+    The emitted config carries the Material Mermaid custom fence whose ``format`` is a
+    ``!!python/name:`` reference (task 4.1), which the YAML *safe* loader cannot construct.
+    Parse with the same full loader MkDocs itself uses so the seam is checked exactly as
+    MkDocs consumes it — the tag resolves to the real function object.
+    """
+    from mkdocs.utils.yaml import get_yaml_loader
+
+    data = yaml.load(yaml_text, Loader=get_yaml_loader())
     assert isinstance(data, dict)
     return data
 

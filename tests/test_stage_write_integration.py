@@ -360,45 +360,43 @@ def test_written_set_is_in_plan_order(tmp_path) -> None:
 # --------------------------------------------------------------------------- #
 
 
-def test_clean_model_response_is_used_as_body(tmp_path) -> None:
-    plan = _plan(_seeded_segments())
+def test_bound_model_without_repo_path_falls_back_through_live_run(tmp_path) -> None:
+    # The agentic writer (Wave 2.5, task 3.1) runs its per-segment agent ONLY when a model is
+    # bound AND the target-repository path resolves to a real directory. This live-run driver
+    # seeds no SLOT_TARGET_REPO (the agentic end-to-end path with a fixture repo + scripted
+    # provider lands in task 5.2), so the writer must NOT attempt a run: it renders the
+    # deterministic fallback for every segment without consulting the bound provider for prose
+    # (Req 2.6, 5.4, 6.3). The provider is still bound for the run loop's own turn.
     provider = _CleanProse()
+    plan = _plan(_seeded_segments())
     result = _drive_write_stage(
         plan, provider=provider, tmp_path=tmp_path
     )
 
-    # The bound provider is consulted by the writer's gated prose step once per planned
-    # segment (Req 5.1, a single bounded call per segment). The *same* provider also drives
-    # the run loop's own conversation turn AND the now-real downstream Review stage (Wave 2
-    # quality-review-gate, task 4.1), which fires on the same step_end over the writer's
-    # published SLOT_WRITTEN_SEGMENTS and judges each written segment with one bounded call
-    # of its own. So the total call count is the run-loop turn plus one writer call and one
-    # review-judge call per segment (2N+1) — neither stage adds an uncapped loop (Req 5.3).
-    assert provider.calls == 2 * len(plan.segments) + 1
-
-    # The model's clean body flows through to every stored Segment (Req 5.1, 5.4): the
-    # body is wired from the model, not the deterministic fallback.
+    # The writer never consulted the bound provider (no repo path => no agentic run), so the
+    # clean-prose body never reaches a stored Segment; every body is the deterministic
+    # fallback instead (Req 2.6, 5.4).
     stored = result.store.list_segments()
     assert len(stored) == len(plan.segments)
+    vocab = default_profile()
     for seg in stored:
-        assert seg.body == _CleanProse.BODY
-        assert seg.summary == _CleanProse.SUMMARY
+        assert validate_segment(seg, vocab).is_valid
+        assert seg.body.startswith("# ")  # the blueprint-title-led fallback body
+        assert seg.body != _CleanProse.BODY
 
-    # The bounded journal records the genuine-model provenance (Req 8.3).
-    assert result.write_trigger_detail()["prose_source"] == "model"
+    # The bounded journal records the model-less fallback provenance (Req 8.3): no agentic run
+    # was viable for any segment.
+    assert result.write_trigger_detail()["prose_source"] == "fallback"
 
 
-def test_fake_provider_falls_back_but_still_writes_valid_segments(tmp_path) -> None:
-    # A FakeProvider whose content is a structured JSON object with NO usable body drives
-    # the writer's gated prose step to None, so the deterministic fallback renders the body
-    # — yet there is still one valid stored Segment per planned segment, and the prose
-    # source is recorded as "fake" (a model WAS consulted) so the credential-free run is
-    # auditable (Req 5.4, 6.3, 8.3). The content is non-empty so the run loop reaches its
-    # clean terminal state in a single step (one ``step_end``, one Write trigger).
-    no_body = json.dumps({"summary": "a summary but no body field"})
+def test_no_repo_path_falls_back_but_still_writes_valid_segments(tmp_path) -> None:
+    # Even with a bound provider, a run with no target-repository path falls back
+    # deterministically for every segment and never crashes — there is still one valid stored
+    # Segment per planned segment (Req 2.6, 6.1). The content is non-empty so the run loop
+    # reaches its clean terminal state in a single step (one ``step_end``, one Write trigger).
     plan = _plan(_seeded_segments())
     result = _drive_write_stage(
-        plan, provider=FakeProvider(no_body), tmp_path=tmp_path
+        plan, provider=FakeProvider("done"), tmp_path=tmp_path
     )
 
     stored = result.store.list_segments()
@@ -409,7 +407,7 @@ def test_fake_provider_falls_back_but_still_writes_valid_segments(tmp_path) -> N
         # The deterministic fallback leads with a Markdown heading (the blueprint title).
         assert seg.body.startswith("# ")
 
-    assert result.write_trigger_detail()["prose_source"] == "fake"
+    assert result.write_trigger_detail()["prose_source"] == "fallback"
 
 
 # --------------------------------------------------------------------------- #
@@ -429,7 +427,9 @@ def test_journal_summary_is_bounded_and_carries_counts(tmp_path) -> None:
     assert detail["total_planned"] == len(plan.segments)
     assert detail["written_count"] == len(plan.segments)
     assert detail["flagged_count"] == 0
-    assert detail["prose_source"] == "model"
+    # No SLOT_TARGET_REPO is seeded by this driver, so no agentic run is viable and every
+    # segment uses the deterministic fallback (Req 2.6, 8.3).
+    assert detail["prose_source"] == "fallback"
 
     # The capped top-id list reflects the stored segments, in plan order, and stays
     # bounded (never the full set on a large plan).
@@ -437,9 +437,26 @@ def test_journal_summary_is_bounded_and_carries_counts(tmp_path) -> None:
     expected_ids = [s.id for s in written.segments]
     assert detail["top_written_ids"] == expected_ids[: len(detail["top_written_ids"])]
 
-    # The summary is scalar/bounded only — never a full segment body (Req 8.2).
+    # The bounded agentic aggregate is folded in alongside the existing summary fields
+    # (Req 8.2). No agentic run was viable (no target repo), so every per-segment run is a
+    # zeroed "no_model"/"invalid_repo" fallback with no steps or cost.
+    assert detail["agent_run_count"] == len(plan.segments)
+    assert detail["agent_written_count"] == 0
+    assert detail["agent_fallback_count"] == len(plan.segments)
+    assert detail["agent_total_steps"] == 0
+    assert detail["agent_total_cost_usd"] == 0.0
+    assert sum(detail["agent_exit_reasons"].values()) == len(plan.segments)
+
+    # The summary is scalar/bounded only — never a full segment body (Req 8.2): every value
+    # is a scalar, a short list of strings, or a scalar-valued dict (the exit-reason tally).
     for value in detail.values():
-        assert isinstance(value, (str, int, bool, list))
+        if isinstance(value, list):
+            assert all(isinstance(item, str) for item in value)
+        elif isinstance(value, dict):
+            assert all(isinstance(k, str) for k in value)
+            assert all(isinstance(v, int) for v in value.values())
+        else:
+            assert isinstance(value, (str, int, float, bool))
     flat = repr(detail)
     for seg in written.segments:
         assert seg.body not in flat

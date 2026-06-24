@@ -49,6 +49,7 @@ from __future__ import annotations
 import asyncio
 import dataclasses
 import logging
+import os
 from typing import Any
 
 from docuharnessx.analysis.model import Enrichment, RepoAnalysis
@@ -60,10 +61,22 @@ __all__ = [
 
 _log = logging.getLogger(__name__)
 
-#: Default wall-clock budget for a single enrichment model call. A model that does
-#: not answer within this many seconds is treated as a (logged, absorbed) timeout so
-#: enrichment can never stall the run (Req 9.5).
-DEFAULT_ENRICH_TIMEOUT_S: float = 30.0
+
+def _timeout_from_env(name: str, default: float) -> float:
+    """Positive float seconds from environment variable *name*, else *default*."""
+    raw = os.environ.get(name, "").strip()
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return default
+    return value if value > 0 else default
+
+
+#: Default wall-clock budget for a single enrichment model call. A model that does not answer
+#: within this many seconds is treated as a (logged, absorbed) timeout so enrichment can never
+#: stall the run (Req 9.5). Sized generously for slow models; raisable/lowerable via
+#: ``DHX_ENRICH_TIMEOUT_S``.
+DEFAULT_ENRICH_TIMEOUT_S: float = _timeout_from_env("DHX_ENRICH_TIMEOUT_S", 120.0)
 
 #: A compact, model-agnostic instruction prompt. The deterministic core is rendered
 #: into a small textual brief (no file bodies) so the model summarizes only what the

@@ -267,9 +267,13 @@ def _build_scqa(
     The ``answer`` echoes the Minto lead conclusion (``key_message``) so the body leads
     with the conclusion. All four moves are built only from vocabulary-derived labels.
     """
+    # The situation sets the scene around the SUBJECT, not the reader's role: the role is
+    # metadata that shapes what is written (and places the page in its role section), never
+    # second-person prose the reader has to read ("You are a <role>...") — a doc addresses its
+    # audience by being right for them, not by labelling them.
     return SCQAOpener(
         situation=(
-            f"You are {role_phrase} working with {subject_phrase}."
+            f"This page documents {subject_phrase}."
         ),
         complication=(
             f"Reaching the {intent_label} goal for {subject_phrase} is unclear "

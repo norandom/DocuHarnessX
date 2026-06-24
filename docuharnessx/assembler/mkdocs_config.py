@@ -22,7 +22,14 @@ with ``mkdocs build`` (Req 3.3, 6.1, 6.2, 6.4):
   index (Req 6.2). (The legacy ``tags_file`` option is deprecated in current
   ``mkdocs-material`` and aborts a ``--strict`` build, so it is intentionally not emitted.)
 * a deterministic ``nav`` — one entry per emitted role landing page (in the caller's order,
-  which the writer supplies in vocabulary role order) followed by the tags index (Req 6.1).
+  which the writer supplies in vocabulary role order) followed by the tags index (Req 6.1);
+* a minimal, idempotent ``markdown_extensions`` block enabling the Material
+  ``pymdownx.superfences`` custom fence for ``mermaid`` so the agentic writer's emitted
+  diagrams render (Req 10.1, 10.2). The fence ``format`` is a Python function reference, so
+  the configuration is serialized with :class:`_MkDocsYamlDumper` (a ``SafeDumper`` that
+  emits the ``!!python/name:`` tag MkDocs' full loader recognizes) rather than plain
+  ``yaml.safe_dump``; the dumper behaves identically to ``SafeDumper`` for every other value,
+  so all previously emitted keys stay byte-stable.
 
 The builder is **pure**: it derives the configuration only from its three arguments,
 performs no I/O, and emits byte-identical YAML for equal inputs (Req 8.2). It never injects
@@ -38,7 +45,10 @@ byte-stable, mirroring the YAML emission already used in
 
 from __future__ import annotations
 
+import types
+
 import yaml
+from pymdownx import superfences
 
 from docuharnessx.assembler.model import SiteIdentity
 from docuharnessx.ontology import Vocabulary
@@ -54,10 +64,70 @@ TAGS_INDEX_PATH: str = "tags.md"
 #: The human-facing nav title for the tags index entry.
 _TAGS_NAV_TITLE: str = "Tags"
 
+#: The docs-relative path of the site landing page (emitted by the writer). At the docs root
+#: so MkDocs serves it as the site home — ``index.md`` renders at the site's base path, giving
+#: the site a real entry point instead of a 404 (Req 6.1).
+HOME_PAGE_PATH: str = "index.md"
+
+#: The human-facing nav title for the home entry (first in the nav).
+HOME_NAV_TITLE: str = "Home"
+
 #: The Material theme features. ``navigation.tabs`` surfaces the top-level nav as tabs and
 #: ``content.tabs.link`` enables the linked content-tabs the role renderer can use for the
 #: role-switching affordance (design "mkdocs.yml builder"; Req 6.3, 6.4).
 _THEME_FEATURES: tuple[str, ...] = ("navigation.tabs", "content.tabs.link")
+
+
+class _MkDocsYamlDumper(yaml.SafeDumper):
+    """A ``SafeDumper`` that additionally emits Python-object references as ``!!python/name:``.
+
+    The Mermaid custom fence's ``format`` value is a Python function reference
+    (:func:`pymdownx.superfences.fence_code_format`), which MkDocs' own (full) YAML loader
+    constructs back into the function object. PyYAML's plain ``safe_dump`` cannot emit such a
+    tag, so this dumper adds a single representer for the function type that emits the
+    ``!!python/name:<module>.<qualname>`` tag — exactly the form the full loader recognizes
+    (Req 10.1). For every non-function value the dumper behaves identically to ``SafeDumper``,
+    so all previously emitted keys stay byte-stable (Req 10.2).
+    """
+
+
+def _represent_python_name(dumper: yaml.Dumper, data: types.FunctionType) -> yaml.Node:
+    """Represent a function as the ``!!python/name:<module>.<qualname>`` YAML tag.
+
+    Mirrors PyYAML's full ``Dumper`` representation of a Python name reference (an empty
+    scalar carrying the ``python/name`` tag), so MkDocs' full loader resolves it back to the
+    function object rather than treating it as a quoted string.
+    """
+    name = f"{data.__module__}.{data.__qualname__}"
+    return dumper.represent_scalar("tag:yaml.org,2002:python/name:" + name, "")
+
+
+_MkDocsYamlDumper.add_representer(types.FunctionType, _represent_python_name)
+
+
+def _markdown_extensions() -> list:
+    """Return the ``markdown_extensions`` block enabling the Mermaid custom fence (Req 10.1).
+
+    A single, fixed ``pymdownx.superfences`` entry registering a custom fence named
+    ``mermaid`` (class ``mermaid``) whose ``format`` is
+    :func:`pymdownx.superfences.fence_code_format` — emitted as the ``!!python/name:`` tag by
+    :class:`_MkDocsYamlDumper`. This is the minimal, idempotent addition needed for Material
+    to render fenced ```` ```mermaid ```` blocks as diagrams; it changes no other behavior
+    (Req 10.2). Order and content are fixed for byte-stability.
+    """
+    return [
+        {
+            "pymdownx.superfences": {
+                "custom_fences": [
+                    {
+                        "name": "mermaid",
+                        "class": "mermaid",
+                        "format": superfences.fence_code_format,
+                    }
+                ]
+            }
+        }
+    ]
 
 
 def _theme() -> dict:
@@ -82,14 +152,15 @@ def _plugins() -> list:
 
 
 def _nav(role_pages: tuple[tuple[str, str], ...]) -> list:
-    """Return the deterministic nav: each role landing page then the tags index (Req 6.1).
+    """Return the deterministic nav: the home page, each role landing page, then tags (Req 6.1).
 
     ``role_pages`` is ``(label, docs_relative_path)`` per emitted role landing page, in the
     caller's order (the writer supplies them in vocabulary role order). Each becomes a
     ``{label: path}`` nav entry, in that exact order; the tags index is appended last. The
     nav order is therefore a total, deterministic function of the caller's input.
     """
-    nav: list = [{label: path} for (label, path) in role_pages]
+    nav: list = [{HOME_NAV_TITLE: HOME_PAGE_PATH}]
+    nav.extend({label: path} for (label, path) in role_pages)
     nav.append({_TAGS_NAV_TITLE: TAGS_INDEX_PATH})
     return nav
 
@@ -149,8 +220,15 @@ def build_mkdocs_yaml(
     config["plugins"] = _plugins()
     config["nav"] = _nav(role_pages)
 
-    body = yaml.safe_dump(
+    # Mermaid rendering: a minimal, idempotent pymdownx.superfences custom fence so emitted
+    # fenced `mermaid` blocks render as diagrams in the Material site (Req 10.1, 10.2). The
+    # fence `format` is a Python function reference emitted via _MkDocsYamlDumper as the
+    # !!python/name: tag MkDocs' full loader recognizes; every other key is unchanged.
+    config["markdown_extensions"] = _markdown_extensions()
+
+    body = yaml.dump(
         config,
+        Dumper=_MkDocsYamlDumper,
         default_flow_style=False,
         sort_keys=False,
         allow_unicode=True,

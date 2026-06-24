@@ -1,0 +1,21 @@
+# Build manifest for the crafted agentic fixture repository.
+#
+# This makes the fixture read like a small but realistic Python project so the
+# scripted fake-agent provider can explore a believable repo. It is deliberately
+# self-contained and PORTABLE — it pins no machine-specific absolute path, so the
+# agentic writer's read-only workspace can be rooted at this directory on any
+# machine or in CI without the fixture changing. Keep the script-cited source
+# modules (app.py / engine.py / config.py) stable; do not move their symbols.
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentic-fixture-app"
+version = "0.1.0"
+description = "A tiny fixture app the scripted agentic writer reads and cites."
+requires-python = ">=3.12"
+
+[project.scripts]
+fixture-app = "app:main"

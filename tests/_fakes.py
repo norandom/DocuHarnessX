@@ -33,7 +33,7 @@ import sys
 from collections.abc import Sequence
 from typing import Any, AsyncIterator
 
-from harnessx.core.events import Event, Message, ModelResponseEvent, ToolSchema
+from harnessx.core.events import Event, Message, ModelResponseEvent, ToolCall, ToolSchema
 from harnessx.core.processor import Processor
 from harnessx.providers.base import BaseModelProvider
 
@@ -47,6 +47,10 @@ __all__ = [
     "make_replacement_stage",
     "RoutingFakeProvider",
     "PyMkdocsNoPushRunner",
+    "ScriptedAgentProvider",
+    "ScriptedReviewAgentProvider",
+    "SCRIPTED_AGENT_BODY",
+    "SCRIPTED_AGENT_READS",
 ]
 
 
@@ -162,6 +166,29 @@ def _message_text(messages: "Sequence[Any]") -> str:
         if content is not None:
             parts.append(str(content))
     return "\n".join(parts)
+
+
+#: The distinctive opening of the agentic writer's task description
+#: (:func:`docuharnessx.composition.task_prompt.build_agent_task`). Present in every
+#: writer-agentic sub-run prompt and in neither the review/judge prompt nor the top-level
+#: skeleton run-loop turn, so it is the routing signal that distinguishes a writer-agentic
+#: turn (the scripted read/grep-then-body script) from the bare run-loop turn (end immediately).
+_WRITER_AGENTIC_MARKER = (
+    "writing one documentation segment for a software repository by "
+    "exploring its real source code"
+)
+
+
+def _is_writer_agentic_prompt(messages: "Sequence[Any]") -> bool:
+    """Classify a ``complete`` request as an agentic-writer sub-run prompt.
+
+    The agentic Write stage runs a bounded HarnessX agent *per segment* whose task description
+    opens with :data:`_WRITER_AGENTIC_MARKER`. That marker is carried into every step of that
+    sub-run (it is the task's user message) and appears in no other request, so it reliably
+    separates a writer-agentic turn — which must be answered by the scripted read/grep script —
+    from the top-level skeleton run-loop turn, which must end immediately. Pure/deterministic.
+    """
+    return _WRITER_AGENTIC_MARKER in _message_text(messages)
 
 
 def _is_review_prompt(messages: "Sequence[Any]") -> bool:
@@ -314,4 +341,255 @@ class PyMkdocsNoPushRunner(DefaultCommandRunner):
             1
             for argv in self.commands
             if len(argv) >= 2 and argv[0] == "mkdocs" and argv[1] == "build"
+        )
+
+
+# --------------------------------------------------------------------------- #
+# ScriptedAgentProvider — drives the REAL HarnessX run loop offline            #
+# (agentic-codebase-writer task 1.2, Req 9.1, 9.2)                             #
+# --------------------------------------------------------------------------- #
+#
+# The Wave 2.5 ``agentic-codebase-writer`` replaces the writer's single-shot
+# ``model.complete(messages, tools=[])`` step with a bounded, per-segment HarnessX
+# AGENTIC run: the agent explores the target repository with the built-in
+# read/grep/glob/bash tools over a read-only ``Workspace`` rooted at the repo and emits a
+# grounded, ``file:line``-cited, Mermaid-diagrammed body (Req 3.x, 4.x). To keep that
+# whole path testable end to end with NO network and NO credentials (Req 9.1, 9.2), the
+# tests need a ``BaseModelProvider``-shaped fake whose ``complete`` returns a DETERMINISTIC
+# SCRIPT — a fixed sequence of tool-call turns (read/grep over the crafted fixture repo)
+# followed by a final end-turn grounded body — and that drives the REAL run loop:
+#
+#   • the run loop calls ``provider.complete(messages, tools)`` once per step;
+#   • a scripted tool-call turn makes the run loop execute the REAL ``Read``/``Grep`` tools
+#     against the fixture repo (real file reads occur), append the results as ``role=tool``
+#     messages, and call ``complete`` again for the next step; and
+#   • the final end-turn turn (``finish_reason="end_turn"``, no tool calls) ends the run
+#     with ``exit_reason="done"`` and ``final_output`` = the grounded body.
+#
+# Determinism comes from STATELESS turn selection: each ``complete`` call counts how many
+# of the provider's scripted tool-call turns are already present in ``messages`` (one
+# assistant message carrying tool_calls per consumed turn) and returns the NEXT turn — or
+# the final body once every scripted turn has been consumed. This mirrors how the run loop
+# itself advances (each step appends one assistant message then the tool results), so the
+# provider needs no internal step counter to stay correct across retries or re-entry.
+#
+# The fixture repo lives at ``tests/fixtures/agentic_repo`` (task 1.3): the scripted reads
+# target ``app.py``/``engine.py``/``config.py`` with paths RELATIVE to the workspace root,
+# which the read tool resolves through the active sandbox — so the SAME script works for any
+# repo path the harness is rooted at. The final body cites four real ``file:line`` sources
+# spanning THREE DISTINCT files, satisfying the structure gate's ``MIN_CITED_FILES`` (3)
+# and carrying one valid ``graph TD`` Mermaid fence, so it also reaches the review accept
+# path (Req 9.4, validated by later tasks).
+
+
+#: The scripted exploration turns, in order. Each entry is one *tool-call turn*: a tuple of
+#: ``(tool_name, tool_input)`` pairs the provider emits as a single assistant turn carrying
+#: HarnessX :class:`~harnessx.core.events.ToolCall` objects. The run loop executes these
+#: real builtin tools against the fixture repo. Paths are RELATIVE so the workspace sandbox
+#: resolves them against whatever root the harness is rooted at (the fixture repo in tests).
+SCRIPTED_AGENT_READS: tuple[tuple[tuple[str, dict], ...], ...] = (
+    # Turn 1 — read the planner's primary evidence file.
+    (("Read", {"file_path": "app.py"}),),
+    # Turn 2 — follow the import into the engine, and grep for the entry symbol so a real
+    #          Grep also executes (exercising both read and grep tools, Req 9.2).
+    (
+        ("Read", {"file_path": "engine.py"}),
+        ("Grep", {"pattern": "def load_config", "output_mode": "files_with_matches"}),
+    ),
+    # Turn 3 — read the configuration module the engine depends on.
+    (("Read", {"file_path": "config.py"}),),
+)
+
+
+#: The final grounded body the provider returns once every scripted tool-call turn has been
+#: consumed. Contains exactly one valid ``graph TD`` Mermaid fence (vertical, short nodes,
+#: valid arrows) and four ``file:line`` citations spanning THREE distinct fixture files
+#: (``app.py``, ``engine.py``, ``config.py``) — at/above ``MIN_CITED_FILES`` (3) — so it
+#: clears the deterministic structure gate and reaches the review accept path. The cited
+#: lines resolve to real fixture content (``app.py:11`` Application, ``app.py:17`` run,
+#: ``engine.py:16`` start, ``config.py:10`` load_config).
+SCRIPTED_AGENT_BODY: str = (
+    "# How the application starts\n\n"
+    "The entry point wires an `Application` (`app.py:11`) to the work engine: calling\n"
+    "`Application.run` (`app.py:17`) delegates straight to `Engine.start`\n"
+    "(`engine.py:16`), which first loads the run configuration via `load_config`\n"
+    "(`config.py:10`) and then drives one bounded work cycle.\n\n"
+    "```mermaid\n"
+    "graph TD\n"
+    "  App[Application] --> Run[run]\n"
+    "  Run --> Start[Engine.start]\n"
+    "  Start --> Cfg[load_config]\n"
+    "```\n\n"
+    "Start from `app.py`, follow the import into `engine.py`, then read `config.py`\n"
+    "to see the defaults the engine applies.\n"
+)
+
+
+class ScriptedAgentProvider(BaseModelProvider):
+    """A no-network provider that drives the real run loop with a fixed agentic script.
+
+    Subclasses :class:`BaseModelProvider` so it is a genuine provider (gains the
+    ``agentic`` mixin and passes ``isinstance`` checks) while overriding only the two
+    methods the run loop calls. Each :meth:`complete` returns, in order, one
+    :class:`~harnessx.core.events.ModelResponseEvent` per scripted tool-call turn (carrying
+    real :class:`~harnessx.core.events.ToolCall` objects, ``finish_reason="tool_use"``) and
+    then a final end-turn response whose ``content`` is :data:`SCRIPTED_AGENT_BODY` — a
+    grounded body with a valid Mermaid fence and ``file:line`` citations.
+
+    The next turn is chosen STATELESSLY from the conversation: it counts how many scripted
+    tool-call turns are already represented in ``messages`` (one assistant message with
+    ``tool_calls`` per consumed turn) and returns the following turn. This keeps the run
+    deterministic without an internal step counter, mirroring how the run loop advances. The
+    optional :attr:`complete_calls` and :attr:`read_paths` counters let tests assert the
+    script was actually exercised.
+    """
+
+    def __init__(
+        self,
+        reads: "Sequence[Sequence[tuple[str, dict]]] | None" = None,
+        body: str = SCRIPTED_AGENT_BODY,
+    ) -> None:
+        # Freeze the script into tuples so it cannot be mutated mid-run.
+        self._reads: tuple[tuple[tuple[str, dict], ...], ...] = tuple(
+            tuple(turn) for turn in (reads if reads is not None else SCRIPTED_AGENT_READS)
+        )
+        self._body = body
+        #: Number of ``complete`` calls the run loop made (one per step).
+        self.complete_calls = 0
+        #: Flattened list of file paths the scripted ``Read`` turns requested, in order,
+        #: so a test can assert which fixture files the real read tool was driven over.
+        self.read_paths: list[str] = [
+            call_input["file_path"]
+            for turn in self._reads
+            for (name, call_input) in turn
+            if name == "Read" and "file_path" in call_input
+        ]
+
+    async def complete(
+        self,
+        messages: "list[Message]",
+        tools: "list[ToolSchema]",
+        stream_callback: object | None = None,
+    ) -> ModelResponseEvent:
+        self.complete_calls += 1
+        # Count how many scripted tool-call turns are already consumed: each consumed turn
+        # left exactly one assistant message carrying tool_calls in the conversation.
+        consumed = sum(
+            1
+            for m in messages
+            if getattr(m, "role", None) == "assistant" and getattr(m, "tool_calls", ())
+        )
+        if consumed < len(self._reads):
+            turn = self._reads[consumed]
+            tool_calls = tuple(
+                ToolCall(id=f"scripted-{consumed}-{idx}", name=name, input=dict(call_input))
+                for idx, (name, call_input) in enumerate(turn)
+            )
+            return ModelResponseEvent(
+                run_id="scripted-agent-run",
+                step_id=consumed,
+                content="",
+                tool_calls=tool_calls,
+                finish_reason="tool_use",
+            )
+        # Every scripted exploration turn is done — emit the final grounded body and end.
+        return ModelResponseEvent(
+            run_id="scripted-agent-run",
+            step_id=consumed,
+            content=self._body,
+            finish_reason="end_turn",
+        )
+
+    def count_tokens(self, messages: "list[Message]") -> int:
+        return 1
+
+
+# --------------------------------------------------------------------------- #
+# ScriptedReviewAgentProvider — full credential-free pipeline (write + review)  #
+# (agentic-codebase-writer task 5.2, Req 9.2, 9.4)                             #
+# --------------------------------------------------------------------------- #
+#
+# Task 5.2 drives the FULL pipeline (Write -> Review -> Assemble -> build) over the crafted
+# fixture repo with NO network and NO credentials, and asserts the agentic writer reaches the
+# REVIEW ACCEPT path so the assembled site is non-empty (Req 9.2, 9.4). The pipeline binds ONE
+# model (``ModelConfig(main=provider)``), and BOTH the agentic Write stage and the single-shot
+# Review stage call ``provider.complete`` on it. So the e2e provider must answer two kinds of
+# request from one object:
+#
+#   • a WRITER-AGENTIC turn -> the deterministic scripted read/grep tool-call sequence then the
+#     final grounded body (exactly :class:`ScriptedAgentProvider`), driving the REAL run loop's
+#     real builtin tools over the read-only fixture workspace; and
+#   • a REVIEW/JUDGE prompt -> a passing per-criterion COBESY verdict the deterministic verdict
+#     parser accepts, so the gate ACCEPTS every written segment (Req 9.4).
+#
+# It routes by the SAME robust prompt-content signal :class:`RoutingFakeProvider` uses
+# (:func:`_is_review_prompt`): the judge request opens with the distinctive
+# :data:`_JUDGE_PROMPT_MARKER` phrase and lists the named COBESY criteria, whereas the
+# writer-agentic task carries neither — so a review prompt is recognized first and every other
+# ``complete`` call falls through to the scripted agentic turn selection.
+
+
+class ScriptedReviewAgentProvider(ScriptedAgentProvider):
+    """Drive the agentic Write loop AND the Review judge from one offline provider (task 5.2).
+
+    Subclasses :class:`ScriptedAgentProvider` (a genuine :class:`BaseModelProvider`) so the
+    bind ``ModelConfig(main=ScriptedReviewAgentProvider()).agentic(make_docgen(...))`` works
+    and the writer-agentic path is the inherited scripted read/grep-then-body script. It
+    overrides only :meth:`complete` to ROUTE by prompt content:
+
+    * a **review/judge prompt** (classified by :func:`_is_review_prompt`) -> a single end-turn
+      response whose ``content`` is a passing per-criterion COBESY verdict (every
+      :data:`~docuharnessx.review.COBESY_CRITERIA` criterion at/above threshold with an overall
+      pass), in the exact shape the deterministic verdict parser accepts — so the quality gate
+      ACCEPTS every written segment (Req 9.4); and
+    * any **other** prompt -> the inherited :class:`ScriptedAgentProvider` agentic turn (the
+      scripted tool-call sequence, then the grounded :data:`SCRIPTED_AGENT_BODY`).
+
+    Routing FIRST keeps the scripted tool-call turn-counting (which inspects the conversation's
+    assistant ``tool_calls`` messages) from ever seeing a review prompt — a review request is a
+    single-shot judgement (``tools == []``), never an agentic loop. No network, no credentials.
+    The :attr:`review_calls` counter lets a test assert the judge path was exercised.
+    """
+
+    def __init__(
+        self,
+        reads: "Sequence[Sequence[tuple[str, dict]]] | None" = None,
+        body: str = SCRIPTED_AGENT_BODY,
+    ) -> None:
+        super().__init__(reads=reads, body=body)
+        #: Number of review/judge ``complete`` calls routed to the passing-verdict path.
+        self.review_calls = 0
+
+    async def complete(
+        self,
+        messages: "list[Message]",
+        tools: "list[ToolSchema]",
+        stream_callback: object | None = None,
+    ) -> ModelResponseEvent:
+        # Route a review/judge request to the passing verdict FIRST (it is a single-shot call,
+        # never part of the agentic loop), so the scripted turn-counting only ever sees
+        # writer-agentic conversations.
+        if _is_review_prompt(messages):
+            self.review_calls += 1
+            self.complete_calls += 1
+            return ModelResponseEvent(
+                run_id="scripted-review-agent-run",
+                step_id=0,
+                content=RoutingFakeProvider._passing_verdict_json(),
+                finish_reason="end_turn",
+            )
+        # A writer-agentic sub-run turn (the per-segment bounded agent): defer to the inherited
+        # scripted read/grep-then-body script driving the real run loop's real tools.
+        if _is_writer_agentic_prompt(messages):
+            return await super().complete(messages, tools, stream_callback)
+        # Otherwise this is the top-level skeleton run-loop turn. The pipeline stages do their
+        # work as a side effect of the content-free step_end event, so the run loop's OWN turn
+        # has nothing to do — end it immediately in one step (so the stages fire exactly once),
+        # exactly like the bare FakeProvider.
+        self.complete_calls += 1
+        return ModelResponseEvent(
+            run_id="scripted-review-agent-run",
+            step_id=0,
+            content="done",
+            finish_reason="end_turn",
         )

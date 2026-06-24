@@ -51,6 +51,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 from typing import TYPE_CHECKING, Any
 
 from docuharnessx.review.parse import parse_verdict
@@ -66,12 +67,28 @@ __all__ = [
 
 _log = logging.getLogger(__name__)
 
+def _timeout_from_env(name: str, default: float) -> float:
+    """Positive float seconds from environment variable *name*, else *default*."""
+    raw = os.environ.get(name, "").strip()
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return default
+    return value if value > 0 else default
+
+
+def _judge_debug_enabled() -> bool:
+    """True when ``DHX_DEBUG_AGENT`` is set — log the raw judge reply on a parse failure."""
+    return os.environ.get("DHX_DEBUG_AGENT", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
 #: Default wall-clock budget for a single judge model call. A model that does not answer
-#: within this many seconds is treated as a (logged, absorbed) timeout so the judge step
-#: can never stall the run; the caller then applies the fail-closed default-reject (Req 5.3,
-#: 5.4). A per-segment judgement is a bounded single-shot scoring call (lighter than a prose
-#: generation), so the budget mirrors the planner's re-rank hook rather than prose.
-DEFAULT_JUDGE_TIMEOUT_S: float = 30.0
+#: within this many seconds is treated as a (logged, absorbed) timeout so the judge step can
+#: never stall the run; the caller then applies the fail-closed default-reject (Req 5.3, 5.4).
+#: The judge reads a full (now substantive, diagram-rich) segment body and emits a structured
+#: verdict, so on a slow model the call can run well past a few seconds — the default is sized
+#: generously and is raisable/lowerable via ``DHX_JUDGE_TIMEOUT_S`` for a particular endpoint.
+DEFAULT_JUDGE_TIMEOUT_S: float = _timeout_from_env("DHX_JUDGE_TIMEOUT_S", 120.0)
 
 
 def judge_segment(
@@ -142,10 +159,17 @@ def judge_segment(
     verdict = parse_verdict(content, criteria)
     if verdict is None:
         _log.warning(
-            "Judge response was empty or unparseable for segment %r; "
+            "Judge response was empty or unparseable for segment %r (content_chars=%d); "
             "treating the segment as unjudged (default-reject).",
             getattr(criteria, "segment_id", "?"),
+            len(content),
         )
+        if _judge_debug_enabled():
+            _log.warning(
+                "[DHX_DEBUG_AGENT] raw judge reply for %r:\n%s",
+                getattr(criteria, "segment_id", "?"),
+                content,
+            )
     return verdict
 
 

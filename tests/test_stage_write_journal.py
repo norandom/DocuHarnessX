@@ -15,7 +15,9 @@ a tiny capturing-tracer runtime stub bound via ``_bind_runtime`` (exactly like
 from __future__ import annotations
 
 import asyncio
+import shutil
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 from harnessx.core.events import ProcessorTriggerEvent, StepEndEvent, TaskStartEvent
@@ -32,6 +34,22 @@ from docuharnessx.planning import COVERAGE_PLAN_SCHEMA_VERSION, CoveragePlan
 from docuharnessx.planning.model import EvidenceRef, PlannedSegment
 from docuharnessx.stages.base import STAGE_PARTICIPATION_ACTION
 from docuharnessx.stages.write import STAGE_NAME, WriteStage
+
+from tests._fakes import FakeProvider, ScriptedAgentProvider
+
+_FIXTURE_REPO = Path(__file__).parent / "fixtures" / "agentic_repo"
+
+
+def _rooted_copy(tmp_path: Path) -> str:
+    """Copy the pristine fixture into *tmp_path* so a run can root there cleanly.
+
+    ``Harness.run`` writes a ``harness_config.yaml`` runtime snapshot into the workspace
+    root, so rooting at a throwaway copy keeps the committed fixture clean.
+    """
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    dest = tmp_path / "agentic_repo"
+    shutil.copytree(_FIXTURE_REPO, dest)
+    return str(dest)
 
 
 # --------------------------------------------------------------------------- #
@@ -58,27 +76,6 @@ class _RuntimeStub:
 class _ModelConfigStub:
     def __init__(self, main: Any) -> None:
         self.main = main
-
-
-class _RecordingModel:
-    """A duck-typed provider whose ``complete`` returns a canned content string."""
-
-    def __init__(self, content: Any) -> None:
-        self._content = content
-        self.calls = 0
-
-    async def complete(
-        self, messages: Any, tools: Any, stream_callback: Any = None
-    ) -> Any:
-        self.calls += 1
-
-        class _Resp:
-            content = self._content
-
-        return _Resp()
-
-    def count_tokens(self, messages: Any) -> int:
-        return 1
 
 
 def _sample_event() -> StepEndEvent:
@@ -180,6 +177,7 @@ def _state_with(
     plan: CoveragePlan,
     *,
     store: InMemorySegmentStore | None = None,
+    repo_path: str | None = None,
 ) -> tuple[State, InMemorySegmentStore]:
     vocab = default_profile()
     store = store if store is not None else InMemorySegmentStore(vocab)
@@ -188,6 +186,8 @@ def _state_with(
     rc.set_coverage_plan(plan)
     rc.set_vocabulary(vocab)
     rc.set_segment_store(store)
+    if repo_path is not None:
+        rc.set_target_repo(repo_path)
     return state, store
 
 
@@ -282,12 +282,134 @@ def test_journal_detail_carries_no_full_bodies() -> None:
     serialized = repr(detail)
     for body in bodies:
         assert body not in serialized
-    # No nested Segment/ProseResult objects leaked into the detail.
+    # No nested Segment/ProseResult objects leaked into the detail: every value is a scalar,
+    # a short list of strings, or a scalar-valued dict (the agentic aggregate's exit-reason
+    # tally), mirroring the Review stage's bounded ``judge_source`` breakdown.
     for value in detail.values():
         if isinstance(value, list):
             assert all(isinstance(item, str) for item in value)
+        elif isinstance(value, dict):
+            assert all(isinstance(k, str) for k in value)
+            assert all(isinstance(v, int) for v in value.values())
         else:
-            assert isinstance(value, (str, int, bool))
+            assert isinstance(value, (str, int, float, bool))
+
+
+# --------------------------------------------------------------------------- #
+# Bounded agentic telemetry aggregate (Req 8.1-8.3, task 3.2)                   #
+# --------------------------------------------------------------------------- #
+
+
+def _assert_agentic_aggregate_shape(detail: dict[str, Any]) -> None:
+    """The journal detail carries the bounded, scalar-only agentic aggregate (Req 8.2)."""
+    assert isinstance(detail["agent_run_count"], int)
+    assert isinstance(detail["agent_written_count"], int)
+    assert isinstance(detail["agent_fallback_count"], int)
+    assert isinstance(detail["agent_total_steps"], int)
+    assert isinstance(detail["agent_total_cost_usd"], float)
+    reasons = detail["agent_exit_reasons"]
+    assert isinstance(reasons, dict)
+    assert all(isinstance(k, str) for k in reasons)
+    assert all(isinstance(v, int) for v in reasons.values())
+    # accepted + fallback always partition the per-segment runs.
+    assert (
+        detail["agent_written_count"] + detail["agent_fallback_count"]
+        == detail["agent_run_count"]
+    )
+    # The exit-reason tally counts exactly one entry per per-segment run.
+    assert sum(reasons.values()) == detail["agent_run_count"]
+
+
+def test_journal_folds_agentic_aggregate_for_accepted_run(tmp_path) -> None:
+    # A model is bound AND the repo path is a real directory, so the bounded agent runs over
+    # the fixture repo and produces an accepted body. The journal detail folds the per-segment
+    # AgentRunStats into a bounded, scalar-only aggregate alongside the existing summary fields
+    # (Req 8.1, 8.2). Driven through the real run loop with the offline ScriptedAgentProvider.
+    plan = _plan(_valid_segments()[:1])
+    state, _store = _state_with(plan, repo_path=_rooted_copy(tmp_path))
+    tracer = _CapturingTracer()
+    stage = _bound_stage(state, tracer=tracer, model=ScriptedAgentProvider())
+
+    _drive(stage, _sample_event())
+
+    detail = _write_trigger(tracer).detail
+    # Existing summary fields are still present (extend, don't replace).
+    assert detail["stage"] == STAGE_NAME
+    assert detail["total_planned"] == 1
+    assert detail["written_count"] == 1
+    assert detail["prose_source"] == "model"
+    # The bounded agentic aggregate is folded in.
+    _assert_agentic_aggregate_shape(detail)
+    assert detail["agent_run_count"] == 1
+    assert detail["agent_written_count"] == 1
+    assert detail["agent_fallback_count"] == 0
+    # The accepted run ran real steps over the fixture repo at a measurable cost-tally shape.
+    assert detail["agent_total_steps"] > 0
+    assert detail["agent_total_cost_usd"] >= 0.0
+    # A clean end-turn over the scripted script exits "done".
+    assert detail["agent_exit_reasons"].get("done") == 1
+
+
+def test_journal_agentic_aggregate_is_zeroed_when_no_model() -> None:
+    # No model bound: no agentic run is attempted for any segment, so every per-segment run is
+    # recorded as a non-attempted "no_model" fallback with zero steps/cost (Req 5.4, 6.3, 8.2).
+    plan = _plan(_valid_segments())
+    state, _store = _state_with(plan)
+    tracer = _CapturingTracer()
+    stage = _bound_stage(state, tracer=tracer)  # no model bound at all
+
+    _drive(stage, _sample_event())
+
+    detail = _write_trigger(tracer).detail
+    _assert_agentic_aggregate_shape(detail)
+    assert detail["agent_run_count"] == len(plan.segments)
+    assert detail["agent_written_count"] == 0
+    assert detail["agent_fallback_count"] == len(plan.segments)
+    assert detail["agent_total_steps"] == 0
+    assert detail["agent_total_cost_usd"] == 0.0
+    assert detail["agent_exit_reasons"] == {"no_model": len(plan.segments)}
+
+
+def test_journal_agentic_aggregate_counts_fallback_for_unusable_body(tmp_path) -> None:
+    # A model is bound and the repo path is valid, so an agentic run IS attempted; the bound
+    # provider ends the turn immediately with a body that fails the structure gate, so the
+    # runner returns None and the segment falls back. The aggregate counts it as a fallback,
+    # not an agent-written segment (Req 6.1, 8.2).
+    plan = _plan(_valid_segments()[:1])
+    state, _store = _state_with(plan, repo_path=_rooted_copy(tmp_path))
+    tracer = _CapturingTracer()
+    stage = _bound_stage(
+        state, tracer=tracer, model=FakeProvider("Just prose, no mermaid, no citations.")
+    )
+
+    _drive(stage, _sample_event())
+
+    detail = _write_trigger(tracer).detail
+    _assert_agentic_aggregate_shape(detail)
+    assert detail["agent_run_count"] == 1
+    assert detail["agent_written_count"] == 0
+    assert detail["agent_fallback_count"] == 1
+    assert detail["prose_source"] == "fake"
+
+
+def test_journal_agentic_aggregate_empty_plan() -> None:
+    # An empty plan attempts no runs: the aggregate is present and fully zeroed with an empty
+    # exit-reason tally, alongside the existing zeroed summary fields (Req 6.4, 8.1, 8.2).
+    plan = _plan(())
+    state, _store = _state_with(plan)
+    tracer = _CapturingTracer()
+    stage = _bound_stage(state, tracer=tracer)
+
+    _drive(stage, _sample_event())
+
+    detail = _write_trigger(tracer).detail
+    _assert_agentic_aggregate_shape(detail)
+    assert detail["agent_run_count"] == 0
+    assert detail["agent_written_count"] == 0
+    assert detail["agent_fallback_count"] == 0
+    assert detail["agent_total_steps"] == 0
+    assert detail["agent_total_cost_usd"] == 0.0
+    assert detail["agent_exit_reasons"] == {}
 
 
 # --------------------------------------------------------------------------- #
@@ -306,26 +428,32 @@ def test_prose_source_marker_is_fallback_when_no_model() -> None:
     assert _write_trigger(tracer).detail["prose_source"] == "fallback"
 
 
-def test_prose_source_marker_is_model_for_clean_response() -> None:
-    plan = _plan(_valid_segments())
-    state, _store = _state_with(plan)
+def test_prose_source_marker_is_model_for_accepted_agent_body(tmp_path) -> None:
+    # A model is bound AND the target-repository path resolves to a real directory, so the
+    # bounded agent runs over the fixture repo and produces a body that clears the structure
+    # gate -> the run-level marker is "model" (Req 8.3). Driven through the real run loop with
+    # the offline ScriptedAgentProvider (no network, no credentials).
+    plan = _plan(_valid_segments()[:1])
+    state, _store = _state_with(plan, repo_path=_rooted_copy(tmp_path))
     tracer = _CapturingTracer()
-    model = _RecordingModel("# A real body\n\nGenerated prose from the model.")
-    stage = _bound_stage(state, tracer=tracer, model=model)
+    stage = _bound_stage(state, tracer=tracer, model=ScriptedAgentProvider())
 
     _drive(stage, _sample_event())
 
     assert _write_trigger(tracer).detail["prose_source"] == "model"
 
 
-def test_prose_source_marker_is_fake_when_model_response_unusable() -> None:
-    plan = _plan(_valid_segments())
-    state, _store = _state_with(plan)
+def test_prose_source_marker_is_fake_when_agent_body_unusable(tmp_path) -> None:
+    plan = _plan(_valid_segments()[:1])
+    state, _store = _state_with(plan, repo_path=_rooted_copy(tmp_path))
     tracer = _CapturingTracer()
-    # A bound model whose response is empty -> generate_prose returns None -> the
-    # deterministic fallback renders with source="fake" (a model *was* consulted).
-    model = _RecordingModel("   \n  ")
-    stage = _bound_stage(state, tracer=tracer, model=model)
+    # A model is bound and the repo path is valid, so an agentic run IS attempted; the bound
+    # provider ends the turn immediately with a body that fails the structure gate (no Mermaid,
+    # no citations), so the runner returns None and the deterministic fallback renders with
+    # source="fake" (a run *was* attempted).
+    stage = _bound_stage(
+        state, tracer=tracer, model=FakeProvider("Just prose, no mermaid, no citations.")
+    )
 
     _drive(stage, _sample_event())
 

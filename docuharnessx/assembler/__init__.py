@@ -44,6 +44,7 @@ from docuharnessx.assembler.model import (
     AssemblerInputError,
     SiteIdentity,
 )
+from docuharnessx.assembler.home import HOME_PAGE_PATH, render_home_page
 from docuharnessx.assembler.identity import read_origin_remote, resolve_site_identity
 from docuharnessx.assembler.mkdocs_config import TAGS_INDEX_PATH, build_mkdocs_yaml
 from docuharnessx.assembler.pages import page_filename, render_segment_page
@@ -69,6 +70,9 @@ __all__ = [
     # mkdocs.yml builder (task 3.3)
     "build_mkdocs_yaml",
     "TAGS_INDEX_PATH",
+    # site home landing page
+    "render_home_page",
+    "HOME_PAGE_PATH",
     # site writer (task 4.1)
     "assemble_site",
 ]

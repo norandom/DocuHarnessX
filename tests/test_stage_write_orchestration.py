@@ -279,11 +279,15 @@ def test_written_segments_in_plan_order() -> None:
 
 
 # --------------------------------------------------------------------------- #
-# Gated prose: model vs fallback vs fake provenance (Req 5.1, 5.4, 8.3)         #
+# Agentic prose: no repo path => deterministic fallback, no run (Req 2.6, 5.4)  #
 # --------------------------------------------------------------------------- #
 
 
-def test_bound_model_clean_response_is_used_as_body() -> None:
+def test_bound_model_without_repo_path_falls_back_without_a_run() -> None:
+    # The agentic writer (task 3.1) runs the per-segment agent ONLY when a model is bound AND
+    # the target-repository path resolves to a real directory. Here a model is bound but no
+    # SLOT_TARGET_REPO is seeded, so the stage must NOT attempt a run: it renders the
+    # deterministic fallback for the segment and never consults the bound model (Req 2.6, 5.4).
     plan = _plan(_valid_segments()[:1])
     state, store = _state_with(plan)
     model = _RecordingModel("# A real body\n\nGenerated prose from the model.")
@@ -291,10 +295,12 @@ def test_bound_model_clean_response_is_used_as_body() -> None:
 
     _drive(stage, _sample_event())
 
-    assert model.calls == len(plan.segments)  # exactly one call per segment
+    assert model.calls == 0  # no agentic run attempted without a repo path
     stored = store.list_segments()
     assert len(stored) == 1
-    assert "Generated prose from the model." in stored[0].body
+    # The deterministic fallback body (leads with the blueprint title), not the model's text.
+    assert stored[0].body.startswith("# ")
+    assert "Generated prose from the model." not in stored[0].body
 
 
 def test_none_model_falls_back_deterministically() -> None:

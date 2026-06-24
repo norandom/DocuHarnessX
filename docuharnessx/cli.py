@@ -68,6 +68,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import logging
 import os
 import sys
 from collections.abc import Sequence
@@ -336,15 +337,33 @@ class RunOutcome:
 _DEFAULT_OUT_RELPATH = os.path.join(".docuharnessx", "out")
 
 #: The skeleton's minimal run task description. The empty pipeline performs no real
-#: documentation work yet (every stage is a no-op stub), so the task is a single
-#: placeholder turn that drives the run loop once to prove the wiring end to end.
+def _env_int_default(name: str, default: int) -> int:
+    """Positive integer from environment variable *name*, else *default*."""
+    raw = os.environ.get(name, "").strip()
+    if raw.isdigit() and int(raw) > 0:
+        return int(raw)
+    return default
+
+
+#: The single user turn that drives the pipeline. The eight stages do all the work as
+#: processors firing on ``on_step_end``, so the model itself must do **nothing** and end its
+#: turn immediately: every extra model step re-fires the whole expensive pipeline (the
+#: agentic writer + the per-segment judges run again) and risks ``budget_exceeded`` before a
+#: clean ``done``. The instruction is therefore explicit — take no action, call no tools,
+#: answer in one word — so an agentic model does not treat "drive the pipeline" as a task and
+#: rabbit-hole on the ``todo_write`` tool the Control bundle exposes.
 _SKELETON_TASK_DESCRIPTION = (
-    "DocuHarnessX skeleton run: drive the empty documentation pipeline once."
+    "DocuHarnessX runs its entire documentation pipeline automatically through background "
+    "processors that execute the moment this turn ends. You do not need to do anything, and "
+    "you must NOT call any tools or write any todos. Reply with exactly the single word "
+    "DONE and nothing else."
 )
 
-#: Default per-run step budget for the skeleton task. The no-op pipeline completes
-#: in a single model turn; this is a small ceiling so a degenerate run cannot spin.
-_SKELETON_MAX_STEPS = 4
+#: Default per-run step budget for the skeleton task. The pipeline completes in a single
+#: model turn (the stages run on that turn's ``on_step_end``); this is a small ceiling so a
+#: degenerate, tool-looping run cannot spin and re-run the pipeline. Overridable via
+#: ``DHX_MAX_STEPS`` (or ``--config`` ``max_steps``) for a model that needs more turns.
+_SKELETON_MAX_STEPS = _env_int_default("DHX_MAX_STEPS", 4)
 
 #: Process exit code on a clean run (exit_reason 'done').
 EXIT_OK: int = 0
@@ -846,6 +865,47 @@ def _init_command(args: argparse.Namespace, *, input_fn: "Any" = None) -> int:
     return EXIT_OK
 
 
+class _DropHarnessSerializationNoise(logging.Filter):
+    """Drop the benign ``tool has no recorded __hx_target__`` serialization warning.
+
+    HarnessX warns (``harnessx.core.harness``, WARNING) when a tool registered as a
+    closure — e.g. the control bundle's ``todo_write`` — is serialized name-only,
+    because it would not survive a YAML config *round-trip*. The agentic writer builds
+    one bounded harness per segment and uses a ``NullTracer``: it never serializes or
+    round-trips its config, so the warning is pure noise that would otherwise print
+    once per segment. This filter drops *only* that message; every other
+    ``harnessx.core.harness`` warning passes through untouched.
+    """
+
+    _NEEDLE = "has no recorded __hx_target__"
+
+    def filter(self, record: logging.LogRecord) -> bool:  # True = keep, False = drop
+        return self._NEEDLE not in record.getMessage()
+
+
+class _DropEventLoopClosedNoise(logging.Filter):
+    """Drop the benign httpx ``Event loop is closed`` teardown error from ``asyncio``.
+
+    DocuHarnessX drives each per-segment writer agent (``composition.agent``) and each
+    review-gate judge call (``review.judge``) via ``asyncio.run()`` on a short-lived loop.
+    HarnessX's OpenAI provider creates a fresh ``AsyncOpenAI`` (httpx) client per call and
+    never closes it; the client's connection cleanup is scheduled asynchronously and can
+    fire *after* that loop has already closed, which asyncio reports as
+    ``Task exception was never retrieved`` with a ``RuntimeError('Event loop is closed')``.
+    The request already completed and its result was used, so this is pure teardown noise
+    (one scary multi-line traceback per call). This filter drops *only* that case; every
+    other ``asyncio`` error passes through untouched.
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:  # True = keep, False = drop
+        text = record.getMessage()
+        exc = record.exc_info[1] if record.exc_info else None
+        loop_closed = (
+            isinstance(exc, RuntimeError) and "Event loop is closed" in str(exc)
+        ) or "Event loop is closed" in text
+        return not ("Task exception was never retrieved" in text and loop_closed)
+
+
 def _configure_run_logging(verbose: bool) -> None:
     """Set console log verbosity for a dispatched command.
 
@@ -883,6 +943,24 @@ def _configure_run_logging(verbose: bool) -> None:
         )
     except Exception:  # pragma: no cover - structlog optional / API drift
         pass
+
+    # Always suppress the benign per-segment ``todo_write`` serialization warning
+    # (noise even in verbose mode; we never round-trip the harness config). Installed
+    # idempotently so repeated dispatches do not stack duplicate filters.
+    _hx_harness_log = _logging.getLogger("harnessx.core.harness")
+    if not any(
+        isinstance(f, _DropHarnessSerializationNoise) for f in _hx_harness_log.filters
+    ):
+        _hx_harness_log.addFilter(_DropHarnessSerializationNoise())
+
+    # Always suppress the benign "Event loop is closed" httpx teardown traceback that the
+    # per-call ``asyncio.run`` of the writer agent and the review judge can emit (the call
+    # already returned its result). Installed idempotently on the asyncio logger.
+    _asyncio_log = _logging.getLogger("asyncio")
+    if not any(
+        isinstance(f, _DropEventLoopClosedNoise) for f in _asyncio_log.filters
+    ):
+        _asyncio_log.addFilter(_DropEventLoopClosedNoise())
 
     if not verbose:
         import warnings

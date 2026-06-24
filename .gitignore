@@ -25,3 +25,6 @@ htmlcov/
 # DocuHarnessX generated output
 /site/
 /_docs_out/
+
+# DocuHarnessX generated per-project ontology config (written by `dhx init`)
+.docuharnessx/

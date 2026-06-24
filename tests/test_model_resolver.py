@@ -8,8 +8,9 @@ its observable contract (design "ModelResolver"; Req 3.2, 3.3, 3.4):
 * When no model id is configured, fall back to the provider **environment
   variables** following HarnessX conventions (Req 3.3): ``ANTHROPIC_API_KEY`` /
   ``ANTHROPIC_DEFAULT_MAIN_MODEL`` → AnthropicProvider; ``OPENAI_API_KEY`` /
-  ``OPENAI_DEFAULT_MAIN_MODEL`` → LiteLLMProvider; ``LITELLM_API_KEY`` /
-  ``LITELLM_DEFAULT_MAIN_MODEL`` → LiteLLMProvider.
+  ``OPENAI_DEFAULT_MAIN_MODEL`` → native OpenAIProvider (agentic tool-calling
+  safe — LiteLLM's path sends null tool-call content that OpenAI rejects);
+  ``LITELLM_API_KEY`` / ``LITELLM_DEFAULT_MAIN_MODEL`` → LiteLLMProvider.
 * Raise :class:`docuharnessx.errors.ModelResolutionError` with an explicit
   message when neither config nor env yields a model (Req 3.4).
 
@@ -38,6 +39,7 @@ PROVIDER_ENV_VARS = (
     "OPENAI_API_KEY",
     "OPENAI_DEFAULT_MAIN_MODEL",
     "OPENAI_API_BASE",
+    "OPENAI_MAX_TOKENS",
     "LITELLM_API_KEY",
     "LITELLM_DEFAULT_MAIN_MODEL",
     "LITELLM_API_BASE",
@@ -117,42 +119,101 @@ def test_config_wins_over_env(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 # --------------------------------------------------------------------------- #
-# OpenAI-key models route through LiteLLM's openai/ provider prefix
-# (regression: LiteLLM cannot infer the provider for unrecognised ids, e.g.
-# a newly released gpt-5.5, and errors "LLM Provider NOT provided")
+# OpenAI-key models route to the NATIVE OpenAIProvider, not LiteLLM.
+#
+# Regression (production): the agentic writer fell back to deterministic
+# boilerplate on every segment because LiteLLM's provider sends an assistant
+# tool-call turn with content=null and has no tool-call/result pairing repair, so
+# OpenAI rejects the next turn ("Invalid value for 'content': expected a string,
+# got null") and the multi-turn tool loop dies. The native OpenAIProvider coerces
+# empty content to "" and runs _fix_tool_call_pairing, so it survives the loop.
+# These tests pin the routing decision (no network call is made).
 # --------------------------------------------------------------------------- #
 
 
-def test_openai_env_bare_model_gets_openai_prefix(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_openai_env_builds_native_openai_provider(monkeypatch: pytest.MonkeyPatch) -> None:
     from harnessx.providers.litellm_provider import LiteLLMProvider
+    from harnessx.providers.openai_provider import OpenAIProvider
 
     monkeypatch.setenv("OPENAI_API_KEY", "sk-env")
     monkeypatch.setenv("OPENAI_DEFAULT_MAIN_MODEL", "gpt-5.5")
 
     mc = _resolver().resolve_model(None)
-    assert isinstance(mc.main, LiteLLMProvider)
-    assert mc.main.model == "openai/gpt-5.5"
+    assert isinstance(mc.main, OpenAIProvider)
+    assert not isinstance(mc.main, LiteLLMProvider)
+    # Bare id straight to the OpenAI SDK (no litellm "openai/" routing prefix).
+    assert mc.main.model == "gpt-5.5"
+    assert mc.main.api_key == "sk-env"
+    # A concrete integer max_tokens (never null) — newer models reject null.
+    assert isinstance(mc.main.max_tokens, int) and mc.main.max_tokens > 0
 
 
-def test_openai_env_default_model_gets_openai_prefix(monkeypatch: pytest.MonkeyPatch) -> None:
-    from harnessx.providers.litellm_provider import LiteLLMProvider
+def test_openai_max_tokens_is_env_overridable(monkeypatch: pytest.MonkeyPatch) -> None:
+    from harnessx.providers.openai_provider import OpenAIProvider
+
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-env")
+    monkeypatch.setenv("OPENAI_MAX_TOKENS", "32000")
+
+    mc = _resolver().resolve_model(None)
+    assert isinstance(mc.main, OpenAIProvider)
+    assert mc.main.max_tokens == 32000
+
+
+def test_openai_compatible_endpoint_routes_native_with_base_url(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A non-OpenAI-shaped id (e.g. MiMo) on an OpenAI-compatible endpoint uses the
+    native provider with the custom base URL — so its tool-call loop is handled
+    correctly instead of falling back to LiteLLM."""
+    from harnessx.providers.openai_provider import OpenAIProvider
+
+    base = "https://token-plan-ams.xiaomimimo.com/v1"
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-mimo")
+    monkeypatch.setenv("OPENAI_API_BASE", base)
+
+    # Via --model / config.
+    mc = _resolver().resolve_model("mimo-v2.5-pro")
+    assert isinstance(mc.main, OpenAIProvider)
+    assert mc.main.model == "mimo-v2.5-pro"
+    assert mc.main.base_url == base
+
+    # And via the env default-model path.
+    monkeypatch.setenv("OPENAI_DEFAULT_MAIN_MODEL", "mimo-v2.5-pro")
+    mc_env = _resolver().resolve_model(None)
+    assert isinstance(mc_env.main, OpenAIProvider)
+    assert mc_env.main.model == "mimo-v2.5-pro"
+    assert mc_env.main.base_url == base
+
+
+def test_openai_env_default_model_is_native(monkeypatch: pytest.MonkeyPatch) -> None:
+    from harnessx.providers.openai_provider import OpenAIProvider
 
     monkeypatch.setenv("OPENAI_API_KEY", "sk-env")  # no explicit model -> default
 
     mc = _resolver().resolve_model(None)
-    assert isinstance(mc.main, LiteLLMProvider)
-    assert mc.main.model == "openai/gpt-4o"
+    assert isinstance(mc.main, OpenAIProvider)
+    assert mc.main.model == "gpt-4o"
 
 
-def test_openai_env_provider_qualified_model_is_not_double_prefixed(monkeypatch: pytest.MonkeyPatch) -> None:
-    from harnessx.providers.litellm_provider import LiteLLMProvider
+def test_openai_env_provider_qualified_model_is_stripped_for_native(monkeypatch: pytest.MonkeyPatch) -> None:
+    from harnessx.providers.openai_provider import OpenAIProvider
 
     monkeypatch.setenv("OPENAI_API_KEY", "sk-env")
     monkeypatch.setenv("OPENAI_DEFAULT_MAIN_MODEL", "openai/gpt-5.5")
 
     mc = _resolver().resolve_model(None)
-    assert isinstance(mc.main, LiteLLMProvider)
-    assert mc.main.model == "openai/gpt-5.5"
+    assert isinstance(mc.main, OpenAIProvider)
+    # The native provider wants the bare id; the litellm "openai/" prefix is stripped.
+    assert mc.main.model == "gpt-5.5"
+
+
+def test_config_openai_model_with_key_builds_native_provider(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A configured OpenAI id + an OpenAI key uses the native provider too."""
+    from harnessx.providers.openai_provider import OpenAIProvider
+
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-cfg")
+    mc = _resolver().resolve_model("gpt-5.5")
+    assert isinstance(mc.main, OpenAIProvider)
+    assert mc.main.model == "gpt-5.5"
+    assert mc.main.api_key == "sk-cfg"
 
 
 def test_as_openai_route_helper() -> None:
@@ -197,17 +258,17 @@ def test_env_anthropic_key_only_uses_default_model(monkeypatch: pytest.MonkeyPat
     assert mc.main.model  # some non-empty default
 
 
-def test_env_openai_fallback_builds_litellm(monkeypatch: pytest.MonkeyPatch) -> None:
-    from harnessx.providers.litellm_provider import LiteLLMProvider
+def test_env_openai_fallback_builds_native_openai(monkeypatch: pytest.MonkeyPatch) -> None:
+    from harnessx.providers.openai_provider import OpenAIProvider
 
     monkeypatch.setenv("OPENAI_API_KEY", "sk-openai")
     monkeypatch.setenv("OPENAI_DEFAULT_MAIN_MODEL", "gpt-4o")
 
     mc = _resolver().resolve_model(None)
-    assert isinstance(mc.main, LiteLLMProvider)
-    # OpenAI-key models are routed through LiteLLM's openai/ provider prefix so
-    # ids LiteLLM doesn't recognise (e.g. gpt-5.5) still route to OpenAI.
-    assert mc.main.model == "openai/gpt-4o"
+    # OpenAI-key models use the native provider (not LiteLLM) so the agentic
+    # writer's multi-turn tool loop survives OpenAI's strict content/pairing rules.
+    assert isinstance(mc.main, OpenAIProvider)
+    assert mc.main.model == "gpt-4o"
 
 
 def test_env_litellm_fallback_builds_litellm(monkeypatch: pytest.MonkeyPatch) -> None:

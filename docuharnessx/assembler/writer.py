@@ -52,6 +52,7 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from docuharnessx.assembler.home import HOME_PAGE_PATH, render_home_page
 from docuharnessx.assembler.mkdocs_config import TAGS_INDEX_PATH, build_mkdocs_yaml
 from docuharnessx.assembler.model import (
     ASSEMBLED_SITE_SCHEMA_VERSION,
@@ -206,6 +207,11 @@ def assemble_site(
 
     # Step 4: the tags index page (the listing directive the tags plugin discovers).
     _write_text(docs_dir / TAGS_INDEX_PATH, _TAGS_INDEX_CONTENT)
+
+    # Step 4b: the home landing page at the docs root, so the site has a real entry point
+    # (``index.md`` renders at the base path instead of a 404). It indexes the same emitted
+    # role pages the nav carries, in the same order.
+    _write_text(docs_dir / HOME_PAGE_PATH, render_home_page(identity, role_pages))
 
     # Step 5: the mkdocs.yml (Material theme + tags plugin + per-target identity + nav).
     mkdocs_yml = build_mkdocs_yaml(identity, role_pages, vocab)

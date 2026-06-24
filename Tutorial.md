@@ -62,12 +62,57 @@ Two things to know:
 | Provider | API key | Optional model override | Routed through |
 |---|---|---|---|
 | Anthropic | `ANTHROPIC_API_KEY` | `ANTHROPIC_DEFAULT_MAIN_MODEL` | Anthropic SDK |
-| OpenAI | `OPENAI_API_KEY` | `OPENAI_DEFAULT_MAIN_MODEL` | LiteLLM |
+| OpenAI | `OPENAI_API_KEY` | `OPENAI_DEFAULT_MAIN_MODEL` | OpenAI SDK (native) |
 | LiteLLM | `LITELLM_API_KEY` | `LITELLM_DEFAULT_MAIN_MODEL` | LiteLLM |
 
-Anthropic model ids (`claude-*`, `anthropic/*`) use the Anthropic provider; everything
-else goes through LiteLLM. You can also set the model in a `--config` YAML instead of
-the environment.
+Anthropic model ids (`claude-*`, `anthropic/*`) use the Anthropic provider; OpenAI ids
+(`gpt-*`, `o1`/`o3`/`o4`, `openai/*`) with an `OPENAI_API_KEY` use the **native OpenAI
+provider** (required for the agentic writer's multi-turn tool-calling — the generic
+LiteLLM path mishandles tool-call message content with OpenAI); everything else goes
+through LiteLLM. You can also set the model in a `--config` YAML instead of the
+environment.
+
+### OpenAI-compatible endpoints (MiMo, vLLM, proxies)
+
+Any OpenAI-compatible API works through the same native provider — just point
+`OPENAI_API_BASE` at it. When `OPENAI_API_BASE` is set, the model id is routed to the
+native OpenAI provider even if it isn't a `gpt-*` name (so the tool-calling loop is
+handled correctly). Example, MiMo:
+
+```bash
+export OPENAI_API_KEY=<your-mimo-key>
+export OPENAI_API_BASE=https://token-plan-ams.xiaomimimo.com/v1
+export OPENAI_DEFAULT_MAIN_MODEL=mimo-v2.5-pro
+unset ANTHROPIC_API_KEY    # else Anthropic wins the resolver order
+```
+
+The provider sends a concrete integer `max_tokens` (default 16384; raise it with
+`export OPENAI_MAX_TOKENS=32000` if long, diagram-rich pages get truncated) — these
+endpoints reject a null `max_tokens`.
+
+### Tuning the agentic writer
+
+Each documentation segment is written by a bounded HarnessX agent that explores the repo
+through read/grep tools, then writes a Mermaid-diagrammed, `file:line`-cited body. If you
+see `rejected by the structure gate … exit=budget_exceeded` in the logs, the agent ran out
+of its per-segment budget before finishing — raise it. All knobs are environment variables
+(defaults in parentheses):
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `DHX_WRITER_TOKEN_BUDGET` | 400000 | Cumulative tokens per segment (summed across turns). The usual cause of `budget_exceeded`. |
+| `DHX_WRITER_MAX_COST_USD` | 2.00 | Hard US-dollar cap per segment. |
+| `DHX_WRITER_MAX_STEPS` | 24 | Max agentic turns per segment. |
+| `DHX_WRITER_TOKEN_THRESHOLD` | 150000 | Context-compaction threshold (keep high enough to retain cited line numbers). |
+| `DHX_WRITER_MIN_CITED_FILES` | 3 | Minimum distinct `file:line` files an accepted body must cite. |
+| `DHX_JUDGE_TIMEOUT_S` | 120 | Wall-clock budget for the review gate's per-segment judge call. A slow model that exceeds it is treated as a timeout and the segment is **default-rejected** (`Judge call timed out … default-reject`) — raise this for slow endpoints. |
+| `DHX_ENRICH_TIMEOUT_S` | 120 | Wall-clock budget for the analysis enrichment model call. |
+| `DHX_RELEVANCE_TIMEOUT_S` | 120 | Wall-clock budget for the planner's relevance re-rank model call. |
+| `DHX_DEBUG_AGENT` | unset | When set (`1`), logs the full body of any segment the gate rejects **and** the raw judge reply when a verdict is unparseable — invaluable for seeing what the model actually wrote. |
+
+Each rejection line reports `steps=` and `exit=`: `exit=budget_exceeded` with low `steps`
+means raise `DHX_WRITER_TOKEN_BUDGET`; `steps ≤ 1` means the model answered without reading
+files (a tool-calling/model issue).
 
 ## 4. (Optional) Configure the ontology
 
@@ -143,11 +188,12 @@ Source: GitHub Actions**. The workflow builds and publishes on the next push.
 
 - **No model configured / `ModelResolutionError`** — set one of the provider API keys in
   step 3 (or a model in `--config`).
-- **`LLM Provider NOT provided` from LiteLLM** — a model id LiteLLM doesn't recognize
-  needs a provider prefix. Models from `OPENAI_API_KEY`/`OPENAI_DEFAULT_MAIN_MODEL` are
-  routed as `openai/<model>` automatically (so a bare `gpt-5.5` works). If you instead
-  set the model in a `--config` YAML, write it provider-qualified, e.g. `openai/gpt-5.5`.
-  OpenAI model ids are lowercase and case-sensitive.
+- **OpenAI model ids are lowercase and case-sensitive** — use `gpt-5.5`, not `GPT-5.5`.
+  Models from `OPENAI_API_KEY`/`OPENAI_DEFAULT_MAIN_MODEL` use the native OpenAI provider
+  with the bare id (no `openai/` prefix needed).
+- **`LLM Provider NOT provided` from LiteLLM** — only the `LITELLM_API_KEY` path goes
+  through LiteLLM; a model id LiteLLM doesn't recognize there needs a provider prefix
+  (e.g. `openai/gpt-4o-mini`, `gemini/...`).
 - **`mkdocs` not found** — make sure the venv is activated (`source .venv/bin/activate`)
   so `mkdocs` is on `PATH`; or invoke `dhx` as `.venv/bin/dhx`.
 - **Vendor/build directories** — the scanner ignores `.git`, `.venv`, `node_modules`,

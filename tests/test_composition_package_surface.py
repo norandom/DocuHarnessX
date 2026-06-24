@@ -56,6 +56,24 @@ def test_namespace_reexports_core_entry_points_identity_equal() -> None:
     assert pkg.DEFAULT_PROSE_TIMEOUT_S is prose.DEFAULT_PROSE_TIMEOUT_S
 
 
+def test_namespace_reexports_agentic_entry_points_identity_equal() -> None:
+    """Task 2.5: the new agentic entry points are surfaced from the single namespace,
+    each identity-equal to its submodule definition (no shadow copies)."""
+    pkg = importlib.import_module("docuharnessx.composition")
+    agent = importlib.import_module("docuharnessx.composition.agent")
+    task_prompt = importlib.import_module("docuharnessx.composition.task_prompt")
+    harness_factory = importlib.import_module(
+        "docuharnessx.composition.harness_factory"
+    )
+    structure_gate = importlib.import_module("docuharnessx.composition.structure_gate")
+
+    assert pkg.AgenticProseRunner is agent.AgenticProseRunner
+    assert pkg.AgentRunStats is agent.AgentRunStats
+    assert pkg.build_agent_task is task_prompt.build_agent_task
+    assert pkg.build_writer_harness is harness_factory.build_writer_harness
+    assert pkg.validate_agent_body is structure_gate.validate_agent_body
+
+
 def test_all_lists_every_public_name_and_is_importable() -> None:
     pkg = importlib.import_module("docuharnessx.composition")
     expected = {
@@ -78,6 +96,19 @@ def test_all_lists_every_public_name_and_is_importable() -> None:
         "render_fallback_summary",
         "generate_prose",
         "DEFAULT_PROSE_TIMEOUT_S",
+        # writer budget defaults + structure-gate threshold (task 1.1)
+        "WRITER_MAX_STEPS",
+        "WRITER_MAX_COST_USD",
+        "WRITER_TOKEN_BUDGET",
+        "WRITER_TOKEN_THRESHOLD",
+        "WRITER_LOOP_THRESHOLD",
+        "MIN_CITED_FILES",
+        # agentic entry points (task 2.5)
+        "build_agent_task",
+        "validate_agent_body",
+        "build_writer_harness",
+        "AgenticProseRunner",
+        "AgentRunStats",
     }
     assert set(pkg.__all__) == expected
     # __all__ is self-consistent: every advertised name is actually importable.

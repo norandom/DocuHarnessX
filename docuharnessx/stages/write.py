@@ -1,14 +1,25 @@
-"""The real Write stage adapter (cobesy-writer task 3.1 boundary: WriteStage).
+"""The real Write stage adapter (agentic-codebase-writer task 3.1 boundary: WriteStage).
 
 The Write stage turns each :class:`~docuharnessx.planning.model.PlannedSegment` of the
 frozen :class:`~docuharnessx.planning.model.CoveragePlan` into a written, COBESY-structured
 ontology :class:`~docuharnessx.ontology.Segment`, filling the ``title``/``summary``/``body``
 the planner deliberately left blank. It is a **thin HarnessX adapter** over the pure,
-model-free composition core (:mod:`docuharnessx.composition`): all structural work
-(blueprint, prompt, wiring, fallback) is deterministic and the only model-touching step is
-the gated :func:`docuharnessx.composition.generate_prose`. This module merely wires that
-core into the run lifecycle (design "deterministic composition core + thin gated stage
-adapter"), exactly mirroring :class:`~docuharnessx.stages.plan.PlanStage`.
+model-free composition core (:mod:`docuharnessx.composition`): all *structural* work
+(blueprint, wiring, fallback) stays deterministic; only the per-segment **prose surface** is
+model-touching.
+
+Wave 2.5 ``agentic-codebase-writer`` (this task) replaces that prose surface in place: the
+former single-shot :func:`docuharnessx.composition.generate_prose` call is swapped for the
+bounded :class:`~docuharnessx.composition.AgenticProseRunner`, which runs one bounded HarnessX
+agent per segment over a read-only ``Workspace`` rooted at the target repository, explores the
+real source through the built-in read/grep/glob/bash tools, and emits a ``file:line``-cited,
+Mermaid-diagrammed body the runner gates before returning. This module merely wires that core
+into the run lifecycle (design "deterministic composition core + thin gated stage adapter"),
+exactly mirroring :class:`~docuharnessx.stages.plan.PlanStage`. The stable
+``STAGE_NAME``/``WriteStage``/``make_write_stage``/module path, the input boundary, the
+plan-order iteration, the validate/store/flag logic, and the frozen
+:class:`~docuharnessx.composition.WrittenSegments` output seam are all preserved, so the
+registry, ``make_docgen``, and every downstream stage need no edits (Req 1.1, 7.1-7.5).
 
 It replaces the former no-op stub **in place**: the ``STAGE_NAME`` constant
 (``"write"``), the :class:`WriteStage` class name, the :func:`make_write_stage` factory,
@@ -47,8 +58,8 @@ and writes nothing, exactly like the no-op base (Req 1.3). It raises
 :class:`WriterInputError` only when it *has* a run ``State`` but a required input slot is
 missing or unsupported.
 
-Model access (Req 5.2)
-----------------------
+Model access (Req 5.2, 5.4)
+---------------------------
 The bound model, if any, is obtained from the runtime-injected ``ModelConfig`` exactly as
 :meth:`~docuharnessx.stages.plan.PlanStage._relevance_model` does — via a concrete, named
 per-instance accessor (:meth:`_writer_model`) over ``getattr(self, "_model_config",
@@ -56,15 +67,24 @@ None).main``. The composition core never constructs a provider itself; any failu
 reach one degrades to ``None`` so a misconfigured model can never abort the write (it
 falls back to the deterministic body).
 
-The per-segment write orchestration (blueprint -> prompt -> gated prose -> fallback ->
-wiring -> validate -> store -> publish ``WrittenSegments``) lands in task 3.2; this task
-establishes the stable adapter shell and the input boundary it builds on.
+Target repository + agentic fallback (Req 2.6, 5.4, 6.1, 6.3)
+-------------------------------------------------------------
+The agent's read-only ``Workspace`` roots at the target-repository path read from
+``RunContext.target_repo()``. When a model is bound **and** that path resolves to an existing
+directory, the per-segment prose comes from the bounded :class:`AgenticProseRunner` (offloaded
+off the pipeline run loop via :func:`asyncio.to_thread`), and an accepted body is used
+verbatim. When no model is bound, or the repo path is unset / not a directory, the stage skips
+the agentic attempt entirely and renders the existing deterministic fallback for every segment
+— the run never crashes (Req 2.6, 5.4, 6.3). A bound-model run whose agent raises / times out /
+returns empty / over-budget / fails the structure gate likewise yields the deterministic
+fallback for that segment (Req 6.1).
 """
 
 from __future__ import annotations
 
 import asyncio
 import logging
+import os
 from typing import TYPE_CHECKING, Any, AsyncIterator
 
 from harnessx.core.events import (
@@ -76,12 +96,13 @@ from harnessx.core.events import (
 from harnessx.core.processor import Processor
 
 from docuharnessx.composition import (
+    AgenticProseRunner,
+    AgentRunStats,
     ProseResult,
     WriteFlag,
     WriterInputError,
     WrittenSegments,
     build_blueprint,
-    generate_prose,
     render_fallback_body,
     render_fallback_summary,
     wire_segment,
@@ -123,6 +144,14 @@ _log = logging.getLogger(__name__)
 #: the trace bounded for large repos (Req 8.2).
 _TOP_WRITTEN_IDS_CAP: int = 5
 
+#: The shared, stateless bounded agentic prose runner — the single model surface of the
+#: agentic writer. It builds a fresh bounded :class:`~harnessx.core.harness.Harness` +
+#: :class:`~harnessx.core.harness.BaseTask` per :meth:`AgenticProseRunner.run` call, so one
+#: instance can safely drive every segment of every run (Req 5.3). It never raises: every
+#: agentic failure is absorbed into ``(None, stats)`` so the stage falls back deterministically
+#: (Req 6.1).
+_AGENT_RUNNER: AgenticProseRunner = AgenticProseRunner()
+
 
 class WriteStage(NoOpStage):
     """Real Write stage: ``CoveragePlan`` + ``Vocabulary`` + ``SegmentStore`` -> segments.
@@ -142,6 +171,12 @@ class WriteStage(NoOpStage):
     #: task starts (e.g. when ``on_step_end`` is unit-driven without a task), so a
     #: harness-free smoke run forwards the event unchanged (Req 1.3).
     _run_state: "State | None" = None
+
+    #: The per-segment :class:`~docuharnessx.composition.AgentRunStats` collected during the
+    #: most recent :meth:`_write_segments`, in plan order. Set just before the journal trigger
+    #: is emitted so :meth:`_summary_detail` can fold a bounded, scalar-only aggregate of the
+    #: agentic runs into the participation summary (Req 8.2). Empty until the first write.
+    _last_agent_stats: "tuple[AgentRunStats, ...]" = ()
 
     async def on_task_start(
         self, event: TaskStartEvent
@@ -181,8 +216,10 @@ class WriteStage(NoOpStage):
             return
 
         # Read + validate the writer inputs; raises WriterInputError (no partial output)
-        # on a missing required slot or an unsupported plan version (Req 2.1-2.4).
-        plan, analysis, vocab, store = self._read_inputs(run_context)
+        # on a missing required slot or an unsupported plan version (Req 2.1-2.4). The
+        # target-repository path is read here too: it is the (validated) root of the agent's
+        # read-only workspace, or None when unset/invalid (Req 2.1, 2.6).
+        plan, analysis, vocab, store, repo_path = self._read_inputs(run_context)
 
         # The deterministic model, if any, is reached via the named per-instance accessor
         # mirroring PlanStage._relevance_model (Req 5.2). It is absent on the
@@ -193,7 +230,7 @@ class WriteStage(NoOpStage):
         # ordered WrittenSegments seam to SLOT_WRITTEN_SEGMENTS (Req 7.1, 7.4, 7.5). An
         # empty plan yields an empty written set and completes without error (Req 6.5).
         written, prose_source = await self._write_segments(
-            plan, analysis, vocab, store, model
+            plan, analysis, vocab, store, model, repo_path
         )
         run_context.set_written_segments(written)
 
@@ -223,18 +260,26 @@ class WriteStage(NoOpStage):
 
     def _read_inputs(
         self, run_context: RunContext
-    ) -> "tuple[CoveragePlan, Any, Vocabulary, SegmentStore]":
-        """Read + validate the four input slots; raise on a fatal input error.
+    ) -> "tuple[CoveragePlan, Any, Vocabulary, SegmentStore, str | None]":
+        """Read + validate the input slots; raise on a fatal input error.
 
         Reads the :class:`CoveragePlan` (``SLOT_COVERAGE_PLAN``), the optional
         :class:`~docuharnessx.analysis.model.RepoAnalysis` (``SLOT_REPO_ANALYSIS``), the
-        loaded ``Vocabulary`` (``SLOT_VOCABULARY``), and the ``SegmentStore`` handle
-        (``SLOT_SEGMENT_STORE``) through the typed ``RunContext`` accessors (Req 2.1).
-        Pins :data:`COVERAGE_PLAN_SCHEMA_VERSION` and raises :class:`WriterInputError`
-        naming the cause when the plan/vocabulary/store slot is unset or the plan declares
-        an unsupported version, producing no partial output (Req 2.2-2.4). The
+        loaded ``Vocabulary`` (``SLOT_VOCABULARY``), the ``SegmentStore`` handle
+        (``SLOT_SEGMENT_STORE``), and the target-repository path (``SLOT_TARGET_REPO``)
+        through the typed ``RunContext`` accessors (Req 2.1). Pins
+        :data:`COVERAGE_PLAN_SCHEMA_VERSION` and raises :class:`WriterInputError` naming the
+        cause when the plan/vocabulary/store slot is unset or the plan declares an
+        unsupported version, producing no partial output (Req 2.2-2.4). The
         ``RepoAnalysis`` is optional — an unset slot is returned as ``None`` and tolerated
         by the blueprint (Req 2.5).
+
+        The target-repository path is returned as a *validated* string when it is set and
+        resolves to an existing directory, else ``None`` (Req 2.6): an unset or invalid path
+        is **not** fatal — it simply disables the agentic attempt so every segment uses the
+        deterministic fallback (the agent's read-only workspace can only root at a real
+        directory; rooting elsewhere would raise inside the run, which the runner already
+        absorbs, but resolving it here keeps the run loud-free and the journal honest).
         """
         plan = run_context.coverage_plan()
         if plan is None:
@@ -273,7 +318,25 @@ class WriteStage(NoOpStage):
         # blueprint grounds on the planner evidence alone.
         analysis = run_context.repo_analysis()
 
-        return plan, analysis, vocab, store
+        # The target-repository path is optional for the writer (Req 2.6): when set and a real
+        # directory it roots the agent's read-only workspace; otherwise it degrades to None so
+        # every segment uses the deterministic fallback (no run is attempted).
+        repo_path = self._resolve_repo_path(run_context.target_repo())
+
+        return plan, analysis, vocab, store, repo_path
+
+    @staticmethod
+    def _resolve_repo_path(raw: str | None) -> str | None:
+        """Return *raw* iff it names an existing directory, else ``None`` (Req 2.6).
+
+        The agent's read-only workspace can only root at a real directory. An unset slot, an
+        empty string, or a path that does not resolve to an existing directory is reduced to
+        ``None`` so the stage skips the agentic attempt and falls back deterministically for
+        every segment rather than crashing the run.
+        """
+        if not raw or not os.path.isdir(raw):
+            return None
+        return raw
 
     # ------------------------------------------------------------------ #
     # Per-segment write orchestration (Req 5, 6, 7)                       #
@@ -286,17 +349,23 @@ class WriteStage(NoOpStage):
         vocab: "Vocabulary",
         store: "SegmentStore",
         model: Any | None,
+        repo_path: str | None,
     ) -> "tuple[WrittenSegments, str]":
         """Write every planned segment in plan order and build the output seam.
 
         Iterates ``plan.segments`` in their existing (deterministic) order (Req 6.6):
-        for each segment it builds the deterministic COBESY blueprint, runs the gated
-        prose step (off the run loop when a model is consulted), falls back to the
-        deterministic renderer when prose is unavailable, wires the ontology ``Segment``,
-        validates it against the loaded ``Vocabulary``, and either stores it (adding it to
-        the ordered written set, Req 6.1) or records a deterministic :class:`WriteFlag`
-        and continues (Req 6.2, 6.4). An absent ``RepoAnalysis`` is tolerated — the
-        blueprint grounds on the planner evidence alone (Req 2.5).
+        for each segment it builds the deterministic COBESY blueprint, runs the bounded
+        agentic prose step (off the run loop), falls back to the deterministic renderer
+        when prose is unavailable, wires the ontology ``Segment``, validates it against the
+        loaded ``Vocabulary``, and either stores it (adding it to the ordered written set,
+        Req 6.1) or records a deterministic :class:`WriteFlag` and continues (Req 6.2, 6.4).
+        An absent ``RepoAnalysis`` is tolerated — the blueprint grounds on the planner
+        evidence alone (Req 2.5).
+
+        ``repo_path`` is the validated target-repository path (or ``None``): an agentic run
+        is viable only when a model is bound **and** the path is a real directory; otherwise
+        every segment uses the deterministic fallback without attempting a run (Req 2.6, 5.4,
+        6.3). This is decided once for the whole plan so the per-segment branch stays cheap.
 
         Returns the ordered :class:`WrittenSegments` whose ``segments`` are the *same
         identities* handed to ``store.put`` (Req 7.4, 7.5) paired with the aggregate
@@ -305,16 +374,25 @@ class WriteStage(NoOpStage):
         ``"fallback"`` marker (Req 6.5). Every planned segment is represented in
         ``segments`` or ``flags``, so the seam is auditable.
         """
+        # An agentic attempt is viable only when BOTH a model is bound and the repo path is a
+        # real directory; otherwise no run is attempted and every segment falls back (Req 2.6,
+        # 5.4, 6.3).
+        agentic = model is not None and repo_path is not None
+
         written: list[Segment] = []
         flags: list[WriteFlag] = []
         sources: list[str] = []
+        stats: list[AgentRunStats] = []
 
         for planned in plan.segments:
-            segment, source = await self._compose_segment(
-                planned, analysis, vocab, model
+            segment, source, run_stats = await self._compose_segment(
+                planned, analysis, vocab, model, repo_path, agentic
             )
             sources.append(source)
+            stats.append(run_stats)
             self._store_or_flag(segment, planned, store, vocab, written, flags)
+
+        self._last_agent_stats = tuple(stats)
 
         return (
             WrittenSegments(
@@ -322,7 +400,7 @@ class WriteStage(NoOpStage):
                 flags=tuple(flags),
                 total_planned=len(plan.segments),
             ),
-            _aggregate_prose_source(sources, model_bound=model is not None),
+            _aggregate_prose_source(sources, model_bound=agentic),
         )
 
     async def _compose_segment(
@@ -331,48 +409,77 @@ class WriteStage(NoOpStage):
         analysis: Any,
         vocab: "Vocabulary",
         model: Any | None,
-    ) -> "tuple[Segment, str]":
-        """Build the deterministic ``Segment`` for one planned segment (blueprint→wire).
+        repo_path: str | None,
+        agentic: bool,
+    ) -> "tuple[Segment, str, AgentRunStats]":
+        """Build the deterministic ``Segment`` for one planned segment (blueprint then wire).
 
-        Builds the COBESY blueprint (deterministic, model-free), runs the gated prose
-        step, and wires the ontology ``Segment``. The prose source provenance is recorded
-        on the :class:`ProseResult`: ``"model"`` when the bound model returned a clean
-        response, ``"fake"`` when a model *was* consulted but its response was unusable
-        (so the deterministic fallback rendered the body), and ``"fallback"`` when no
-        model was bound at all (Req 5.1, 5.4, 8.3). The model only ever contributes
-        ``body``/``summary`` — every non-body field is fixed by :func:`wire_segment`
-        (Req 5.5). Returns the wired ``Segment`` paired with that prose-source marker so
-        the bounded journal summary can report it (Req 8.3).
+        Builds the COBESY blueprint (deterministic, model-free), runs the bounded agentic
+        prose step, and wires the ontology ``Segment``. The prose source provenance is
+        recorded on the :class:`ProseResult`: ``"model"`` when the agent produced a body that
+        cleared the structure gate, ``"fake"`` when an agentic run *was* attempted but its
+        body was unusable (so the deterministic fallback rendered the body), and ``"fallback"``
+        when no agentic run was viable at all (no model and/or no repo path; Req 5.4, 6.3,
+        8.3). The agent only ever contributes ``body``/``summary``; every non-body field is
+        fixed by :func:`wire_segment` (Req 4.5, 7.3). Returns the wired ``Segment`` paired with
+        that prose-source marker **and** the per-run
+        :class:`~docuharnessx.composition.AgentRunStats` telemetry so the bounded journal
+        summary can report both (Req 8.2, 8.3).
         """
         blueprint = build_blueprint(planned, analysis, vocab)
-        prose = await self._prose_for(blueprint, model)
-        return wire_segment(planned, blueprint, prose), prose.source
+        prose, run_stats = await self._prose_for(blueprint, model, repo_path, agentic)
+        return wire_segment(planned, blueprint, prose), prose.source, run_stats
 
     async def _prose_for(
-        self, blueprint: "CompositionBlueprint", model: Any | None
-    ) -> ProseResult:
-        """Run the gated prose step, falling back deterministically when it returns ``None``.
+        self,
+        blueprint: "CompositionBlueprint",
+        model: Any | None,
+        repo_path: str | None,
+        agentic: bool,
+    ) -> "tuple[ProseResult, AgentRunStats]":
+        """Run the bounded agent, falling back deterministically when it returns ``None``.
 
-        When a model is bound the synchronous :func:`generate_prose` (which drives the
-        provider's awaitable ``complete`` on its own private loop) is offloaded to a worker
-        thread via :func:`asyncio.to_thread` so loops never nest inside the run loop —
-        exactly as :meth:`PlanStage._maybe_apply_relevance` (Req 5.1, 5.3). When no model
-        is bound there is no async work, so the model-less gate is taken inline. A ``None``
-        result (model-less, failed, timed-out, empty, or unparseable) renders the
-        deterministic fallback (Req 5.4, 6.3); its ``source`` is ``"fake"`` when a model
-        was consulted (the fake/recorded-provider case) and ``"fallback"`` when no model
-        was bound at all (Req 8.3).
+        When an agentic run is viable (``agentic`` -- a model is bound and ``repo_path`` is a
+        real directory) the synchronous :meth:`AgenticProseRunner.run` (which drives the
+        bounded ``Harness.run`` coroutine on its own private loop) is offloaded to a worker
+        thread via :func:`asyncio.to_thread` so the agent's event loop never nests inside the
+        pipeline run loop (Req 5.5), exactly as :meth:`PlanStage._maybe_apply_relevance`. The
+        runner gates the agent body internally (>=1 Mermaid fence + >=N ``file:line``
+        citations) and returns a ``source="model"`` :class:`ProseResult` only on an accepted
+        body; on raise / timeout / empty / over-budget / rejected it returns ``None`` (Req
+        6.1), so the deterministic fallback renders the body with ``source="fake"`` (an agentic
+        run *was* attempted). When no agentic run is viable (no model and/or no repo path) the
+        deterministic fallback renders with ``source="fallback"`` and no run is attempted (Req
+        2.6, 5.4, 6.3).
+
+        Returns the :class:`ProseResult` paired with the per-run
+        :class:`~docuharnessx.composition.AgentRunStats` telemetry (steps, cost, exit reason,
+        accepted) so the caller can fold a bounded aggregate into the journal summary (Req
+        8.2). When no run is attempted at all the stats are a zeroed, non-attempted sentinel
+        whose ``exit_reason`` names *why* (``"no_model"`` when no model is bound, else
+        ``"invalid_repo"`` when the model is present but the repo path is unusable) — scalar
+        only, never the body.
         """
-        if model is None:
-            return self._fallback_prose(blueprint, source="fallback")
+        if not agentic:
+            return (
+                self._fallback_prose(blueprint, source="fallback"),
+                AgentRunStats(
+                    steps=0,
+                    cost_usd=0.0,
+                    exit_reason="no_model" if model is None else "invalid_repo",
+                    accepted=False,
+                ),
+            )
 
-        # A model will be consulted: run the synchronous generate_prose (with its own
-        # asyncio.run) off the run loop's thread so loops never nest. generate_prose
-        # absorbs its own failures/timeouts and returns None on any unusable response.
-        result = await asyncio.to_thread(generate_prose, blueprint, model=model)
+        # A model + a real repo path are present: run the bounded agent off the run loop's
+        # thread so its private event loop never nests. The runner absorbs every failure and
+        # gates the body, returning (None, stats) on any unusable response (Req 6.1).
+        result, stats = await asyncio.to_thread(
+            _AGENT_RUNNER.run, blueprint, repo_path=repo_path, model=model
+        )
         if result is not None:
-            return result
-        return self._fallback_prose(blueprint, source="fake")
+            return result, stats
+        return self._fallback_prose(blueprint, source="fake"), stats
 
     @staticmethod
     def _fallback_prose(
@@ -491,14 +598,17 @@ class WriteStage(NoOpStage):
         Summary-level fields only (Req 8.2): the stage name, the total planned count, the
         successfully-written count, the flagged/skipped count, a *capped* list of the
         top-priority written segment ids (the written set is already in the plan's
-        priority-desc order, so the head is the most important), and the aggregate
-        ``prose_source`` marker (Req 8.3). No raw ``Segment``/``ProseResult`` objects and
-        no segment bodies, so the trace stays bounded for large plans (Req 8.2).
+        priority-desc order, so the head is the most important), the aggregate
+        ``prose_source`` marker (Req 8.3), and the bounded **agentic aggregate** folded from
+        the per-segment :class:`~docuharnessx.composition.AgentRunStats` of the most recent
+        write (Req 8.2). No raw ``Segment``/``ProseResult``/``AgentRunStats`` objects, no
+        segment bodies, no tool outputs and no transcripts, so the trace stays bounded for
+        large plans (Req 8.2).
         """
         top_written_ids = [
             seg.id for seg in written.segments[:_TOP_WRITTEN_IDS_CAP]
         ]
-        return {
+        detail: dict[str, Any] = {
             "stage": self.stage_name,
             "total_planned": written.total_planned,
             "written_count": len(written.segments),
@@ -506,6 +616,10 @@ class WriteStage(NoOpStage):
             "top_written_ids": top_written_ids,
             "prose_source": prose_source,
         }
+        # Fold the per-segment agentic telemetry into a bounded, scalar-only aggregate
+        # alongside the existing summary fields (extend, never replace; Req 8.1, 8.2).
+        detail.update(_aggregate_agent_stats(self._last_agent_stats))
+        return detail
 
 
 def _aggregate_prose_source(sources: list[str], *, model_bound: bool) -> str:
@@ -527,6 +641,52 @@ def _aggregate_prose_source(sources: list[str], *, model_bound: bool) -> str:
         return "model"
     # A model was consulted but at least one segment did not yield clean model prose.
     return "fake"
+
+
+def _aggregate_agent_stats(
+    stats: "tuple[AgentRunStats, ...]",
+) -> dict[str, Any]:
+    """Fold the per-segment agentic runs into one bounded, scalar-only journal aggregate.
+
+    The bounded journal summary folds each per-segment
+    :class:`~docuharnessx.composition.AgentRunStats` into a *summary-level* aggregate carrying
+    only scalars (Req 8.2) — never the body, the tool outputs, or the conversation transcript:
+
+    * ``agent_run_count`` — the number of per-segment runs recorded (one per planned segment;
+      ``0`` for an empty plan);
+    * ``agent_written_count`` — how many runs produced a body the structure gate accepted
+      (``accepted=True``);
+    * ``agent_fallback_count`` — how many runs fell back (``accepted=False``: no model /
+      invalid repo / raise / timeout / empty / over-budget / rejected);
+    * ``agent_total_steps`` — the summed agentic step count across the runs;
+    * ``agent_total_cost_usd`` — the summed accumulated US-dollar cost across the runs;
+    * ``agent_exit_reasons`` — a bounded ``{exit_reason: count}`` tally (mirroring the Review
+      stage's ``judge_source`` breakdown): only reasons actually present are keyed, so a
+      clean accepted run reports ``{"done": N}``, a model-less run ``{"no_model": N}``, and an
+      empty plan ``{}``.
+
+    Pure, deterministic, scalar-valued; ``accepted`` and the fallback set always partition the
+    runs so ``agent_written_count + agent_fallback_count == agent_run_count`` and the
+    exit-reason tally sums to ``agent_run_count``.
+    """
+    exit_reasons: dict[str, int] = {}
+    total_steps = 0
+    total_cost_usd = 0.0
+    written_count = 0
+    for run in stats:
+        exit_reasons[run.exit_reason] = exit_reasons.get(run.exit_reason, 0) + 1
+        total_steps += run.steps
+        total_cost_usd += run.cost_usd
+        if run.accepted:
+            written_count += 1
+    return {
+        "agent_run_count": len(stats),
+        "agent_written_count": written_count,
+        "agent_fallback_count": len(stats) - written_count,
+        "agent_total_steps": total_steps,
+        "agent_total_cost_usd": total_cost_usd,
+        "agent_exit_reasons": exit_reasons,
+    }
 
 
 def make_write_stage() -> Processor:
