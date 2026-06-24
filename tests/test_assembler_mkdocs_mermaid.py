@@ -146,7 +146,8 @@ def test_all_previously_emitted_keys_unchanged() -> None:
     assert data["theme"]["name"] == "material"
     assert "plugins" in data
     assert "nav" in data
-    # No stray keys beyond the known set + markdown_extensions.
+    # No stray keys beyond the known set + markdown_extensions. ``extra_css`` wires the
+    # deepwiki-inspired theme stylesheet.
     expected_keys = {
         "site_name",
         "site_url",
@@ -154,6 +155,7 @@ def test_all_previously_emitted_keys_unchanged() -> None:
         "edit_uri",
         "use_directory_urls",
         "theme",
+        "extra_css",
         "plugins",
         "nav",
     }

@@ -49,6 +49,7 @@ from docuharnessx.assembler.identity import read_origin_remote, resolve_site_ide
 from docuharnessx.assembler.mkdocs_config import TAGS_INDEX_PATH, build_mkdocs_yaml
 from docuharnessx.assembler.pages import page_filename, render_segment_page
 from docuharnessx.assembler.roles import render_role_landing_page, role_page_path
+from docuharnessx.assembler.theme import EXTRA_CSS_PATH, render_extra_css
 from docuharnessx.assembler.writer import assemble_site
 
 __all__ = [
@@ -73,6 +74,9 @@ __all__ = [
     # site home landing page
     "render_home_page",
     "HOME_PAGE_PATH",
+    # deepwiki-inspired theme stylesheet
+    "render_extra_css",
+    "EXTRA_CSS_PATH",
     # site writer (task 4.1)
     "assemble_site",
 ]

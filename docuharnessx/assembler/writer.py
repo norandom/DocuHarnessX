@@ -61,6 +61,7 @@ from docuharnessx.assembler.model import (
 )
 from docuharnessx.assembler.pages import page_filename, render_segment_page
 from docuharnessx.assembler.roles import render_role_landing_page, role_page_path
+from docuharnessx.assembler.theme import EXTRA_CSS_PATH, render_extra_css
 from docuharnessx.ontology import (
     AxisTerm,
     InMemorySegmentStore,
@@ -205,6 +206,23 @@ def assemble_site(
         _write_text(docs_dir / landing_rel, content)
     role_page_count = len(emitted_roles)
 
+    # Assign each accepted segment to exactly ONE role section — its first emitted role in
+    # vocabulary order — so the sidebar nav becomes a wiki-style page tree (role section ->
+    # its segment pages) with no duplicate entries (a segment may belong to several roles).
+    emitted_role_ids = [role.id for role in emitted_roles]
+    landing_by_role_id = {role.id: role_page_path(role.id) for role in emitted_roles}
+    grouped: dict[str, list[tuple[str, str]]] = {}
+    for segment in report.accepted:
+        primary = next(
+            (rid for rid in emitted_role_ids if rid in segment.roles), None
+        )
+        if primary is None:
+            continue  # every accepted segment has an emitted role; defensive only
+        grouped.setdefault(landing_by_role_id[primary], []).append(
+            (segment.title, page_filename(segment.id))
+        )
+    segments_by_role = {landing: tuple(entries) for landing, entries in grouped.items()}
+
     # Step 4: the tags index page (the listing directive the tags plugin discovers).
     _write_text(docs_dir / TAGS_INDEX_PATH, _TAGS_INDEX_CONTENT)
 
@@ -213,8 +231,11 @@ def assemble_site(
     # role pages the nav carries, in the same order.
     _write_text(docs_dir / HOME_PAGE_PATH, render_home_page(identity, role_pages))
 
+    # Step 4c: the deepwiki-inspired theme stylesheet referenced from mkdocs.yml extra_css.
+    _write_text(docs_dir / EXTRA_CSS_PATH, render_extra_css())
+
     # Step 5: the mkdocs.yml (Material theme + tags plugin + per-target identity + nav).
-    mkdocs_yml = build_mkdocs_yaml(identity, role_pages, vocab)
+    mkdocs_yml = build_mkdocs_yaml(identity, role_pages, vocab, segments_by_role)
     mkdocs_yml_path = site_dir / _MKDOCS_YML
     _write_text(mkdocs_yml_path, mkdocs_yml)
 

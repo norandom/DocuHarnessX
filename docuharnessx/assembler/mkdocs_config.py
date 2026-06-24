@@ -51,6 +51,7 @@ import yaml
 from pymdownx import superfences
 
 from docuharnessx.assembler.model import SiteIdentity
+from docuharnessx.assembler.theme import EXTRA_CSS_PATH
 from docuharnessx.ontology import Vocabulary
 
 __all__ = ["build_mkdocs_yaml", "TAGS_INDEX_PATH"]
@@ -72,10 +73,48 @@ HOME_PAGE_PATH: str = "index.md"
 #: The human-facing nav title for the home entry (first in the nav).
 HOME_NAV_TITLE: str = "Home"
 
-#: The Material theme features. ``navigation.tabs`` surfaces the top-level nav as tabs and
-#: ``content.tabs.link`` enables the linked content-tabs the role renderer can use for the
-#: role-switching affordance (design "mkdocs.yml builder"; Req 6.3, 6.4).
-_THEME_FEATURES: tuple[str, ...] = ("navigation.tabs", "content.tabs.link")
+#: The Material theme features. Tuned for a deepwiki-open-like experience: a left **sidebar
+#: tree** (rather than top tabs) with section index pages and everything expanded, instant
+#: SPA-style loading, a "back to top" button, a followed table of contents, and code-copy
+#: buttons. ``content.tabs.link`` is kept for the role renderer's role-switch content-tabs
+#: (Req 6.3, 6.4); ``navigation.indexes`` makes each role landing page its section's index.
+_THEME_FEATURES: tuple[str, ...] = (
+    "navigation.instant",
+    "navigation.tracking",
+    "navigation.indexes",
+    "navigation.expand",
+    "navigation.top",
+    "navigation.footer",
+    "toc.follow",
+    "content.code.copy",
+    "content.tabs.link",
+    "search.suggest",
+    "search.highlight",
+)
+
+#: The colour-scheme palette: a light/dark toggle. The concrete deepwiki-open colours are
+#: applied per scheme by the extra stylesheet (:data:`docuharnessx.assembler.theme.EXTRA_CSS_PATH`)
+#: overriding Material's CSS custom properties; here we only wire the two schemes + the toggle.
+_PALETTE: tuple[dict, ...] = (
+    {
+        "scheme": "default",
+        "toggle": {
+            "icon": "material/weather-night",
+            "name": "Switch to dark mode",
+        },
+    },
+    {
+        "scheme": "slate",
+        "toggle": {
+            "icon": "material/weather-sunny",
+            "name": "Switch to light mode",
+        },
+    },
+)
+
+#: The typeface, matching deepwiki-open's Noto Sans JP body font (a clean monospace for code).
+#: Material loads these from Google Fonts automatically.
+_FONT: dict = {"text": "Noto Sans JP", "code": "Roboto Mono"}
 
 
 class _MkDocsYamlDumper(yaml.SafeDumper):
@@ -133,10 +172,17 @@ def _markdown_extensions() -> list:
 def _theme() -> dict:
     """Return the Material theme block (Req 6.4).
 
-    Emitted as a mapping (not the bare ``"material"`` string) so the Material features the
-    role-switch content-tabs rely on can be attached. Deterministic.
+    Emitted as a mapping (not the bare ``"material"`` string) so the deepwiki-inspired
+    features, the light/dark palette toggle, and the Noto Sans JP font can be attached. The
+    concrete colours are applied by the extra stylesheet; this only wires the schemes.
+    Deterministic.
     """
-    return {"name": "material", "features": list(_THEME_FEATURES)}
+    return {
+        "name": "material",
+        "features": list(_THEME_FEATURES),
+        "palette": [dict(entry) for entry in _PALETTE],
+        "font": dict(_FONT),
+    }
 
 
 def _plugins() -> list:
@@ -151,16 +197,33 @@ def _plugins() -> list:
     return ["search", {"tags": {}}]
 
 
-def _nav(role_pages: tuple[tuple[str, str], ...]) -> list:
-    """Return the deterministic nav: the home page, each role landing page, then tags (Req 6.1).
+def _nav(
+    role_pages: tuple[tuple[str, str], ...],
+    segments_by_role: "dict[str, tuple[tuple[str, str], ...]] | None" = None,
+) -> list:
+    """Return the deterministic nav: home, each role section (+ its segment pages), then tags.
 
     ``role_pages`` is ``(label, docs_relative_path)`` per emitted role landing page, in the
-    caller's order (the writer supplies them in vocabulary role order). Each becomes a
-    ``{label: path}`` nav entry, in that exact order; the tags index is appended last. The
-    nav order is therefore a total, deterministic function of the caller's input.
+    caller's order (vocabulary role order). ``segments_by_role`` optionally maps a role's
+    landing path to its ``(segment_title, segment_docs_path)`` entries (the writer assigns
+    each accepted segment to one role); when present the role becomes a **section** whose
+    index is the landing page (``navigation.indexes``) followed by its segment pages — so the
+    left sidebar is a full wiki-style page tree. With no mapping each role is a flat link
+    (back-compatible). The home page is first and the tags index last; the order is a total,
+    deterministic function of the caller's input.
     """
+    mapping = segments_by_role or {}
     nav: list = [{HOME_NAV_TITLE: HOME_PAGE_PATH}]
-    nav.extend({label: path} for (label, path) in role_pages)
+    for label, path in role_pages:
+        children = mapping.get(path)
+        if children:
+            # navigation.indexes: a list whose first item (the landing path, bare) is the
+            # section index, followed by one {title: path} entry per assigned segment.
+            section: list = [path]
+            section.extend({title: seg_path} for (title, seg_path) in children)
+            nav.append({label: section})
+        else:
+            nav.append({label: path})
     nav.append({_TAGS_NAV_TITLE: TAGS_INDEX_PATH})
     return nav
 
@@ -169,6 +232,7 @@ def build_mkdocs_yaml(
     identity: SiteIdentity,
     role_pages: tuple[tuple[str, str], ...],
     vocab: Vocabulary,
+    segments_by_role: "dict[str, tuple[tuple[str, str], ...]] | None" = None,
 ) -> str:
     """Build the ``mkdocs.yml`` string for the assembled site (Req 3.3, 6.1, 6.2, 6.4).
 
@@ -217,8 +281,11 @@ def build_mkdocs_yaml(
     config["use_directory_urls"] = True
 
     config["theme"] = _theme()
+    # The deepwiki-inspired skin: a single extra stylesheet overriding Material's CSS custom
+    # properties (the writer emits it at the same docs-relative path).
+    config["extra_css"] = [EXTRA_CSS_PATH]
     config["plugins"] = _plugins()
-    config["nav"] = _nav(role_pages)
+    config["nav"] = _nav(role_pages, segments_by_role)
 
     # Mermaid rendering: a minimal, idempotent pymdownx.superfences custom fence so emitted
     # fenced `mermaid` blocks render as diagrams in the Material site (Req 10.1, 10.2). The
