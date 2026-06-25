@@ -97,6 +97,7 @@ __all__ = [
     "orchestrate_run",
     "RunOutcome",
     "exit_code_for_reason",
+    "resolve_session",
 ]
 
 #: Process exit code on a refused/failed ``dhx init`` (existing file without
@@ -114,8 +115,10 @@ _DESCRIPTION = (
 #: ``dhx <target-repo> --out DIR --config YAML`` (Req 4.1, 4.8) is supported by
 #: defaulting to ``run`` when the first positional token is NOT one of these — so a
 #: target path is accepted directly without an explicit ``run`` subcommand, while
-#: ``dhx init`` (and ``dhx run``) keep working.
-_SUBCOMMANDS: frozenset[str] = frozenset({"run", "init"})
+#: ``dhx init``, ``dhx run`` (and ``dhx mcp``) keep working. ``mcp`` is listed here so
+#: the bare-form normaliser leaves ``dhx mcp <repo>`` intact rather than rewriting it to
+#: ``run mcp <repo>`` (mcp-refine Req 1.3).
+_SUBCOMMANDS: frozenset[str] = frozenset({"run", "init", "mcp"})
 
 
 def _normalize_argv(argv: Sequence[str] | None) -> list[str] | None:
@@ -272,6 +275,49 @@ def build_parser() -> argparse.ArgumentParser:
         "--verbose",
         action="store_true",
         help="Show detailed logs (off by default).",
+    )
+
+    # mcp subcommand (mcp-refine task 5.2): launch the stdio refine MCP server rooted
+    # at a target repo + output dir. The argument surface mirrors ``run``
+    # (``target_repo`` / ``--out`` / ``--config`` / ``-v``) so an author refines exactly
+    # the docs a prior ``dhx run`` produced under the same ``<out>`` (Req 2.1). The
+    # target is an optional positional (validated by ``_mcp_command`` before launch,
+    # exactly as ``run`` validates its target; Req 2.2), so a missing target surfaces a
+    # ``TargetRepoError`` rather than an argparse usage error.
+    mcp = subparsers.add_parser(
+        "mcp",
+        help=(
+            "Launch the stdio MCP refine server for a target repository's generated "
+            "docs (refine segments/overview interactively in an MCP client)."
+        ),
+    )
+    mcp.add_argument(
+        "target_repo",
+        nargs="?",
+        metavar="<target-repo>",
+        help="Path to the target repository whose generated docs to refine.",
+    )
+    mcp.add_argument(
+        "--out",
+        metavar="DIR",
+        help=(
+            "Output directory the prior run wrote (segments + site). Defaults to the "
+            "documented per-target path when omitted (same as 'dhx run')."
+        ),
+    )
+    mcp.add_argument(
+        "--config",
+        metavar="YAML",
+        help="Path to a YAML configuration file (model selection, budgets).",
+    )
+    mcp.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help=(
+            "Show detailed server logs on stderr (off by default). stdout always "
+            "stays the MCP protocol channel."
+        ),
     )
 
     return parser
@@ -727,6 +773,115 @@ def _run_command(
     return outcome.exit_code
 
 
+def _require_mcp() -> None:
+    """Fail with an explicit, dependency-naming error if the MCP SDK is missing.
+
+    Implements mcp-refine Req 1.4 at the ``mcp``-command boundary, mirroring
+    :func:`_require_harnessx`: rather than failing with an opaque ``ImportError`` deep
+    in the server factory, raise the typed
+    :class:`~docuharnessx.errors.DependencyError` naming the missing SDK and how to
+    install it. ``DependencyError`` is a
+    :class:`~docuharnessx.errors.DocuHarnessXError`, so :func:`main` maps it to the
+    standard non-zero CLI exit. The import is deferred to call time so ``dhx --help``
+    and the ``run`` / ``init`` paths never require the MCP SDK.
+    """
+    try:
+        import mcp.server  # noqa: F401
+        import mcp.server.stdio  # noqa: F401
+    except ImportError as exc:  # pragma: no cover - exercised when dep absent
+        from docuharnessx.errors import DependencyError
+
+        raise DependencyError(
+            "DocuHarnessX 'mcp' requires the 'mcp' SDK (>=1.28), which is not "
+            "importable. Install it with 'pip install \"mcp>=1.28\"' (or "
+            "'pip install -e .')."
+        ) from exc
+
+
+def resolve_session(*args: Any, **kwargs: Any) -> Any:
+    """Resolve the per-target refine session (lazy, drift-mitigation wrapper).
+
+    Delegates to :func:`docuharnessx.mcp.resolve_session`. The import is deferred to
+    call time because :mod:`docuharnessx.mcp.session` imports
+    :func:`_validate_target_repo` *from this module* — a module-level import here would
+    be circular. Exposing it as a module-level name also lets the ``dhx mcp`` tests
+    monkeypatch ``cli.resolve_session`` to a credential-free stub.
+    """
+    from docuharnessx.mcp import resolve_session as _resolve_session
+
+    return _resolve_session(*args, **kwargs)
+
+
+def _run_stdio_blocking(session: Any) -> None:
+    """Drive the stdio refine server to completion (blocking; mcp-refine task 5.2).
+
+    Wraps the async :func:`docuharnessx.mcp.run_stdio` in :func:`asyncio.run` so the
+    ``dhx mcp`` command blocks serving the MCP protocol over the inherited
+    ``stdin``/``stdout`` until the client disconnects (Req 2.5). The server logs to
+    **stderr** and the stdio transport owns ``stdout``, so the command's stdout stays a
+    clean protocol channel. Exposed as a module-level name so the tests can monkeypatch
+    it to a credential-free stub (no stdio subprocess, no model).
+    """
+    from docuharnessx.mcp import run_stdio
+
+    asyncio.run(run_stdio(session))
+
+
+def _mcp_command(args: argparse.Namespace) -> int:
+    """Handle ``dhx mcp``: validate the target, resolve the session, launch stdio.
+
+    In order (mcp-refine Req 2.1, 2.2, 2.5, 2.6):
+
+    1. **Guard the MCP SDK** import with an explicit, dependency-naming error so a
+       stripped install reports the missing SDK cleanly (Req 1.4), mirroring
+       :func:`_require_harnessx`.
+    2. **Validate the target FIRST** — an existing directory — via the same
+       :func:`_validate_target_repo` the ``run`` path uses, so a bad target raises
+       :class:`TargetRepoError` (mapped to a non-zero exit by :func:`main`) *before any
+       session/model work* (Req 2.2).
+    3. **Resolve the per-target session** via :func:`resolve_session` (output dir
+       defaulting to the documented per-target path when ``--out`` is omitted; the
+       project ``Vocabulary``, the ``<out>/segments`` store, the per-target
+       ``SiteIdentity``, and the resolved model — a no-model resolution is swallowed to
+       ``None`` inside the resolver so the server still starts; Req 2.1, 2.3, 2.4, 2.6).
+    4. **Launch the stdio server** via :func:`_run_stdio_blocking`, serving until the
+       client disconnects (Req 2.5).
+
+    All human/log output goes to **stderr** (configured in :func:`main` via
+    :func:`_configure_run_logging`); the launcher writes nothing to stdout except the
+    MCP protocol stream, so the command's stdout stays the MCP channel.
+
+    Returns :data:`EXIT_OK` once the server loop has terminated cleanly (the client
+    disconnected). A :class:`TargetRepoError` (or any other typed boundary failure)
+    propagates to :func:`main`, which reports it on stderr and maps it to a non-zero
+    exit.
+    """
+    # 1. The SDK guard runs before validation so a stripped install reports the missing
+    #    dependency rather than failing later in the launcher.
+    _require_mcp()
+
+    # 2. Validate the target FIRST — before resolving the session or any model work
+    #    (Req 2.2). Returns the absolute path; an invalid target raises TargetRepoError.
+    target_repo = _validate_target_repo(args.target_repo)
+
+    # 3. Resolve the per-target session. ``--out`` omitted -> None so the resolver
+    #    applies the documented per-target default (mirroring ``dhx run``; Req 2.1). A
+    #    ``--config`` YAML's ``model:`` is honoured by the resolver (config-then-env, like
+    #    ``dhx run``); a named-but-bad config fails fast there.
+    out_dir = os.path.abspath(args.out) if args.out else None
+    session = resolve_session(target_repo, out_dir, config_path=args.config)
+
+    # 4. Launch the stdio server and serve until the client disconnects (Req 2.5). The
+    #    transport owns stdout; the server logs to stderr.
+    print(
+        f"dhx mcp: serving refine MCP server for {target_repo} over stdio "
+        "(stdout is the MCP protocol channel; logs go to stderr).",
+        file=sys.stderr,
+    )
+    _run_stdio_blocking(session)
+    return EXIT_OK
+
+
 def _prompt_axis_terms(
     axis_label: str,
     input_fn: "Any",
@@ -1035,6 +1190,8 @@ def main(
             )
         if args.command == "init":
             return _init_command(args, input_fn=init_input)
+        if args.command == "mcp":
+            return _mcp_command(args)
         # Unknown subcommand (argparse normally guards this); report honestly.
         print(
             f"dhx {args.command}: unknown command.",

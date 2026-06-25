@@ -64,6 +64,7 @@ def build_agent_task(
     max_steps: int = WRITER_MAX_STEPS,
     max_cost_usd: float = WRITER_MAX_COST_USD,
     token_budget: int = WRITER_TOKEN_BUDGET,
+    guidance: str = "",
 ) -> Any:
     """Build the deterministic, bounded agentic :class:`BaseTask` for one segment.
 
@@ -90,17 +91,25 @@ def build_agent_task(
             :data:`WRITER_MAX_COST_USD` (Req 5.1).
         token_budget: ``BaseTask.token_budget`` cap; defaults to
             :data:`WRITER_TOKEN_BUDGET` (Req 5.1).
+        guidance: Optional human refinement guidance shaping WHAT the agent writes and
+            emphasises (docuharnessx-mcp-refine task 2.3; Req 5.2, 5.9, 7.2, 9.1, 9.7).
+            Defaults to ``""``; when empty the rendered description is byte-identical to
+            today's task so existing callers/tests are unaffected. When non-empty it is
+            rendered as an **applied author-guidance instruction near the mission** — never
+            quoted as a heading/section — mirroring the existing role/COBESY anti-echo
+            discipline.
 
     Returns:
         A :class:`harnessx.core.harness.BaseTask` (a plain-data fallback when the harness is
         unavailable at import time) carrying the bounded caps and the scoped, COBESY-seeded
         description that demands a Mermaid diagram and ``file:line`` citations. Equal inputs
-        yield a byte-identical description and equal caps (Req 4.1, task 2.1 determinism).
+        (including equal ``guidance``) yield a byte-identical description and equal caps
+        (Req 4.1, task 2.1 determinism; ``guidance=""`` reproduces today's task verbatim).
 
     Invariants: never consults a model; never mutates ``blueprint``; deterministic.
     """
     description = _render_description(
-        blueprint, repo_path=repo_path, min_citations=min_citations
+        blueprint, repo_path=repo_path, min_citations=min_citations, guidance=guidance
     )
     return _make_task(
         description,
@@ -182,6 +191,7 @@ def _render_description(
     *,
     repo_path: str,
     min_citations: int,
+    guidance: str = "",
 ) -> str:
     """Render the bounded agentic task description from blueprint-derived facts only.
 
@@ -192,6 +202,14 @@ def _render_description(
     one valid Mermaid diagram and at least ``min_citations`` distinct ``file:line``
     citations). All audience/intent framing is the loaded-``Vocabulary`` labels carried by
     the blueprint (Req 4.6). Pure: returns a string and never mutates ``blueprint``.
+
+    When ``guidance`` is non-empty (docuharnessx-mcp-refine task 2.3; Req 5.2, 5.9, 7.2,
+    9.1, 9.7) one extra **applied author-guidance instruction** is emitted near the mission,
+    directing WHAT the agent writes and emphasises while forbidding the agent from quoting,
+    naming, or turning the guidance into an output heading/section — exactly the
+    applied-not-echoed discipline already used for the audience role and the COBESY method
+    names. When ``guidance`` is the empty string no such line is emitted, so the rendered
+    description is byte-identical to today's task (backward compatible).
     """
     role_phrase = _join(blueprint.role_labels) or "the reader"
     intent_label = blueprint.intent_label
@@ -210,7 +228,25 @@ def _render_description(
         f"Title: {blueprint.title}",
         f"Expert audience (assume prior knowledge, skip basics): "
         f"{'yes' if blueprint.andragogy else 'no'}",
-        "",
+    ]
+
+    # Applied author-guidance (docuharnessx-mcp-refine task 2.3) — emitted only when the
+    # human supplied refinement guidance, immediately after the mission so it shapes WHAT the
+    # agent writes. It is APPLIED, never ECHOED: the agent must not quote it, name it, or turn
+    # it into an output heading/section — mirroring the role / COBESY-method anti-echo rules
+    # above and below. The empty-string default emits nothing, keeping the task byte-identical
+    # to today's (Req 5.9). The guidance text is embedded inside the instruction sentence on a
+    # single line, never on a line of its own, so a naive split can never read it as a heading.
+    if guidance.strip():
+        lines.append(
+            f"Apply this refinement guidance to WHAT you write and emphasise — it directs the "
+            f"content, not the wording: {guidance.strip()} Do NOT quote it, name it, repeat it "
+            f"verbatim, or add a heading or section for it; let it steer which concerns you "
+            f"surface and stress while you write natural, reader-facing prose."
+        )
+
+    lines.append("")
+    lines.extend([
         # Grounding — the read-only repo and the tools.
         f"The repository source tree is rooted read-only at: {repo_path}",
         "Read the real source with the read, grep, glob, and bash tools. Ground every "
@@ -225,7 +261,7 @@ def _render_description(
         # Scope — the evidence files to start from (from blueprint.evidence_anchors).
         "Start from these evidence files (read them first, then follow references as "
         "needed to ground the segment):",
-    ]
+    ])
 
     if blueprint.evidence_anchors:
         for anchor in blueprint.evidence_anchors:

@@ -12,6 +12,10 @@ dependencies = [
     # MkDocs source tree and the deploy stage runs `mkdocs build` (Req 8.3).
     "mkdocs>=1.6",
     "mkdocs-material>=9.5",
+    # MCP SDK: the `dhx mcp` stdio server is built on the low-level
+    # `mcp.server` API. Available transitively via HarnessX's MCP client today,
+    # but this feature makes it a direct runtime dependency, so declare it.
+    "mcp>=1.28",
 ]
 
 [project.optional-dependencies]

@@ -141,6 +141,7 @@ class AgenticProseRunner:
         *,
         repo_path: str,
         model: Any | None,
+        guidance: str = "",
         min_citations: int = MIN_CITED_FILES,
         max_steps: int = WRITER_MAX_STEPS,
         max_cost_usd: float = WRITER_MAX_COST_USD,
@@ -160,6 +161,11 @@ class AgenticProseRunner:
                 at. A missing/invalid path is absorbed → ``(None, stats)`` (Req 2.6 driver).
             model: a bound HarnessX ``BaseModelProvider``-shaped object, or ``None``. ``None``
                 means no run is attempted (Req 5.4) → ``(None, stats)``.
+            guidance: optional human refinement guidance shaping WHAT the agent writes and
+                emphasises (docuharnessx-mcp-refine task 2.3). Forwarded verbatim to
+                :func:`~docuharnessx.composition.task_prompt.build_agent_task` and rendered as
+                an applied, never-echoed author-guidance instruction; defaults to ``""`` so the
+                rendered task stays byte-identical to today's for every existing caller.
             min_citations: the structure gate's minimum distinct ``file:line`` citations and
                 the same minimum the task prompt demands; defaults to :data:`MIN_CITED_FILES`.
             max_steps: ``BaseTask.max_steps`` cap for this run; defaults to
@@ -212,6 +218,7 @@ class AgenticProseRunner:
             max_steps=max_steps,
             max_cost_usd=max_cost_usd,
             token_budget=token_budget,
+            guidance=guidance,
         )
 
         # Drive the real bounded agentic loop on a private event loop; absorb every failure.
