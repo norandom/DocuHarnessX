@@ -18,6 +18,13 @@ DocuHarnessX has no existing MCP component; HarnessX ships only an MCP *client*,
 spec builds a server. The installed `mcp` SDK (1.28.0) provides the stdio transport and the
 tool-dispatch layer, both usable without a model.
 
+The agent sets the docs location **at run time** rather than the launcher binding a fixed
+target: a first-class `open_workspace(repo, out, config?)` tool points the server at a target
+repository and the output directory a prior `dhx run` wrote (config optionally selects the
+model), resolving a per-target session on demand and setting it as the server's single mutable
+**active workspace**. Every other tool acts on that active workspace. `dhx mcp` may still
+**pre-open** one target as a convenience, but the client may switch at any time.
+
 The server exposes two first-class capabilities. **(A) Interactive refine over the existing
 surface**: list/get segments, rewrite a segment to human guidance (re-running the bounded
 agentic writer so the new body is re-grounded in the real repository and gated by the
@@ -50,12 +57,15 @@ edits a frozen data type.
 
 - **In scope**:
   - A new `docuharnessx/mcp/` package: a stdio MCP server, the tool handlers, a per-target
-    refine session object, and the overview capability.
+    refine session object, the server's mutable active workspace, and the overview capability.
+  - The workspace tool: `open_workspace` (the agent points the server at a target repo + output
+    dir at run time, optionally selecting the model; sets the server's active workspace).
   - The refine tools: `list_segments`, `get_segment`, `rewrite_segment`,
     `validate_segment`, `reassemble_site`.
   - The overview tools: `get_overview`, `draft_overview`, `refine_overview`.
-  - One `dhx mcp` CLI subcommand that resolves the session (output dir + target repo +
-    model) and launches the stdio server.
+  - One `dhx mcp` CLI subcommand that launches the stdio server with an **optional** pre-opened
+    target (when a target repo is given it resolves and pre-opens the session; otherwise the
+    agent opens the workspace via `open_workspace`).
   - One minimal, backward-compatible writer extension: an optional `guidance: str = ""`
     keyword on `AgenticProseRunner.run`, `build_agent_task`, and `_render_description`
     (`composition/agent.py` + `composition/task_prompt.py`), through which `rewrite_segment` and
@@ -118,35 +128,53 @@ edits.
 5. WHEN the `mcp` package is imported, it SHALL expose the server entry point, the session
    object, and the tool handlers from a single package namespace.
 
-### Requirement 2: The `dhx mcp` launcher and per-target session
+### Requirement 2: The `dhx mcp` launcher and the agent-set active workspace
 
-**Objective:** As a documentation author, I want `dhx mcp` to launch a stdio MCP server
-rooted at a specific target repo and output directory, so that I refine exactly the docs the
-batch run produced for that project.
+**Objective:** As a documentation author, I want `dhx mcp` to launch a stdio MCP server whose
+target docs the agent points at *at run time* (rather than a fixed target bound at launch), so
+that I — or my MCP client — choose which project's docs to refine without restarting the
+server, while still being able to pre-open one target for convenience.
 
 #### Acceptance Criteria
-1. The `dhx mcp` subcommand SHALL accept a target-repository path and an output directory
-   (the same `--out` semantics as `dhx run`, defaulting to the documented per-target output
-   path when omitted), and an optional `--config` / model selection.
-2. IF the target-repository path is missing or is not an existing directory, the `dhx mcp`
-   subcommand SHALL fail before launching the server with an identifiable error, exactly as
-   the `run` path validates its target.
-3. WHEN `dhx mcp` starts, it SHALL resolve a per-target session carrying the output
-   directory, the target-repository path, the loaded project `Vocabulary`, a
-   `FilesystemSegmentStore` rooted at `<out>/segments`, the resolved `ModelConfig` (or
-   `None` when no model is configured), the resolved per-target `SiteIdentity`, and the
-   optional `RepoAnalysis` when one is available.
-4. WHEN the session is resolved, the per-target `SiteIdentity` SHALL be derived from the
+1. The `dhx mcp` subcommand SHALL accept an **optional** target-repository path and an output
+   directory (the same `--out` semantics as `dhx run`, defaulting to the documented per-target
+   output path when omitted), and an optional `--config` / model selection. WHEN a target
+   repository is given, `dhx mcp` SHALL **pre-open** it as the server's initial active workspace
+   (a convenience); WHEN the target is omitted, the server SHALL launch generic and the agent
+   SHALL set the active workspace via `open_workspace` before any other tool can act.
+2. IF a target-repository path **is** given but is missing or is not an existing directory, the
+   `dhx mcp` subcommand SHALL fail before launching the server with an identifiable error,
+   exactly as the `run` path validates its target.
+3. WHEN a workspace is opened (pre-opened at launch, or via `open_workspace`), it SHALL resolve
+   a per-target session carrying the output directory, the target-repository path, the loaded
+   project `Vocabulary`, a `FilesystemSegmentStore` rooted at `<out>/segments`, the resolved
+   `ModelConfig` (or `None` when no model is configured), the resolved per-target `SiteIdentity`,
+   and the optional `RepoAnalysis` when one is available.
+4. WHEN a workspace is resolved, the per-target `SiteIdentity` SHALL be derived from the
    target repository via the existing site-identity resolver (origin remote → identity),
    and SHALL NEVER be hardcoded to DocuHarnessX's own identity.
-5. WHEN the session is resolved, the `dhx mcp` subcommand SHALL start the MCP server over
-   the **stdio** transport and serve until the client disconnects.
+5. WHEN `dhx mcp` starts (with or without a pre-opened target), the subcommand SHALL start the
+   MCP server over the **stdio** transport and serve until the client disconnects.
 6. IF no model can be resolved, the server SHALL still start and serve, and the
    model-touching tools SHALL degrade explicitly (per Requirement 5 and Requirement 7)
    rather than aborting server startup.
-7. The session SHALL be rooted per-target so a `dhx mcp` process refines one target's
-   documentation, and SHALL load the project `Vocabulary` via the project ontology loader
-   (default profile when no project ontology file is present).
+7. The active workspace SHALL be rooted per-target so it refines one target's documentation,
+   and SHALL load the project `Vocabulary` via the project ontology loader (default profile
+   when no project ontology file is present). The server SHALL hold a single **mutable** active
+   workspace that `open_workspace` sets, so the agent MAY switch to a different repo/out without
+   restarting the server.
+8. WHEN the agent calls `open_workspace(repo, out, config?)`, the server SHALL resolve a session
+   on demand from the agent-provided `repo` (required), `out` (optional; the per-target default
+   when omitted), and `config` (optional; selects the model config-then-env), SHALL set it as
+   the server's active workspace, and SHALL return a workspace summary carrying `opened`, the
+   resolved `repo` and `out`, the `segment_count`, the per-target `site_name`, and
+   `model_available`.
+9. IF `open_workspace` cannot resolve the workspace (a missing/invalid target repo, a malformed
+   `--config`, or an invalid ontology), the server SHALL return a **structured tool error**
+   (code `open_failed`) naming the repo and the reason, and SHALL NOT crash the server process.
+10. IF any tool other than `open_workspace` is called before a workspace is open, the server
+    SHALL return a **structured tool error** (code `no_workspace`) directing the agent to call
+    `open_workspace` first, and SHALL NOT operate on a hardcoded location or crash.
 
 ### Requirement 3: Tool registration and dispatch over stdio MCP
 
@@ -155,10 +183,11 @@ of MCP tools with typed inputs, so that I can discover and call the refine and o
 capabilities conversationally.
 
 #### Acceptance Criteria
-1. The server SHALL register and advertise the refine tools `list_segments`, `get_segment`,
-   `rewrite_segment`, `validate_segment`, and `reassemble_site`, and the overview tools
-   `get_overview`, `draft_overview`, and `refine_overview`, each with a name, a human
-   description, and a typed input schema.
+1. The server SHALL register and advertise the workspace tool `open_workspace`, the refine
+   tools `list_segments`, `get_segment`, `rewrite_segment`, `validate_segment`, and
+   `reassemble_site`, and the overview tools `get_overview`, `draft_overview`, and
+   `refine_overview` — **nine** tools in all — each with a name, a human description, and a
+   typed input schema.
 2. WHEN a client lists tools, the server SHALL return every registered tool with its input
    schema so the client can call it without out-of-band knowledge.
 3. WHEN a client calls a registered tool with valid arguments, the server SHALL dispatch to

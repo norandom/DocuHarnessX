@@ -12,7 +12,7 @@ the structure gate), validating a segment, drafting/refining a grounded narrativ
 and reassembling the themed Material site. The server is a thin composition layer over the
 existing modular core; it builds no second generation engine and no RAG/embedding index.
 
-**Users**: A documentation author drives the eight tools conversationally through an MCP
+**Users**: A documentation author drives the nine tools conversationally through an MCP
 client. The reusable functions the server composes are owned by `agentic-codebase-writer`
 (the writer + gate + blueprint + budgets), `cobesy-writer` (blueprint/wiring/fallback),
 `ontology-engine` (`Segment`/`SegmentStore`/`Vocabulary`), `mkdocs-site-assembler`
@@ -32,12 +32,17 @@ guarantees are inherited verbatim by reusing the bounded agentic writer (read-on
 exploration + Control budgets) and the deterministic structure gate.
 
 ### Goals
-- A stdio MCP server (low-level `mcp.server.Server`) exposing eight tools — `list_segments`,
-  `get_segment`, `rewrite_segment`, `validate_segment`, `reassemble_site`, `get_overview`,
-  `draft_overview`, `refine_overview` — launched by a `dhx mcp` subcommand.
+- A stdio MCP server (low-level `mcp.server.Server`) exposing nine tools — `open_workspace`,
+  `list_segments`, `get_segment`, `rewrite_segment`, `validate_segment`, `reassemble_site`,
+  `get_overview`, `draft_overview`, `refine_overview` — launched by a `dhx mcp` subcommand.
+- An agent-set, **mutable active workspace**: the docs location is chosen at run time via
+  `open_workspace` (resolve a session on demand → set active → return a summary), rather than a
+  fixed target bound at launch; `dhx mcp` may **pre-open** one target as a convenience. The
+  rationale: the launcher no longer hardcodes `--out` at launch — the agent (the MCP client)
+  controls which repo/out the tools act on, and may switch without restarting the server.
 - A per-target `RefineSession` carrying the output dir, target repo, loaded `Vocabulary`,
   `FilesystemSegmentStore`, resolved `ModelConfig`, per-target `SiteIdentity`, and optional
-  `RepoAnalysis`.
+  `RepoAnalysis` — resolved on `open_workspace` (or pre-opened at launch).
 - Anti-slop enforced server-side: every generated/refined body re-grounded through the
   agentic writer and gated by the structure gate before persistence; the gate verdict (and
   any deterministic fallback) surfaced, never silently passed; the store is the single
@@ -56,10 +61,14 @@ exploration + Control budgets) and the deterministic structure gate.
 ## Boundary Commitments
 
 ### This Spec Owns
-- The `docuharnessx/mcp/` package: the stdio server factory, the eight tool handlers, the
-  `RefineSession`, the session resolver, the `PlannedSegment` reconstruction glue, the
-  overview-blueprint builder, and the overview persistence.
-- The `dhx mcp` CLI subcommand (parsing/validation/session resolution/stdio launch).
+- The `docuharnessx/mcp/` package: the stdio server factory, the nine tool handlers (incl.
+  `open_workspace`), the server's mutable active-workspace holder, the `RefineSession`, the
+  session resolver, the `PlannedSegment` reconstruction glue, the overview-blueprint builder,
+  and the overview persistence.
+- The `dhx mcp` CLI subcommand (parsing/validation/**optional** pre-open/stdio launch).
+- The agent-set active-workspace model: `open_workspace` resolves a session on demand and sets
+  it as the server's mutable active workspace; every other tool returns a structured
+  `no_workspace` error until one is open.
 - The server-side acceptance policy: gate-before-persist, surface-the-verdict,
   replace-in-place persistence, and the `ReviewReport`-from-store construction for
   reassembly.
@@ -135,10 +144,15 @@ not a new pipeline.
 
 ```mermaid
 graph TD
-  Client["MCP client opencode"] --> Launch["dhx mcp launcher"]
-  Launch --> Session["RefineSession per target"]
-  Launch --> Server["build_refine_server stdio Server"]
+  Client["MCP client opencode"] --> Launch["dhx mcp launcher optional pre-open"]
+  Launch -->|optional initial session| Server["build_refine_server stdio Server"]
+  Server --> Active["mutable active workspace"]
   Server --> Dispatch["call_tool dispatch"]
+  Dispatch --> Open["open_workspace repo out config"]
+  Open --> Resolve["resolve_session on demand"]
+  Resolve --> Active
+  Active --> Session["RefineSession per target"]
+  Dispatch -->|no_workspace error until open| Active
   Dispatch --> Read["list_segments get_segment validate_segment"]
   Dispatch --> Rewrite["rewrite_segment"]
   Dispatch --> Overview["draft_overview refine_overview get_overview"]
@@ -165,11 +179,18 @@ graph TD
   structure gate, the deterministic wiring, the per-target site identity, the model-resolver
   seam, the `FilesystemSegmentStore` source of truth.
 - New components rationale: `session.py` resolves and holds per-target state; `server.py`
-  registers + dispatches the tools; `handlers.py` implements the eight handlers; `overview.py`
-  builds the overview blueprint + persists the overview; `planned.py` reconstructs a
-  `PlannedSegment` from a stored `Segment`; the CLI gains one `mcp` subcommand; and the writer
-  gains one additive `guidance` parameter (`AgenticProseRunner.run` → `build_agent_task` →
-  `_render_description`) so the human refinement guidance reaches the agent's task.
+  registers + dispatches the tools and owns the mutable active-workspace holder
+  (`_ActiveWorkspace`) that `open_workspace` sets; `handlers.py` implements the handlers (incl.
+  `workspace_summary`, returned by `open_workspace`); `overview.py` builds the overview
+  blueprint + persists the overview; `planned.py` reconstructs a `PlannedSegment` from a stored
+  `Segment`; the CLI gains one `mcp` subcommand with an **optional** target (pre-open); and the
+  writer gains one additive `guidance` parameter (`AgenticProseRunner.run` → `build_agent_task`
+  → `_render_description`) so the human refinement guidance reaches the agent's task.
+- Agent-set-out rationale: the launcher no longer hardcodes `--out` at launch. Instead the
+  agent (the MCP client) chooses the repo + output dir at run time via `open_workspace`, which
+  resolves a `RefineSession` on demand and sets the server's mutable active workspace. This
+  decouples the server lifecycle from a single target (the client may switch repos without
+  restarting) while keeping the `dhx mcp <repo> --out` pre-open path for convenience.
 - Guidance path rationale: the human `guidance` is **not** representable through the existing
   frozen, blueprint-derived task — `build_blueprint` has no `guidance` field, `CompositionBlueprint`
   is `@dataclass(frozen=True)`, and a blueprint `chunk` renders as an **output section heading**
@@ -213,11 +234,14 @@ docuharnessx/
 |   |                      #      so build_blueprint can rebuild a stored segment's blueprint
 |   |-- overview.py        # NEW: build_overview_blueprint(identity, vocab, analysis, *,
 |   |                      #      guidance="") + overview persistence (get/put reserved entry)
-|   |-- handlers.py        # NEW: the eight tool handlers over a RefineSession; returns
+|   |-- handlers.py        # NEW: the tool handlers over a RefineSession (incl.
+|   |                      #      workspace_summary, returned by open_workspace); returns
 |   |                      #      structured results; gate-before-persist; surface verdicts
-|   |-- schemas.py         # NEW: typed MCP input schemas + structured result/error envelopes
-|   `-- server.py          # NEW: build_refine_server(session) -> Server (list_tools +
-|                          #      call_tool dispatch); run_stdio(session) drives Server.run
+|   |-- schemas.py         # NEW: nine typed MCP input schemas (incl. open_workspace) +
+|   |                      #      structured error envelopes (no_workspace, open_failed, …)
+|   `-- server.py          # NEW: build_refine_server(session=None) -> Server (list_tools +
+|                          #      call_tool dispatch; _ActiveWorkspace mutable holder set by
+|                          #      open_workspace); run_stdio(session=None) drives Server.run
 |-- composition/agent.py   # MODIFIED: add optional `guidance: str = ""` to
 |                          #           AgenticProseRunner.run; forward to build_agent_task
 `-- composition/task_prompt.py # MODIFIED: add optional `guidance: str = ""` to
@@ -253,13 +277,16 @@ tests/
   section/heading for it"), modelled on the existing role/COBESY anti-echo rules. `guidance=""`
   emits no guidance line, so equal `(blueprint, repo_path, caps)` inputs still yield a
   byte-identical task (existing determinism + the agentic-codebase-writer tests preserved).
-- `docuharnessx/cli.py` — add `"mcp"` to `_SUBCOMMANDS`; add an `mcp` subparser
-  (`target_repo`, `--out`, `--config`, `-v`) mirroring `run`; add `_mcp_command(args)` that
-  resolves the session and calls `run_stdio(session)`; route `args.command == "mcp"` in
-  `main`. All human/log output for `mcp` goes to **stderr** so stdout stays the MCP channel.
-  The `mcp` command path SHOULD guard the `mcp`-SDK import with a typed, dependency-naming
-  error (mirroring the existing `_require_harnessx()`), so a stripped install reports the
-  missing SDK cleanly rather than an opaque `ImportError`. No other existing function is changed.
+- `docuharnessx/cli.py` — add `"mcp"` to `_SUBCOMMANDS`; add an `mcp` subparser with an
+  **optional** `target_repo` (plus `--out`, `--config`, `-v`) mirroring `run`; add
+  `_mcp_command(args)` that, **when a target repo is given**, validates it and resolves the
+  session to **pre-open** it (passing `config_path=args.config`), otherwise launches generic
+  with `session=None`, then calls `_run_stdio_blocking(session)` (`run_stdio(session)`). Route
+  `args.command == "mcp"` in `main`. All human/log output for `mcp` goes to **stderr** so stdout
+  stays the MCP channel. The `mcp` command path SHOULD guard the `mcp`-SDK import with a typed,
+  dependency-naming error (mirroring the existing `_require_harnessx()`), so a stripped install
+  reports the missing SDK cleanly rather than an opaque `ImportError`. No other existing function
+  is changed.
 - `pyproject.toml` — add `"mcp>=1.28"` to `[project].dependencies`. The SDK is importable in
   the working venv (1.28.0) only because HarnessX pulls it in transitively for its MCP
   *client*; this feature makes `mcp` a **direct** runtime dependency of `docuharnessx`, so it
@@ -267,6 +294,33 @@ tests/
   `mkdocs>=1.6` style, no upper pin).
 
 ## System Flows
+
+### Open the active workspace at run time (agent-set out)
+
+```mermaid
+sequenceDiagram
+  participant C as MCP client
+  participant D as call_tool dispatch
+  participant W as _ActiveWorkspace mutable
+  participant Rs as resolve_session
+  C->>D: open_workspace repo out config
+  D->>Rs: resolve_session repo out config_path
+  alt resolved
+    Rs-->>D: RefineSession
+    D->>W: set active session
+    D-->>C: workspace_summary opened repo out segment_count site_name model_available
+  else resolution failed bad repo or config or ontology
+    Rs-->>D: DocuHarnessXError
+    D-->>C: structured open_failed error not a crash
+  end
+  Note over C,D: until a workspace is open every other tool returns a structured no_workspace error
+```
+
+The launcher may **pre-open** one target (`build_refine_server(session)` / `run_stdio(session)`
+seed the active workspace), but the agent may call `open_workspace` to switch at any time. A
+tool other than `open_workspace` called before a workspace is open returns the structured
+`no_workspace` error (`schemas.no_workspace_error`) rather than operating on a hardcoded
+location or crashing.
 
 ### Re-grounded segment rewrite (capability A; anti-slop)
 
@@ -329,14 +383,17 @@ Each agentic run is bounded by the reused `BaseTask` caps + `make_control` guard
 | 1.3 | run/init/bare form unchanged | cli | `_SUBCOMMANDS` + dispatch | — |
 | 1.4 | Reuse core, no new engine/RAG | handlers, overview | reused functions | rewrite/overview |
 | 1.5 | Single package namespace | mcp/__init__ | re-exports | — |
-| 2.1 | mcp accepts target/out/config | cli, session | `_mcp_command`/`resolve_session` | — |
-| 2.2 | Validate target before launch | cli, session | `_validate_target_repo` reuse | — |
-| 2.3 | Resolve per-target session | session | `resolve_session` | — |
-| 2.4 | Per-target identity, not DHX | session | `resolve_site_identity`/`read_origin_remote` | — |
-| 2.5 | Start stdio server | server, cli | `run_stdio`/`stdio_server` | — |
+| 2.1 | mcp accepts OPTIONAL target/out/config; pre-open when given | cli, session | `_mcp_command` optional target → `resolve_session` | open |
+| 2.2 | Validate target before launch (only when given) | cli, session | `_validate_target_repo` reuse | — |
+| 2.3 | Resolve per-target session (on open / pre-open) | session | `resolve_session` | open |
+| 2.4 | Per-target identity, not DHX | session | `resolve_site_identity`/`read_origin_remote` | open |
+| 2.5 | Start stdio server (with/without pre-open) | server, cli | `run_stdio(session=None)`/`stdio_server` | — |
 | 2.6 | Start even with no model | session, handlers | `model_config or None` | — |
-| 2.7 | Per-target vocab load | session | `load_project_vocabulary` | — |
-| 3.1 | Register the eight tools | server, schemas | `list_tools` | — |
+| 2.7 | Per-target vocab load; mutable active workspace | session, server | `load_project_vocabulary`, `_ActiveWorkspace` | open |
+| 2.8 | open_workspace sets active workspace; returns summary | server, handlers | `_open_workspace` dispatch → `resolve_session` → `workspace_summary` | open |
+| 2.9 | open_workspace resolution failure → structured open_failed | server, schemas | `open_workspace_failed_error` (code `open_failed`) | open |
+| 2.10 | Other tools before open → structured no_workspace | server, schemas | `no_workspace_error` (code `no_workspace`) | open |
+| 3.1 | Register the nine tools (incl. open_workspace) | server, schemas | `list_tools` | — |
 | 3.2 | List tools w/ schemas | server | `list_tools` | — |
 | 3.3 | Dispatch valid calls | server | `call_tool` | all |
 | 3.4 | Structured error on bad args | server, schemas | error envelope | — |
@@ -391,13 +448,13 @@ Each agentic run is bounded by the reused `BaseTask` caps + `make_control` guard
 
 | Component | Domain/Layer | Intent | Req Coverage | Key Dependencies (P0/P1) | Contracts |
 |-----------|--------------|--------|--------------|--------------------------|-----------|
-| RefineSession + resolve_session | mcp (state) | Per-target session: out dir, repo, vocab, store, model, identity, analysis | 2.x, 10.5 | ontology_loader, model_resolver, assembler.identity, FilesystemSegmentStore (P0) | Service, State |
-| build_refine_server / run_stdio | mcp (server) | Register the eight tools; dispatch; drive stdio | 1.5, 2.5, 3.x, 10.3 | mcp.server.Server, stdio_server (P0) | Service |
-| handlers (8 tool handlers) | mcp (handlers) | Read/rewrite/validate/overview/reassemble over a session | 4.x-9.x | AgenticProseRunner, validate_agent_body, assemble_site (P0) | Service |
+| RefineSession + resolve_session | mcp (state) | Per-target session (resolved on open/pre-open): out dir, repo, vocab, store, model, identity, analysis | 2.x, 10.5 | ontology_loader, model_resolver, assembler.identity, FilesystemSegmentStore (P0) | Service, State |
+| build_refine_server / run_stdio | mcp (server) | Register the nine tools; dispatch; hold the mutable active workspace (`_ActiveWorkspace`); optional initial session; drive stdio | 1.5, 2.5, 2.7-2.10, 3.x, 10.3 | mcp.server.Server, stdio_server (P0) | Service |
+| handlers (9 tool handlers + workspace_summary) | mcp (handlers) | open_workspace summary / read / rewrite / validate / overview / reassemble over a session | 2.8, 4.x-9.x | AgenticProseRunner, validate_agent_body, assemble_site (P0) | Service |
 | planned_from_segment | mcp (pure) | Reconstruct a stable-id PlannedSegment from a stored Segment | 5.2, 5.8 | planning.model.PlannedSegment (P0) | Service |
 | build_overview_blueprint | mcp (pure) | Overview-shaped CompositionBlueprint (4 sections) | 7.1, 7.8 | composition.model (P0) | Service |
 | overview persistence | mcp (state) | Get/put the reserved overview entry | 7.4, 7.5 | FilesystemSegmentStore / sidecar (P1) | Service |
-| schemas / result envelopes | mcp (pure) | Typed input schemas + structured result/error envelopes | 3.1, 3.4, 3.5 | mcp.types (P1) | Service |
+| schemas / result envelopes | mcp (pure) | Nine typed input schemas (incl. open_workspace) + structured error envelopes (`missing_argument`, `unknown_tool`, `no_workspace`, `open_failed`) | 2.9, 2.10, 3.1, 3.4, 3.5 | mcp.types (P1) | Service |
 | writer `guidance` extension | composition (writer) | Additive `guidance: str = ""` threaded run → build_agent_task → _render_description; rendered as an applied, never-echoed author instruction near the mission | 5.2, 7.2, 9.1, 9.3 | composition.agent, composition.task_prompt (P0) | Service |
 
 ### Session
@@ -410,16 +467,19 @@ Each agentic run is bounded by the reused `BaseTask` caps + `make_control` guard
 | Requirements | 2.1-2.7, 10.5 |
 
 **Responsibilities and Constraints**
-- `resolve_session(target_repo, out_dir, *, model_config=None)` validates the target is an
-  existing directory (reusing the `run`-path validation semantics), resolves the output dir
-  (default per-target path when omitted), loads the project `Vocabulary` via
+- `resolve_session(target_repo, out_dir, *, model_config=None, config_path=None)` validates the
+  target is an existing directory (reusing the `run`-path validation semantics), resolves the
+  output dir (default per-target path when omitted), loads the project `Vocabulary` via
   `load_project_vocabulary` (default profile when absent), provisions a
   `FilesystemSegmentStore(<out>/segments, vocab)`, resolves the per-target `SiteIdentity` via
   `resolve_site_identity(target_repo, read_origin_remote(target_repo), {})`, optionally loads
   a persisted `RepoAnalysis` when one exists under the output dir, and resolves the model:
-  when `model_config` is injected (tests) it is used as-is; otherwise `resolve_model(config.model)`
-  is attempted and a `ModelResolutionError` is **swallowed to `None`** (the server must start
-  without a model — Req 2.6) rather than aborting.
+  when `model_config` is injected (tests) it is used as-is; otherwise the model declared in the
+  optional `--config` YAML is honoured config-then-env (`load_config(config_path=...).model` →
+  `resolve_model`) and a `ModelResolutionError` is **swallowed to `None`** (the server must
+  start without a model — Req 2.6) rather than aborting. This resolver is unchanged by the
+  active-workspace work except that it already honours `config_path`; it is the function
+  `open_workspace` calls on demand (and `dhx mcp` calls to pre-open).
 - The `RefineSession` is a small dataclass holding `out_dir`, `target_repo`, `vocab`,
   `store`, `model_config` (or `None`), `identity`, `analysis` (or `None`), and a
   `min_citations` (defaulting to `MIN_CITED_FILES`).
@@ -444,6 +504,7 @@ def resolve_session(
     out_dir: str | None,
     *,
     model_config: "ModelConfig | None" = None,
+    config_path: "str | os.PathLike[str] | None" = None,
 ) -> RefineSession: ...
 ```
 - Preconditions: `target_repo` is an existing directory (else an identifiable error before
@@ -457,30 +518,44 @@ def resolve_session(
 
 | Field | Detail |
 |-------|--------|
-| Intent | Register the eight tools and dispatch them; drive stdio |
-| Requirements | 1.5, 2.5, 3.1-3.6, 10.3 |
+| Intent | Register the nine tools and dispatch them; hold the mutable active workspace; drive stdio |
+| Requirements | 1.5, 2.5, 2.7-2.10, 3.1-3.6, 10.3 |
 
 **Responsibilities and Constraints**
-- `build_refine_server(session) -> Server` constructs a low-level `mcp.server.Server`,
-  registers a `@server.list_tools()` returning the eight `mcp.types.Tool` descriptors (name,
-  description, typed `inputSchema` from `schemas.py`), and an async `@server.call_tool(name,
-  arguments)` that validates arguments against the schema, dispatches to the matching handler
-  over the bound `session`, wraps the handler result as `TextContent`, and returns a
+- `build_refine_server(session=None) -> Server` constructs a low-level `mcp.server.Server` and
+  a small mutable `_ActiveWorkspace(session)` holder. The optional `session` is an **initial
+  workspace**: when given (the `dhx mcp <repo> --out` convenience) it is **pre-opened**; when
+  `None` the agent must call `open_workspace` first. It registers a `@server.list_tools()`
+  returning the nine `mcp.types.Tool` descriptors (name, description, typed `inputSchema` from
+  `schemas.py`), and an async `@server.call_tool(name, arguments)` that validates arguments,
+  dispatches to the matching handler, wraps the handler result as MCP content, and returns a
   **structured tool error** (never an uncaught raise) on a missing/malformed argument (Req
-  3.4) or an unknown tool (Req 3.5). The model-touching handlers (`rewrite_segment`,
+  3.4) or an unknown tool (Req 3.5).
+- `open_workspace` is the one tool that needs no prior workspace: `_open_workspace(arguments)`
+  reads the agent-provided `repo` (required string), `out` (optional), and `config` (optional),
+  calls `resolve_session(repo, out, config_path=config)` on demand, sets `active.session`, and
+  returns `handlers.workspace_summary(resolved)` (`opened`, `repo`, `out`, `segment_count`,
+  `site_name`, `model_available`; Req 2.8). A `DocuHarnessXError` from resolution (bad target
+  repo, malformed config, invalid ontology) is caught and returned as
+  `schemas.open_workspace_failed_error(repo, reason)` — code `open_failed` — never a crash
+  (Req 2.9).
+- Every **other** tool acts on the active workspace: when `active.session is None` the
+  dispatcher returns `schemas.no_workspace_error(name)` — code `no_workspace` — rather than
+  operating on a hardcoded location (Req 2.10). The model-touching handlers (`rewrite_segment`,
   `draft_overview`, `refine_overview`) call the synchronous `AgenticProseRunner.run` off the
   async dispatch via `asyncio.to_thread`, mirroring the Write stage, so the runner's private
   event loop never nests in the server's loop.
-- `run_stdio(session)` opens `stdio_server()`, builds the server, and awaits
-  `server.run(read_stream, write_stream, server.create_initialization_options())`. The
-  launcher (`dhx mcp`) calls it via `asyncio.run`.
-- The factory and `call_tool` are exercisable in-process (import `build_refine_server`, call
-  the registered handler / `call_tool`) with no stdio subprocess and no model (Req 3.6, 10.3).
+- `run_stdio(session=None)` opens `stdio_server()`, builds the server (passing the optional
+  initial session through), and awaits `server.run(read_stream, write_stream,
+  server.create_initialization_options())`. The launcher (`dhx mcp`) calls it via `asyncio.run`.
+- The factory and `call_tool` are exercisable in-process (import `build_refine_server()` with
+  no session, call `call_tool`) with no stdio subprocess and no model: a server built with no
+  session returns `no_workspace` until `open_workspace` is called (Req 3.6, 10.3).
 
 ##### Service Interface
 ```python
-def build_refine_server(session: RefineSession) -> "Server": ...
-def run_stdio(session: RefineSession) -> None: ...  # blocks; drives Server.run over stdio
+def build_refine_server(session: "RefineSession | None" = None) -> "Server": ...
+def run_stdio(session: "RefineSession | None" = None) -> None: ...  # blocks; drives Server.run over stdio
 ```
 
 ### Handlers
@@ -489,10 +564,16 @@ def run_stdio(session: RefineSession) -> None: ...  # blocks; drives Server.run 
 
 | Field | Detail |
 |-------|--------|
-| Intent | Implement the eight tools over a `RefineSession` |
-| Requirements | 4.x-9.x |
+| Intent | Implement the tools over a `RefineSession` (plus `workspace_summary` for open_workspace) |
+| Requirements | 2.8, 4.x-9.x |
 
 **Responsibilities and Constraints (per tool)**
+- `workspace_summary(session)` -> the compact, model-free description `open_workspace` returns
+  after the server resolves + sets the active workspace: `{opened: True, repo, out,
+  segment_count, site_name, model_available}` (the resolved target repo + output dir set by the
+  agent, the stored-segment count, the per-target `site_name`, and whether a model is
+  configured). Reads only the session + store; consults no model (Req 2.8). The
+  resolve-on-demand + set-active + open_failed/no_workspace dispatch lives in `server.py`.
 - `list_segments()` -> `session.store.list_segments()` mapped to `{id, title, roles, intent,
   subjects}` in by-id order (Req 4.1, model-free).
 - `get_segment(id)` -> the stored segment's `{id, title, roles, intent, subjects, summary,
@@ -700,9 +781,12 @@ def _render_description(
   error envelopes (Req 4.x, 6.x).
 
 ### Integration Tests
-- `test_mcp_dispatch`: in-process `build_refine_server(session)` lists the eight tools with
+- `test_mcp_dispatch`: in-process `build_refine_server(session)` lists the nine tools with
   schemas; `call_tool` dispatches; bad args and unknown tool return structured errors — all
-  without a model or a stdio subprocess (Req 3.x, 10.3).
+  without a model or a stdio subprocess (Req 3.x, 10.3). A server built with **no** session
+  returns the structured `no_workspace` error for every tool except `open_workspace`; after
+  `open_workspace(repo, out)` the tools act on the resolved active workspace; a bad repo →
+  `open_failed` (Req 2.8-2.10).
 - `test_mcp_rewrite`: with the scripted provider over the fixture repo and a fixture store,
   `rewrite_segment` drives the real `AgenticProseRunner`, accepts a gate-passing body, and
   replaces the stored segment in place (same id, body changed) (Req 5.x, 10.1, 10.2).
@@ -712,8 +796,9 @@ def _render_description(
 - `test_mcp_reassemble`: `reassemble_site` builds a `ReviewReport` from the live store and
   produces a non-empty site reflecting the current bodies + overview; an empty store yields a
   well-formed empty site (Req 8.x, model-free).
-- `test_cli_mcp`: `dhx mcp <repo>` parses, validates the target, and the launcher writes
-  nothing to stdout except the protocol stream (logs to stderr) (Req 2.x).
+- `test_cli_mcp`: `dhx mcp <repo>` parses, validates the target, and pre-opens the session; the
+  bare `dhx mcp` (no target) parses and launches generic with `session=None`; the launcher
+  writes nothing to stdout except the protocol stream (logs to stderr) (Req 2.x).
 
 ### E2E Tests
 - A credential-free refine loop: rewrite (or draft_overview) via the scripted provider ->

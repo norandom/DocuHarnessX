@@ -158,32 +158,55 @@
 - [ ] 4. The MCP server: registration, dispatch, and the stdio launcher
 - [ ] 4.1 Build the server factory: tool registration + dispatch with structured errors
   - Add `schemas.py` (the typed input schemas + the structured result/error envelopes) and
-    `build_refine_server(session) -> Server` registering the eight tools (`list_segments`,
-    `get_segment`, `rewrite_segment`, `validate_segment`, `reassemble_site`, `get_overview`,
-    `draft_overview`, `refine_overview`) via the low-level MCP `list_tools` / `call_tool`
-    decorators; `call_tool` validates arguments, dispatches to the matching handler over the
-    bound session (offloading the model-touching handlers off the async loop), wraps the result
-    as MCP content, and returns a structured tool error for a missing/malformed argument or an
-    unknown tool without crashing the dispatch loop.
+    `build_refine_server(session=None) -> Server` registering the nine tools (`open_workspace`,
+    `list_segments`, `get_segment`, `rewrite_segment`, `validate_segment`, `reassemble_site`,
+    `get_overview`, `draft_overview`, `refine_overview`) via the low-level MCP `list_tools` /
+    `call_tool` decorators; `call_tool` validates arguments, dispatches to the matching handler
+    over the bound session (offloading the model-touching handlers off the async loop), wraps the
+    result as MCP content, and returns a structured tool error for a missing/malformed argument or
+    an unknown tool without crashing the dispatch loop.
   - Observable completion: an in-process integration test (no stdio subprocess, no model) lists
-    the eight tools with their schemas, dispatches a valid `list_segments` / `validate_segment`
+    the nine tools with their schemas, dispatches a valid `list_segments` / `validate_segment`
     call, and confirms a missing required argument and an unknown tool each return a structured
     error rather than raising.
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 10.3_
   - _Boundary: build_refine_server + schemas_
   - _Depends: 3.1, 3.2, 3.3, 3.4_
 
+- [ ] 4.3 Add the `open_workspace` tool + the mutable active-workspace holder
+  - Add the `open_workspace` `mcp.types.Tool` descriptor to `schemas.py` (required `repo`,
+    optional `out` / `config`) and the `no_workspace_error` (code `no_workspace`) +
+    `open_workspace_failed_error` (code `open_failed`) envelopes; add `workspace_summary(session)`
+    to `handlers.py` (`opened` / `repo` / `out` / `segment_count` / `site_name` /
+    `model_available`). In `server.py`, hold a small mutable `_ActiveWorkspace(session)` set by
+    the optional initial session, and route `open_workspace` through `_open_workspace(arguments)`
+    that calls `resolve_session(repo, out, config_path=config)` on demand, sets `active.session`,
+    and returns the summary — catching a `DocuHarnessXError` into the structured `open_failed`
+    error rather than crashing. Every other tool returns the structured `no_workspace` error when
+    `active.session is None`, so the agent sets the docs location at run time rather than the
+    launcher hardcoding `--out`.
+  - Observable completion: an in-process integration test confirms a server built with **no**
+    session returns the structured `no_workspace` error for `list_segments` (and the other
+    non-open tools) until `open_workspace(repo, out)` is called, after which those tools act on
+    the resolved active workspace and `open_workspace` returns the summary; a bad target repo (or
+    malformed `config`) returns the structured `open_failed` error rather than raising — all with
+    no model and no stdio subprocess.
+  - _Requirements: 2.7, 2.8, 2.9, 2.10, 3.1, 3.4, 3.5, 3.6, 10.3_
+  - _Boundary: open_workspace tool + active-workspace holder_
+  - _Depends: 4.1_
+
 - [ ] 4.2 Add the stdio launcher and re-export the public surface
-  - Add `run_stdio(session)` that opens the stdio transport, builds the server, and drives
-    `Server.run` over the inherited streams, and re-export `build_refine_server` /
-    `run_stdio` / `RefineSession` / `resolve_session` / the handlers from the package
-    `__init__`. The launcher writes nothing to stdout except the MCP protocol stream.
+  - Add `run_stdio(session=None)` that opens the stdio transport, builds the server (forwarding
+    the optional initial session), and drives `Server.run` over the inherited streams, and
+    re-export `build_refine_server` / `run_stdio` / `RefineSession` / `resolve_session` / the
+    handlers from the package `__init__`. The launcher writes nothing to stdout except the MCP
+    protocol stream.
   - Observable completion: a unit test confirms the package re-exports the public surface and
     that `run_stdio` wires the built server to the stdio streams (driven against in-memory
     streams so it terminates), writing no non-protocol bytes to stdout.
   - _Requirements: 1.5, 2.5, 3.6_
   - _Boundary: run_stdio + package surface_
-  - _Depends: 4.1_
+  - _Depends: 4.1, 4.3_
 
 - [ ] 5. CLI integration: the `dhx mcp` subcommand
 - [ ] 5.1 Declare the `mcp` SDK as a direct dependency
@@ -198,18 +221,21 @@
   - _Requirements: 1.4_
   - _Boundary: build config_
 
-- [ ] 5.2 Add the `dhx mcp` subcommand and route it to the launcher
-  - Extend the existing `dhx` parser with an `mcp` subparser (target repo, `--out`, `--config`,
-    `-v`) mirroring `run`, add `"mcp"` to the subcommand set so the bare form still works, add a
-    `_mcp_command(args)` that validates the target, resolves the session (resolving or skipping
-    the model), and launches the stdio server, and route `mcp` in `main` — sending all human/log
-    output to stderr so stdout stays the MCP channel, and leaving `run`/`init`/bare-form
+- [ ] 5.2 Add the `dhx mcp` subcommand and route it to the launcher (optional pre-open target)
+  - Extend the existing `dhx` parser with an `mcp` subparser with an **optional** target repo
+    (`nargs="?"`) plus `--out`, `--config`, `-v` mirroring `run`, add `"mcp"` to the subcommand
+    set so the bare form still works, add a `_mcp_command(args)` that — **when a target repo is
+    given** — validates it and resolves the session to **pre-open** it (passing
+    `config_path=args.config`), otherwise launches generic with `session=None`, then launches the
+    stdio server via `_run_stdio_blocking(session)`, and route `mcp` in `main` — sending all
+    human/log output to stderr so stdout stays the MCP channel, and leaving `run`/`init`/bare-form
     untouched. Guard the `mcp`-SDK import with a typed, dependency-naming error (mirroring the
     existing `_require_harnessx()`) so a stripped install reports the missing SDK cleanly.
-  - Observable completion: a unit test confirms `dhx mcp <repo>` parses to the `mcp` command,
-    validates the target before launching (an invalid target exits non-zero with an identifiable
-    error), the launcher writes nothing to stdout except the protocol stream, and `dhx run` /
-    `dhx init` / the bare `dhx <repo>` form still parse unchanged.
+  - Observable completion: a unit test confirms `dhx mcp <repo>` parses to the `mcp` command and
+    pre-opens the session (an invalid target exits non-zero with an identifiable error), `dhx mcp`
+    with **no** target parses and launches generic (`session=None`, the agent opens the workspace
+    via `open_workspace`), the launcher writes nothing to stdout except the protocol stream, and
+    `dhx run` / `dhx init` / the bare `dhx <repo>` form still parse unchanged.
   - _Requirements: 1.1, 1.3, 2.1, 2.2, 2.5, 2.6_
   - _Boundary: dhx mcp subcommand_
   - _Depends: 4.2, 5.1_

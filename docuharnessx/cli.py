@@ -860,24 +860,32 @@ def _mcp_command(args: argparse.Namespace) -> int:
     #    dependency rather than failing later in the launcher.
     _require_mcp()
 
-    # 2. Validate the target FIRST — before resolving the session or any model work
-    #    (Req 2.2). Returns the absolute path; an invalid target raises TargetRepoError.
-    target_repo = _validate_target_repo(args.target_repo)
+    # 2. The agent sets the workspace (target repo + output dir) at run time via the
+    #    ``open_workspace`` tool, so the launch target is OPTIONAL. When a target repo is
+    #    given, pre-open it (the ``dhx mcp <repo> --out`` convenience): validate it first
+    #    (TargetRepoError on a bad target), then resolve the per-target session (``--out``
+    #    omitted -> the documented per-target default; a ``--config`` ``model:`` honoured
+    #    config-then-env, fail-fast on a bad config). Otherwise launch a generic server the
+    #    client points with ``open_workspace(repo, out)``.
+    session = None
+    if args.target_repo:
+        target_repo = _validate_target_repo(args.target_repo)
+        out_dir = os.path.abspath(args.out) if args.out else None
+        session = resolve_session(target_repo, out_dir, config_path=args.config)
+        print(
+            f"dhx mcp: serving refine MCP server over stdio; workspace pre-opened at "
+            f"{target_repo} (the client may switch via open_workspace). Logs -> stderr.",
+            file=sys.stderr,
+        )
+    else:
+        print(
+            "dhx mcp: serving refine MCP server over stdio; call "
+            "open_workspace(repo, out) to choose the docs to refine. Logs -> stderr.",
+            file=sys.stderr,
+        )
 
-    # 3. Resolve the per-target session. ``--out`` omitted -> None so the resolver
-    #    applies the documented per-target default (mirroring ``dhx run``; Req 2.1). A
-    #    ``--config`` YAML's ``model:`` is honoured by the resolver (config-then-env, like
-    #    ``dhx run``); a named-but-bad config fails fast there.
-    out_dir = os.path.abspath(args.out) if args.out else None
-    session = resolve_session(target_repo, out_dir, config_path=args.config)
-
-    # 4. Launch the stdio server and serve until the client disconnects (Req 2.5). The
+    # 3. Launch the stdio server and serve until the client disconnects (Req 2.5). The
     #    transport owns stdout; the server logs to stderr.
-    print(
-        f"dhx mcp: serving refine MCP server for {target_repo} over stdio "
-        "(stdout is the MCP protocol channel; logs go to stderr).",
-        file=sys.stderr,
-    )
     _run_stdio_blocking(session)
     return EXIT_OK
 

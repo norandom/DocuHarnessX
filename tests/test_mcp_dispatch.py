@@ -40,8 +40,10 @@ from docuharnessx.ontology import (
 )
 from docuharnessx.planning.model import PlannedSegment
 
-# The eight tools the server registers (Req 3.1).
+# The nine tools the server registers (Req 3.1): the agent-set workspace tool + eight
+# refine/overview tools.
 _EXPECTED_TOOLS = {
+    "open_workspace",
     "list_segments",
     "get_segment",
     "rewrite_segment",
@@ -145,13 +147,13 @@ def _call_tool(server, name: str, arguments: dict | None) -> mt.CallToolResult:
 # --------------------------------------------------------------------------- #
 
 
-def test_build_refine_server_registers_the_eight_tools_with_schemas(tmp_path) -> None:
+def test_build_refine_server_registers_the_nine_tools_with_schemas(tmp_path) -> None:
     server = build_refine_server(_session(tmp_path))
     tools = _list_tools(server)
 
     names = {tool.name for tool in tools}
     assert names == _EXPECTED_TOOLS
-    assert len(tools) == 8  # no duplicates
+    assert len(tools) == 9  # no duplicates
 
     for tool in tools:
         # Each tool advertises a human description and an object-typed input schema (Req 3.1).
@@ -261,10 +263,71 @@ def test_dispatch_loop_survives_a_sequence_of_good_and_bad_calls(tmp_path) -> No
     assert good.isError is False
 
 
-def test_schemas_module_exposes_the_eight_tool_descriptors() -> None:
+def test_schemas_module_exposes_the_nine_tool_descriptors() -> None:
     from docuharnessx.mcp import schemas
 
     descriptors = schemas.tool_descriptors()
     assert {tool.name for tool in descriptors} == _EXPECTED_TOOLS
     # The descriptors are the same typed mcp Tool objects the server registers.
     assert all(isinstance(tool, mt.Tool) for tool in descriptors)
+
+
+# --------------------------------------------------------------------------- #
+# open_workspace: the agent sets the workspace (repo/out) at call time, not at  #
+# launch. Tools return a structured no-workspace error until one is opened.     #
+# --------------------------------------------------------------------------- #
+
+
+def test_tools_error_until_a_workspace_is_opened() -> None:
+    # A server built with NO initial session (generic launch): every non-open tool returns a
+    # structured no-workspace error (never a crash) until the agent calls open_workspace.
+    server = build_refine_server()
+    result = _call_tool(server, "list_segments", {})
+    assert result.isError is True
+    assert result.structuredContent["code"] == "no_workspace"
+
+
+def test_open_workspace_sets_active_then_tools_work(tmp_path) -> None:
+    repo = tmp_path / "proj"
+    repo.mkdir()
+    out = tmp_path / "out"
+    server = build_refine_server()  # generic — no hardcoded workspace
+
+    opened = _call_tool(
+        server, "open_workspace", {"repo": str(repo), "out": str(out)}
+    )
+    assert opened.isError is False
+    assert opened.structuredContent["opened"] is True
+    assert opened.structuredContent["repo"].endswith("proj")
+    assert opened.structuredContent["out"].endswith("out")
+    assert opened.structuredContent["segment_count"] == 0  # empty store
+    assert isinstance(opened.structuredContent["model_available"], bool)
+
+    # The read-only tools now operate on the opened workspace.
+    listed = _call_tool(server, "list_segments", {})
+    assert listed.isError is False
+    assert listed.structuredContent["segments"] == []
+
+
+def test_open_workspace_bad_repo_is_structured_error_and_loop_survives(tmp_path) -> None:
+    server = build_refine_server()
+    bad = _call_tool(server, "open_workspace", {"repo": str(tmp_path / "nope")})
+    assert bad.isError is True
+    assert bad.structuredContent["code"] == "open_failed"
+    # The dispatch loop survives: no workspace was opened, so a later tool still reports it.
+    after = _call_tool(server, "list_segments", {})
+    assert after.structuredContent["code"] == "no_workspace"
+
+
+def test_open_workspace_requires_a_repo_argument() -> None:
+    server = build_refine_server()
+    result = _call_tool(server, "open_workspace", {})
+    assert result.isError is True  # missing required 'repo'
+
+
+def test_pre_opened_session_serves_without_open_workspace(tmp_path) -> None:
+    # The dhx mcp <repo> --out convenience: an initial session pre-opens the workspace, so the
+    # tools work immediately (backward-compatible with the prior single-session server).
+    server = build_refine_server(_session(tmp_path))
+    listed = _call_tool(server, "list_segments", {})
+    assert listed.isError is False

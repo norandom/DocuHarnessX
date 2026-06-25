@@ -82,6 +82,33 @@ _GUIDANCE_PROPERTY = {
     }
 }
 
+_REPO_PROPERTY = {
+    "repo": {
+        "type": "string",
+        "description": "Path to the target repository whose generated docs to refine.",
+    }
+}
+
+_OUT_PROPERTY = {
+    "out": {
+        "type": "string",
+        "description": (
+            "The output directory a prior `dhx run` wrote (segments + site). Omit to use the "
+            "documented per-target default (<repo>/.docuharnessx/out)."
+        ),
+    }
+}
+
+_CONFIG_PROPERTY = {
+    "config": {
+        "type": "string",
+        "description": (
+            "Optional path to a --config YAML selecting the model (config-then-env, like "
+            "`dhx run`)."
+        ),
+    }
+}
+
 
 # --------------------------------------------------------------------------- #
 # The eight tool descriptors                                                  #
@@ -91,6 +118,20 @@ _GUIDANCE_PROPERTY = {
 # reassembly, then the overview tools. The order is stable for deterministic tool listing.
 
 _TOOLS: tuple[mt.Tool, ...] = (
+    mt.Tool(
+        name="open_workspace",
+        description=(
+            "Open (or switch to) the documentation workspace the refine tools operate on: a "
+            "target repository and the output directory a prior `dhx run` wrote. CALL THIS "
+            "FIRST — the other tools act on the open workspace and return a structured error "
+            "until one is open. `repo` is required; `out` defaults to the per-target path; "
+            "`config` optionally selects the model. Returns the resolved repo/out, the segment "
+            "count, the site name, and whether a model is configured."
+        ),
+        inputSchema=_object_schema(
+            {**_REPO_PROPERTY, **_OUT_PROPERTY, **_CONFIG_PROPERTY}, ["repo"]
+        ),
+    ),
     mt.Tool(
         name="list_segments",
         description=(
@@ -227,4 +268,25 @@ def missing_argument_error(tool: str, argument: str) -> mt.CallToolResult:
             "tool": tool,
             "argument": argument,
         },
+    )
+
+
+def no_workspace_error(tool: str) -> mt.CallToolResult:
+    """A structured error: a tool was called before a workspace was opened (Req 2.x).
+
+    The output directory is set by the agent via ``open_workspace`` rather than hardcoded at
+    launch, so a tool that needs the workspace returns this (never a crash) until one is open.
+    """
+    return make_tool_error(
+        f"tool {tool!r} needs an open workspace; call "
+        "open_workspace(repo=..., out=...) first",
+        structured={"error": True, "code": "no_workspace", "tool": tool},
+    )
+
+
+def open_workspace_failed_error(repo: str, reason: str) -> mt.CallToolResult:
+    """A structured error when ``open_workspace`` could not resolve the workspace."""
+    return make_tool_error(
+        f"could not open workspace for {repo!r}: {reason}",
+        structured={"error": True, "code": "open_failed", "repo": repo},
     )

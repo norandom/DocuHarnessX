@@ -1,9 +1,13 @@
 """The stdio MCP refine server factory + dispatch (mcp-refine task 4.1).
 
-:func:`build_refine_server` constructs a low-level :class:`mcp.server.Server` bound to a
-per-target :class:`~docuharnessx.mcp.session.RefineSession` and registers the **eight**
-refine/overview tools (Req 3.1):
+:func:`build_refine_server` constructs a low-level :class:`mcp.server.Server` whose active
+workspace (the target repo + output dir) is **set by the agent** via ``open_workspace`` rather
+than hardcoded at launch (an optional initial session pre-opens it). It registers the **nine**
+tools (Req 3.1):
 
+* workspace: ``open_workspace`` — the agent points the server at a repo + output dir; every
+  other tool acts on the open workspace (returning a structured no-workspace error until one
+  is open);
 * read-only / model-free: ``list_segments``, ``get_segment``, ``validate_segment``,
   ``reassemble_site``, ``get_overview``;
 * model-touching (bounded agentic writer + structure gate): ``rewrite_segment``,
@@ -30,7 +34,7 @@ so stdout stays the MCP protocol channel (the stdio launcher is task 4.2).
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, AsyncContextManager, Awaitable, Callable
+from typing import TYPE_CHECKING, Any, AsyncContextManager, Callable
 
 import mcp.types as mt
 from mcp.server import Server
@@ -65,33 +69,61 @@ def _str_argument(
     return value, None
 
 
-def build_refine_server(session: "RefineSession") -> Server:
-    """Build the low-level MCP :class:`Server` bound to ``session`` (Req 3.1-3.6).
+class _ActiveWorkspace:
+    """The server's mutable current workspace — the agent sets it via ``open_workspace``.
 
-    Registers the ``list_tools`` advertiser and the ``call_tool`` dispatcher; the returned
-    server is ready for the stdio launcher (task 4.2) and is fully exercisable in-process for
-    the dispatch tests (no stdio subprocess, no model required).
+    The output directory is provided by the agent at call time (not hardcoded at launch), so
+    the bound :class:`RefineSession` is resolved on ``open_workspace`` rather than fixed when
+    the server is built. A ``session`` passed to :func:`build_refine_server` (the
+    ``dhx mcp <repo> --out`` convenience) pre-opens the workspace; the agent may re-open or
+    switch to a different repo/out at any time.
+    """
+
+    __slots__ = ("session",)
+
+    def __init__(self, session: "RefineSession | None" = None) -> None:
+        self.session = session
+
+
+def build_refine_server(session: "RefineSession | None" = None) -> Server:
+    """Build the low-level MCP :class:`Server`; the workspace is agent-set (Req 3.1-3.6).
+
+    ``session`` is an **optional initial workspace**: when given (the ``dhx mcp <repo> --out``
+    convenience) it is pre-opened; when ``None`` the agent must call ``open_workspace`` first
+    (every other tool returns a structured no-workspace error until one is open). Registers the
+    ``list_tools`` advertiser and the single ``call_tool`` dispatcher; the returned server is
+    ready for the stdio launcher (task 4.2) and is fully exercisable in-process for the dispatch
+    tests (no stdio subprocess, no model required).
     """
     server: Server = Server(_SERVER_NAME)
+    active = _ActiveWorkspace(session)
 
     @server.list_tools()
     async def _list_tools() -> list[mt.Tool]:
-        """Advertise the eight typed tool descriptors (Req 3.1, 3.2)."""
+        """Advertise the typed tool descriptors (Req 3.1, 3.2)."""
         return schemas.tool_descriptors()
 
-    # The synchronous, read-only / model-free handlers — dispatched directly (no offload).
-    _sync_dispatch: dict[str, Callable[[], dict[str, Any]]] = {
-        "list_segments": lambda: {"segments": handlers.list_segments(session)},
-        "reassemble_site": lambda: handlers.reassemble_site(session),
-        "get_overview": lambda: handlers.get_overview(session),
-    }
+    def _open_workspace(arguments: dict[str, Any]) -> Any:
+        """Resolve + set the active workspace from the agent-provided ``repo``/``out``/``config``.
 
-    # The model-touching, async handlers — already coroutine functions that offload the
-    # synchronous bounded writer off the event loop via asyncio.to_thread internally
-    # (handlers.py), so dispatch simply awaits them.
-    _async_dispatch: dict[str, Callable[[dict[str, Any]], Awaitable[dict[str, Any]]]] = {
-        "draft_overview": lambda _args: handlers.draft_overview(session),
-    }
+        Resolution failures (bad target repo, malformed config, invalid ontology) become a
+        structured tool error — never a crash — so the dispatch loop survives (Req 3.4, 3.5).
+        """
+        from docuharnessx.errors import DocuHarnessXError
+        from docuharnessx.mcp.session import resolve_session
+
+        repo, err = _str_argument(arguments, "open_workspace", "repo")
+        if err is not None:
+            return err
+        out = arguments.get("out") or None
+        config = arguments.get("config") or None
+        try:
+            resolved = resolve_session(repo, out, config_path=config)
+        except DocuHarnessXError as exc:
+            return schemas.open_workspace_failed_error(repo, str(exc))
+        active.session = resolved
+        _LOGGER.info("open_workspace: repo=%r out=%r", resolved.target_repo, resolved.out_dir)
+        return handlers.workspace_summary(resolved)
 
     @server.call_tool(validate_input=False)
     async def _call_tool(name: str, arguments: dict[str, Any]) -> Any:
@@ -100,9 +132,9 @@ def build_refine_server(session: "RefineSession") -> Server:
         Returns either a JSON-serialisable ``dict`` (the framework wraps it as
         ``structuredContent`` + a JSON text block, ``isError=False``) or an
         :class:`mcp.types.CallToolResult` with ``isError=True`` for an unknown tool / missing
-        argument (the framework passes a returned ``CallToolResult`` straight through). Any
-        unexpected handler exception is caught and surfaced as a structured error so the loop
-        survives (Req 3.3, 3.4, 3.5).
+        argument / no open workspace (the framework passes a returned ``CallToolResult``
+        straight through). Any unexpected handler exception is caught and surfaced as a
+        structured error so the loop survives (Req 3.3, 3.4, 3.5).
         """
         arguments = arguments or {}
 
@@ -112,9 +144,23 @@ def build_refine_server(session: "RefineSession") -> Server:
             return schemas.unknown_tool_error(name)
 
         try:
+            # ``open_workspace`` sets the agent-chosen repo/out; it needs no prior workspace.
+            if name == "open_workspace":
+                return _open_workspace(arguments)
+
+            # Every other tool acts on the OPEN workspace; until the agent opens one, return a
+            # structured no-workspace error rather than operating on a hardcoded location.
+            sess = active.session
+            if sess is None:
+                return schemas.no_workspace_error(name)
+
             # No-argument, model-free synchronous tools.
-            if name in _sync_dispatch:
-                return _sync_dispatch[name]()
+            if name == "list_segments":
+                return {"segments": handlers.list_segments(sess)}
+            if name == "reassemble_site":
+                return handlers.reassemble_site(sess)
+            if name == "get_overview":
+                return handlers.get_overview(sess)
 
             # ``get_segment`` / ``validate_segment`` — a required ``id`` string.
             if name in ("get_segment", "validate_segment"):
@@ -122,8 +168,8 @@ def build_refine_server(session: "RefineSession") -> Server:
                 if err is not None:
                     return err
                 if name == "get_segment":
-                    return handlers.get_segment(session, segment_id)
-                return handlers.validate_segment(session, segment_id)
+                    return handlers.get_segment(sess, segment_id)
+                return handlers.validate_segment(sess, segment_id)
 
             # ``rewrite_segment`` — required ``id`` + ``guidance`` (model-touching; awaited).
             if name == "rewrite_segment":
@@ -133,17 +179,17 @@ def build_refine_server(session: "RefineSession") -> Server:
                 guidance, err = _str_argument(arguments, name, "guidance")
                 if err is not None:
                     return err
-                return await handlers.rewrite_segment(session, segment_id, guidance)
+                return await handlers.rewrite_segment(sess, segment_id, guidance)
 
             # ``refine_overview`` — a required ``guidance`` (model-touching; awaited).
             if name == "refine_overview":
                 guidance, err = _str_argument(arguments, name, "guidance")
                 if err is not None:
                     return err
-                return await handlers.refine_overview(session, guidance)
+                return await handlers.refine_overview(sess, guidance)
 
             # ``draft_overview`` — no arguments (model-touching; awaited).
-            return await _async_dispatch[name](arguments)
+            return await handlers.draft_overview(sess)
         except Exception as exc:  # pragma: no cover - defensive: the loop must never crash
             # A handler should not raise for a domain condition (it returns a structured
             # result), but any unexpected error is contained here so the dispatch loop stays
@@ -158,7 +204,7 @@ def build_refine_server(session: "RefineSession") -> Server:
 
 
 async def run_stdio(
-    session: "RefineSession",
+    session: "RefineSession | None" = None,
     *,
     transport: Callable[[], AsyncContextManager[Any]] = stdio_server,
 ) -> None:

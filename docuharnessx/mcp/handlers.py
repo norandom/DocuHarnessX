@@ -177,6 +177,24 @@ def _find_segment(session: "RefineSession", segment_id: str) -> Segment | None:
 # --------------------------------------------------------------------------- #
 
 
+def workspace_summary(session: "RefineSession") -> dict[str, Any]:
+    """A compact, model-free description of an open workspace (returned by ``open_workspace``).
+
+    Confirms to the agent which workspace is now active — the resolved target repo and output
+    dir (set by the agent, not hardcoded at launch), the stored-segment count, the per-target
+    site name (never DocuHarnessX), and whether a model is configured (so the agent knows the
+    model-touching tools are usable). Reads only the session + store; consults no model.
+    """
+    return {
+        "opened": True,
+        "repo": session.target_repo,
+        "out": session.out_dir,
+        "segment_count": len(session.store.list_segments()),
+        "site_name": session.identity.site_name,
+        "model_available": session.model() is not None,
+    }
+
+
 def list_segments(session: "RefineSession") -> list[dict[str, Any]]:
     """Enumerate the stored segments in by-id order with their targeting axes (Req 4.1).
 

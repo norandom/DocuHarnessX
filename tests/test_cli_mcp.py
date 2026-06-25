@@ -79,10 +79,26 @@ def test_mcp_bad_target_exits_nonzero_without_launching(tmp_path, capsys, monkey
     assert launched["count"] == 0, "the server must not launch for an invalid target"
 
 
-def test_mcp_missing_target_exits_nonzero(capsys) -> None:
+def test_mcp_missing_target_launches_generic_server(monkeypatch) -> None:
+    # The agent sets the workspace via open_workspace, so the launch target is OPTIONAL:
+    # `dhx mcp` with no target launches a GENERIC server (session=None) — not a failure — and
+    # must NOT resolve a session itself (the agent does that with open_workspace).
+    launched: dict[str, object] = {"called": False}
+
+    def _fake_launch(session):
+        launched["called"] = True
+        launched["session"] = session
+
+    def _spy_resolve(*_a, **_k):  # pragma: no cover - must not run without a target
+        raise AssertionError("resolve_session reached without a launch target")
+
+    monkeypatch.setattr(cli, "_run_stdio_blocking", _fake_launch, raising=False)
+    monkeypatch.setattr(cli, "resolve_session", _spy_resolve, raising=False)
+
     code = cli.main(["mcp"])
-    assert code != 0
-    assert "TargetRepoError" in capsys.readouterr().err
+    assert code == cli.EXIT_OK
+    assert launched["called"] is True
+    assert launched["session"] is None  # generic server; the agent opens a workspace
 
 
 def test_mcp_command_validates_before_session(tmp_path, monkeypatch) -> None:

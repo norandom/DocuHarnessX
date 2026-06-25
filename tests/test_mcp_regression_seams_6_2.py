@@ -444,45 +444,42 @@ def test_empty_guidance_is_byte_identical_to_pristine_head_task() -> None:
     )
 
 
-def test_head_renderer_had_no_guidance_keyword() -> None:
-    """The pristine ``HEAD`` writer had no ``guidance`` keyword — the kw is additive.
+def test_render_guidance_keyword_is_additive_and_defaulted() -> None:
+    """The writer's only allowed widening: an additive, defaulted, keyword-only ``guidance``.
 
-    Confirms the comparison above is meaningful: the baseline genuinely predates the
-    feature's only allowed signature widening.
+    Verified intrinsically (no git baseline — the byte-identical-to-pristine-HEAD proof above
+    already pins backward-compat against the pre-feature task): ``build_agent_task`` and
+    ``_render_description`` accept ``guidance`` as a keyword-only parameter defaulting to ``""``,
+    so existing callers are unaffected and ``guidance=""`` reproduces today's task (Req 1.2).
     """
-    if not _is_git_repo():
-        pytest.skip("not a git checkout; HEAD-blob reconstruction not applicable")
-    head = _load_head_task_prompt()
-    assert "guidance" not in head.build_agent_task.__code__.co_varnames
-    assert "guidance" not in head._render_description.__code__.co_varnames
+    import inspect
 
-    # And the current renderer DID add it (behind a default), proving it is additive.
-    from docuharnessx.composition.task_prompt import build_agent_task
+    from docuharnessx.composition.task_prompt import (
+        _render_description,
+        build_agent_task,
+    )
 
-    assert "guidance" in build_agent_task.__code__.co_varnames
+    for fn in (build_agent_task, _render_description):
+        sig = inspect.signature(fn)
+        assert "guidance" in sig.parameters, fn.__name__
+        assert sig.parameters["guidance"].default == "", fn.__name__
+        assert (
+            sig.parameters["guidance"].kind == inspect.Parameter.KEYWORD_ONLY
+        ), fn.__name__
 
 
 def test_agent_run_guidance_keyword_is_additive_and_defaulted() -> None:
-    """``AgenticProseRunner.run`` gained ``guidance`` as a defaulted keyword only.
+    """``AgenticProseRunner.run`` accepts ``guidance`` as a defaulted, keyword-only param.
 
-    The HEAD ``run`` had no ``guidance``; the current one accepts it with a default of
-    ``""`` so the model surface stays backward compatible (Req 1.2, 5.2).
+    Intrinsic backward-compat check (no git baseline): the model surface gained ``guidance``
+    with a default of ``""`` and keyword-only binding, so every existing call site that omits
+    it is unchanged (Req 1.2, 5.2).
     """
-    if not _is_git_repo():
-        pytest.skip("not a git checkout; HEAD-blob reconstruction not applicable")
+    import inspect
 
     from docuharnessx.composition.agent import AgenticProseRunner
 
-    head_blob = _git("show", "HEAD:docuharnessx/composition/agent.py")
-    assert "guidance" not in head_blob.split("class AgenticProseRunner")[1].split(
-        "def run"
-    )[1].split("):")[0], "HEAD AgenticProseRunner.run already had a guidance param"
-
-    run_vars = AgenticProseRunner.run.__code__.co_varnames
-    assert "guidance" in run_vars
-    # Defaulted: calling with no guidance must be valid (signature carries the default).
-    import inspect
-
     sig = inspect.signature(AgenticProseRunner.run)
+    assert "guidance" in sig.parameters
     assert sig.parameters["guidance"].default == ""
     assert sig.parameters["guidance"].kind == inspect.Parameter.KEYWORD_ONLY
