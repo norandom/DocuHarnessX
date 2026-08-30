@@ -24,7 +24,7 @@
   - _Depends: 1.1, 1.2_
 
 - [ ] 2. Core: question planning, substance gate, and explore-first writer task
-- [ ] 2.1 (P) Plan software questions from repository scan signals
+- [x] 2.1 (P) Plan software questions from repository scan signals
   - Implement deterministic planning: entrypoints → startup; named components → component questions up to the component cap; public surface → one extend/use question; build or CI → one build/verify question; tests present → one test-layout question.
   - Apply the documented maximum question count; extra component questions are dropped, not authored as persona pages.
   - Empty or signal-free analysis yields an empty plan. Default reader-role lists do not activate questions.
@@ -114,3 +114,4 @@
 ## Implementation Notes
 
 - Question ids: reject the retired `{role}__{intent}` delimiter (2–3 non-empty `__` tokens on the basename), not any `__`; keep `__main__.py` / `__init__.py` in the slug. Mint ids via `make_question_id`, not raw `Question(id=...)`.
+- Pipeline skeleton: `plan_questions` is an empty stub until 2.1, so a default fixture no-model report is `planned=0`; `no_model` omissions appear only when the planner returns questions.

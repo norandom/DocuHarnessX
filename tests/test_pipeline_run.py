@@ -131,17 +131,34 @@ def test_pipeline_package_exports_runner() -> None:
 
 
 # --------------------------------------------------------------------------- #
-# Question-planner stub (empty until task 2.1)                                 #
+# Question planner is live (task 2.1); no-model still omits (Req 1.3)          #
 # --------------------------------------------------------------------------- #
 
 
-def test_plan_questions_stub_returns_empty_plan() -> None:
+def test_no_model_run_plans_sample_questions_and_omits_with_no_model(
+    tmp_path: Path,
+) -> None:
+    """The skeleton stub is gone: the sample analysis yields questions.
+
+    Writing is still skipped without a model, so accepted stays 0 and each
+    planned question is omitted with ``no_model``.
+    """
     from docuharnessx.analysis import analyze, scan
 
     analysis = analyze(scan(str(_FIXTURE_REPO)))
-    plan = plan_questions(analysis)
-    assert plan.questions == ()
-    assert plan.repo_path == analysis.repo_path
+    expected = plan_questions(analysis)
+    assert expected.questions
+
+    outcome = _run(tmp_path, model=None)
+    report = outcome.report
+    assert report.planned == len(expected.questions)
+    assert report.questions == tuple(question.id for question in expected.questions)
+    assert report.accepted == 0
+    assert report.omitted == report.planned
+    assert all(
+        omission.reason is OmissionReason.NO_MODEL for omission in report.omissions
+    )
+    _assert_honest_empty(tmp_path, report)
 
 
 # --------------------------------------------------------------------------- #
