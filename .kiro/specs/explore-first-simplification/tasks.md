@@ -33,7 +33,7 @@
   - _Boundary: QuestionPlanner_
   - _Depends: 1.1_
 
-- [ ] 2.2 (P) Gate accepted bodies on substance, not diagrams or outlines
+- [x] 2.2 (P) Gate accepted bodies on substance, not diagrams or outlines
   - Accept only when the body cites at least two distinct files that exist under the target repository in `path:line` form, names at least one identifier from the question’s subject or evidence, and is not a title-only restatement.
   - Reject retired slogans (fastest path for, who this is for, run the smallest action, verify first success, locate-the-subject as empty instruction).
   - A diagram is optional and must not be the accept condition.
@@ -115,3 +115,4 @@
 
 - Question ids: reject the retired `{role}__{intent}` delimiter (2–3 non-empty `__` tokens on the basename), not any `__`; keep `__main__.py` / `__init__.py` in the slug. Mint ids via `make_question_id`, not raw `Question(id=...)`.
 - Pipeline skeleton: `plan_questions` is an empty stub until 2.1, so a default fixture no-model report is `planned=0`; `no_model` omissions appear only when the planner returns questions.
+- Shipped `agentic_repo` scan reports no entrypoints (`app.py` is not a detector match); sample plan is `component:root` then `build:pyproject.toml`. Startup is covered by constructed analyses.
