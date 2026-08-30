@@ -44,10 +44,11 @@ from docuharnessx.assembler.model import (
     AssemblerInputError,
     SiteIdentity,
 )
-from docuharnessx.assembler.home import HOME_PAGE_PATH, render_home_page
+from docuharnessx.assembler.home import HOME_PAGE_PATH, render_home_page, render_question_home
 from docuharnessx.assembler.identity import read_origin_remote, resolve_site_identity
 from docuharnessx.assembler.mkdocs_config import TAGS_INDEX_PATH, build_mkdocs_yaml
 from docuharnessx.assembler.pages import page_filename, render_segment_page
+from docuharnessx.assembler.question_site import assemble_question_site
 from docuharnessx.assembler.roles import render_role_landing_page, role_page_path
 from docuharnessx.assembler.theme import EXTRA_CSS_PATH, render_extra_css
 from docuharnessx.assembler.writer import assemble_site
@@ -74,6 +75,9 @@ __all__ = [
     # site home landing page
     "render_home_page",
     "HOME_PAGE_PATH",
+    # question-organised site (explore-first; does not replace assemble_site)
+    "render_question_home",
+    "assemble_question_site",
     # deepwiki-inspired theme stylesheet
     "render_extra_css",
     "EXTRA_CSS_PATH",

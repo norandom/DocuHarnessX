@@ -54,7 +54,7 @@ from docuharnessx.assembler.model import SiteIdentity
 from docuharnessx.assembler.theme import EXTRA_CSS_PATH
 from docuharnessx.ontology import Vocabulary
 
-__all__ = ["build_mkdocs_yaml", "TAGS_INDEX_PATH"]
+__all__ = ["build_mkdocs_yaml", "build_question_mkdocs_yaml", "TAGS_INDEX_PATH"]
 
 #: The docs-relative path of the tags index page (owned/emitted by the writer, task 4.1).
 #: The writer places the Material ``<!-- material/tags -->`` listing directive in this page;
@@ -293,6 +293,45 @@ def build_mkdocs_yaml(
     # !!python/name: tag MkDocs' full loader recognizes; every other key is unchanged.
     config["markdown_extensions"] = _markdown_extensions()
 
+    body = yaml.dump(
+        config,
+        Dumper=_MkDocsYamlDumper,
+        default_flow_style=False,
+        sort_keys=False,
+        allow_unicode=True,
+    )
+    if not body.endswith("\n"):
+        body += "\n"
+    return body
+
+
+def build_question_mkdocs_yaml(
+    identity: SiteIdentity,
+    pages: tuple[tuple[str, str], ...],
+) -> str:
+    """Build ``mkdocs.yml`` for a question-organised site (Req 8.1, 8.2).
+
+    Nav is home plus one entry per accepted page. No role landings and no tags
+    index. Identity, Material theme, extra CSS, and Mermaid fences are reused
+    from the existing builder. ``pages`` is ``(title, docs_relative_path)`` in
+    nav order.
+    """
+    config: dict = {"site_name": identity.site_name}
+    if identity.site_url:
+        config["site_url"] = identity.site_url
+    if identity.repo_url:
+        config["repo_url"] = identity.repo_url
+    if identity.edit_uri:
+        config["edit_uri"] = identity.edit_uri
+    config["use_directory_urls"] = True
+    config["theme"] = _theme()
+    config["extra_css"] = [EXTRA_CSS_PATH]
+    config["plugins"] = ["search"]
+    nav: list = [{HOME_NAV_TITLE: HOME_PAGE_PATH}]
+    for title, path in pages:
+        nav.append({title: path})
+    config["nav"] = nav
+    config["markdown_extensions"] = _markdown_extensions()
     body = yaml.dump(
         config,
         Dumper=_MkDocsYamlDumper,

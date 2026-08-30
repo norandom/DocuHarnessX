@@ -50,7 +50,7 @@
   - _Boundary: ExploreWriter_
   - _Depends: 1.1_
 
-- [ ] 2.4 (P) Assemble a question-organised site from accepted pages only
+- [x] 2.4 (P) Assemble a question-organised site from accepted pages only
   - Home page lists accepted page titles as links; navigation has no per-role landing pages.
   - Omitted questions leave no stub page. Zero accepted pages means no role-based empty site tree.
   - Reuse existing site identity and page-file emission; optional publish modes remain callable after a non-empty assemble.

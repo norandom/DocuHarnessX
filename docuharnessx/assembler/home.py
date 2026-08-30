@@ -16,14 +16,17 @@ inputs yield equal output, no I/O, no model call.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 from docuharnessx.assembler.mkdocs_config import HOME_PAGE_PATH, TAGS_INDEX_PATH
+from docuharnessx.assembler.pages import page_filename
+from docuharnessx.pages.model import Page
 
 if TYPE_CHECKING:  # consumed read-only; typing-only import.
     from docuharnessx.assembler.model import SiteIdentity
 
-__all__ = ["HOME_PAGE_PATH", "render_home_page"]
+__all__ = ["HOME_PAGE_PATH", "render_home_page", "render_question_home"]
 
 
 def render_home_page(
@@ -67,4 +70,29 @@ def render_home_page(
 
     lines.append("")
     lines.append(f"You can also browse the whole corpus by tag in [Tags]({TAGS_INDEX_PATH}).")
+    return "\n".join(lines) + "\n"
+
+
+def render_question_home(
+    identity: "SiteIdentity",
+    pages: Sequence[Page],
+) -> str:
+    """Render the question-organised ``docs/index.md`` (Req 8.1, 8.2).
+
+    Heading is the target ``site_name``. The body lists accepted page titles as
+    Markdown links; it does not index reader roles. Ends in a single ``\\n``.
+    """
+    repo = identity.repo_name or identity.site_name
+    target = f"[`{repo}`]({identity.repo_url})" if identity.repo_url else f"`{repo}`"
+
+    lines: list[str] = [
+        f"# {identity.site_name}",
+        "",
+        f"Documentation for {target}.",
+        "",
+        "## Questions",
+        "",
+    ]
+    for page in pages:
+        lines.append(f"- [{page.title}]({page_filename(page.id)})")
     return "\n".join(lines) + "\n"

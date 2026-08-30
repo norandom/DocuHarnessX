@@ -28,12 +28,14 @@ the emitted tags with no code change here.
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Sequence
 
 import yaml
 
 from docuharnessx.ontology import Segment, Vocabulary, emit_tags
+from docuharnessx.pages.model import Page
 
-__all__ = ["page_filename", "render_segment_page"]
+__all__ = ["page_filename", "render_segment_page", "render_question_page"]
 
 #: The fence delimiter for a YAML frontmatter block (matches the ontology serializer).
 _FENCE = "---"
@@ -156,3 +158,57 @@ def render_segment_page(
     if not content.endswith("\n"):
         content += "\n"
     return page_filename(segment.id), content
+
+
+def _question_frontmatter(page: Page) -> str:
+    """Return slim YAML frontmatter for an accepted question page."""
+    body = yaml.safe_dump(
+        {
+            "id": page.id,
+            "title": page.title,
+            "subjects": list(page.subjects),
+            "summary": page.summary,
+            "related": list(page.related),
+        },
+        default_flow_style=False,
+        sort_keys=False,
+        allow_unicode=True,
+    )
+    return f"{_FENCE}\n{body}{_FENCE}\n"
+
+
+def _question_related_links(page: Page, accepted: Sequence[Page]) -> list[str]:
+    """Return Markdown related-page links, dropping omitted and self references."""
+    by_id = {item.id: item for item in accepted}
+    lines: list[str] = []
+    seen: set[str] = set()
+    for target in page.related:
+        if target == page.id or target in seen:
+            continue
+        other = by_id.get(target)
+        if other is None:
+            continue
+        seen.add(target)
+        lines.append(f"- [{other.title}]({page_filename(other.id)})")
+    return lines
+
+
+def render_question_page(
+    page: Page, accepted: Sequence[Page]
+) -> tuple[str, str]:
+    """Render one accepted question ``page`` to ``(relative_docs_path, markdown)``.
+
+    Filename comes from :func:`page_filename`. Related links resolve only to
+    other accepted pages (Req 8.3). The page ends with a single trailing newline.
+    """
+    parts: list[str] = [_question_frontmatter(page), f"# {page.title}\n"]
+    body = page.body
+    if body:
+        parts.append("\n" + body if not body.startswith("\n") else body)
+    related = _question_related_links(page, accepted)
+    if related:
+        parts.append("\n## Related\n\n" + "\n".join(related) + "\n")
+    content = "".join(parts)
+    if not content.endswith("\n"):
+        content += "\n"
+    return page_filename(page.id), content
