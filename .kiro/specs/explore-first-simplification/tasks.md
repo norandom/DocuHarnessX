@@ -71,7 +71,7 @@
   - _Depends: 2.2, 2.3_
 
 - [ ] 4. Integration: full pipeline and CLI
-- [ ] 4.1 Wire analyze → questions → write/gate → assemble → report in the pipeline runner
+- [x] 4.1 Wire analyze → questions → write/gate → assemble → report in the pipeline runner
   - Replace skeleton stubs with the real planner, writer adapter, substance gate, and site assembler.
   - No-model still plans (or reports skip) and writes zero pages. Empty plan writes a report and no site shell.
   - Fold writer stats into omission reasons without putting bodies in the report. Verbose logging must not dump full bodies into the report file.
@@ -117,3 +117,4 @@
 - Pipeline skeleton: `plan_questions` is an empty stub until 2.1, so a default fixture no-model report is `planned=0`; `no_model` omissions appear only when the planner returns questions.
 - Shipped `agentic_repo` scan reports no entrypoints (`app.py` is not a detector match); sample plan is `component:root` then `build:pyproject.toml`. Startup is covered by constructed analyses.
 - Substance gate title-restatement: omit only leftover prose that is the title plus trivial glue; subject tokens already in the title (e.g. Engine) must not false-reject grounded bodies.
+- ExploreWriter uses a local bounded harness loop (`build_question_task` + substance gate), not `AgenticProseRunner.run` (still COBESY until 5.1). Inspection is `steps <= 1` → `not_inspected`.

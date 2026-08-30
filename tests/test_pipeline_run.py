@@ -1,7 +1,9 @@
-"""Tests for the explore-first pipeline skeleton (task 1.3).
+"""Tests for the explore-first pipeline runner (tasks 1.3 / 4.1).
 
-Pins PipelineRunner: analyze → plan → skip write when no model is bound →
-write a run report, and never emit outline pages or a role-based site shell.
+Pins PipelineRunner: analyze → plan → write/gate → assemble → report.
+No-model and empty-plan runs stay honest-empty (report only, no pages, no
+role-based site shell). Inspecting-writer integration lives in
+``test_pipeline_integration.py``.
 
 Observable completion (tasks.md 1.3 / Req 1.1, 1.3, 6.1, 6.2, 8.4, 10.2): a
 no-model run against ``tests/fixtures/agentic_repo`` writes a report with zero
@@ -20,6 +22,7 @@ import pytest
 
 from docuharnessx.pages.model import OmissionReason
 from docuharnessx.pipeline import RunOutcome, RunReport, run_pipeline
+from tests._fakes import FakeProvider
 from docuharnessx.planning.question_model import (
     Question,
     QuestionKind,
@@ -277,7 +280,7 @@ def test_no_model_omits_each_planned_question_with_no_model(
 def test_bound_model_still_does_not_publish_outline_pages(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Skeleton has no writer: a bound model must not invoke outline fallback."""
+    """A bound non-inspecting model omits pages; it never publishes outlines."""
     question = _sample_question()
 
     def fake_plan(analysis: object) -> QuestionPlan:
@@ -288,7 +291,9 @@ def test_bound_model_still_does_not_publish_outline_pages(
 
     monkeypatch.setattr("docuharnessx.pipeline.run.plan_questions", fake_plan)
 
-    outcome = _run(tmp_path, model=object())
+    outcome = _run(
+        tmp_path, model=FakeProvider(content="Locate the CLI. Run the smallest action.")
+    )
     assert outcome.report.accepted == 0
     assert outcome.pages == ()
     _assert_honest_empty(tmp_path, outcome.report)
@@ -342,5 +347,42 @@ def test_no_model_run_does_not_call_fallback_renderer(
 
     monkeypatch.setattr("docuharnessx.pipeline.run.plan_questions", fake_plan)
     _run(tmp_path, model=None)
-    _run(tmp_path / "with-model", model=object())
+    _run(tmp_path / "with-model", model=FakeProvider(content="done"))
     assert calls == []
+
+
+# --------------------------------------------------------------------------- #
+# Empty plan: report only, no site shell (Req 3.5, 8.4)                        #
+# --------------------------------------------------------------------------- #
+
+
+def test_empty_plan_writes_report_and_no_site_shell(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def fake_plan(analysis: object) -> QuestionPlan:
+        return QuestionPlan(questions=(), repo_path=getattr(analysis, "repo_path"))
+
+    monkeypatch.setattr("docuharnessx.pipeline.run.plan_questions", fake_plan)
+
+    outcome = _run(tmp_path, model=FakeProvider(content="done"))
+    report = outcome.report
+    assert report.planned == 0
+    assert report.accepted == 0
+    assert report.omitted == 0
+    assert report.questions == ()
+    assert report.omissions == ()
+    assert outcome.pages == ()
+    _assert_honest_empty(tmp_path, report)
+
+
+def test_pipeline_runner_source_wires_writer_and_assembler() -> None:
+    """Task 4.1 replaces the omit/raise stubs with the real writer and assembler."""
+    source_path = (
+        Path(__file__).resolve().parents[1] / "docuharnessx" / "pipeline" / "run.py"
+    )
+    source = source_path.read_text(encoding="utf-8")
+    assert "write_questions" in source
+    assert "assemble_question_site" in source
+    assert "resolve_site_identity" in source
+    assert "_omit_unwritten" not in source
+    assert "pipeline skeleton does not assemble" not in source
