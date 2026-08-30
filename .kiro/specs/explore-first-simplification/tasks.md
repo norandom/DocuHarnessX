@@ -8,7 +8,7 @@
   - _Requirements: 2.2, 2.4_
   - _Boundary: QuestionPlanner_
 
-- [ ] 1.2 Define the page, omission, and run-report types
+- [x] 1.2 Define the page, omission, and run-report types
   - Introduce the frozen page (id, title, summary, body, subjects, related, cited files) with no roles or intent fields.
   - Introduce omission (question id + closed-set reason) and run report (planned / accepted / omitted counts, question ids, omissions; no bodies).
   - Observable completion: a unit test serializes a report with one omission reason `no_model` and asserts the payload has counts and no body text.
