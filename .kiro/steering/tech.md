@@ -2,73 +2,73 @@
 
 ## Architecture
 
-DocuHarnessX is a **HarnessX bundle + CLI**. The generator is an agentic pipeline
-expressed as a composed `HarnessConfig` (`make_docgen()`), bound to a model via
-`ModelConfig(main=...).agentic(config)`. It reuses HarnessX's processor dimensions
-rather than reinventing them:
+DocuHarnessX is a **Python documentation pipeline** with a **HarnessX writer**.
+The CLI (`dhx`) validates the target, resolves a model, and runs:
 
-- **Tools** — read/scan the target repo (Read/Grep/Glob, structure walk, CI/config parse)
-- **Context** — assemble per-role, per-segment writing context
-- **Evaluate** — LLM-judge grades each segment = the COBESY anti-cringe gate
-- **Control** — cost guard + loop detection for large repos (25–40k LOC)
-- **Observe** — HarnessJournal (JSONL) audit trail of what was documented and why
-- **Memory** — segment reuse across roles
-- **Train** — doc-quality rewards can evolve the generator (future)
+**analyze → questions → write → gate → assemble → (optional) deploy**
 
-Pipeline stages: **Ingest → Analyze → Classify → Plan → Write → Review → Assemble → Deploy.**
+HarnessX is **not** the pipeline bus. It is used only for the per-page writer:
+a bounded agent with a read-only workspace on the target repo and the built-in
+read/grep/glob/bash tools. Model binding stays `ModelConfig(main=...).agentic(...)`
+on that writer harness — never embedded in a dummy outer `HarnessConfig`.
+
+Analyze remains the existing deterministic `RepoAnalysis` (no model required).
+The question planner is deterministic over that analysis. The substance gate is
+deterministic over the written body. Assemble/deploy stay MkDocs-based.
 
 ## Core Technologies
 
 - **Language**: Python 3.12 (matches HarnessX)
-- **Agent framework**: HarnessX (github.com/Darwin-Agent/HarnessX) as a dependency
+- **Writer runtime**: HarnessX (github.com/Darwin-Agent/HarnessX) as a library
 - **Doc framework**: Material for MkDocs (output target)
-- **Packaging/env**: `uv` (HarnessX convention)
-- **Publish**: `mkdocs gh-deploy` / GitHub Actions; `mike` for versioning
+- **Packaging/env**: `uv`
+- **Publish**: `mkdocs build` / optional `mkdocs gh-deploy` / GitHub Actions
 
 ## Key Libraries
 
-- `harnessx` — harness composition, processors, evaluation, journal
-- `mkdocs` + `mkdocs-material` — site build + theme
-- MkDocs plugins: `tags` (ontology axis A), `awesome-pages` (dynamic nav),
-  `gen-files` + `literate-nav` (generated nav), `mike` (versioning)
+- `harnessx` — per-page agent loop, workspace, control budgets, journal
+- `mkdocs` + `mkdocs-material` — site build
+- `pyyaml` — config and MkDocs emit
 
 ## Development Standards
 
 ### Type Safety
 Follow HarnessX conventions. Do not add type annotations/docstrings to unchanged code.
 
-### Composition Rules (from HarnessX)
+### Composition Rules (from HarnessX) — writer only
 - Model goes in `ModelConfig`, never `HarnessConfig`.
-- Compose processors with `|`; rely on conflict detection (no silent overwrites).
-- Core never imports third-party/benchmark libs; adapters live outside core.
-- Append processors via `{**config.processors, hook: [...existing, proc]}`, never replace.
+- Compose the writer harness with `|`; rely on conflict detection.
+- Core pipeline modules do not import HarnessX except at the writer adapter.
 
 ### Testing
-Unit-test ontology tagging, segment assembly, and the coverage planner deterministically;
-treat LLM-judge output as gated, logged, and reproducible via HarnessJournal traces.
+- Question planner and substance gate: deterministic unit tests, no model.
+- Writer: credential-free scripted fake that **reads fixture files**, then
+  returns a grounded body — or returns an ungrounded body that must be omitted.
+- Never pin template-dump text (`Locate X`, `Run the smallest action`) as a
+  successful page body.
+- E2E: accepted pages name real fixture symbols; a no-explore run emits zero
+  pages and a report.
 
 ## Development Environment
 
 ### Common Commands
 ```bash
 # Env:    uv venv --python 3.12 .venv && source .venv/bin/activate && uv pip install -e .
-# Run:    dhx <path-to-target-repo>           # generate docs for a project
-# Serve:  mkdocs serve                          # preview the generated site
-# Deploy: mkdocs gh-deploy                       # publish to GitHub Pages
+# Run:    dhx <path-to-target-repo> --out DIR --deploy-mode build-only
+# Serve:  cd <out>/site && python -m mkdocs serve
 ```
 
 ## Key Technical Decisions
 
-1. Build on HarnessX (real bundle), not standalone — maximize reuse of Evaluate/Control/Observe.
-2. Material for MkDocs over Sphinx/Docusaurus — aesthetics + native tags + Markdown-native + polyglot.
-3. Content segments are Markdown files with frontmatter `{id, title, roles[], subjects[],
-   intent, summary, related[]}`; role views are assembled by filtering, giving reuse +
-   interconnection. Tags are namespaced `role:` / `subject:` / `intent:`.
-4. The ontology vocabulary (roles, intents, subject prefixes/tags) is **project-configurable**
-   via a per-project ontology config file (e.g. `.docuharnessx/ontology.yaml`). The 10
-   roles / 13 intents are a shipped **default profile**, not closed enums. `dhx init`
-   asks per project or seeds the default; segments validate against the loaded vocabulary.
-   This is what keeps the harness reusable across projects.
+1. **Python pipeline, HarnessX writer** — the dummy `DONE` outer agent is retired.
+   Analyze/plan/gate/assemble do not need an agent loop.
+2. **No publishable fallback** — writer failure is an omitted page, not a
+   rendered blueprint.
+3. **Native OpenAI provider for OpenAI-compatible tool-calling** — LiteLLM's
+   `content: null` path killed the multi-turn writer (see `model_resolver.py`).
+4. **Material for MkDocs** — Markdown-native, polyglot, already shipped.
+5. **Page metadata is slim** — id, title, summary, body, subjects, related,
+   citations. Reader roles and intents are not required to emit a page.
 
 ---
 _Document standards and patterns, not every dependency_

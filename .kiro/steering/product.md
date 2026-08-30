@@ -1,62 +1,47 @@
 # Product Overview
 
-**DocuHarnessX** is a human-centric, role-based documentation generator that turns a
-software project (target size 25–40k LOC) into a published, aesthetic GitHub Pages
-site. It is built as a **HarnessX bundle** (`make_docgen`) plus a `dhx` CLI: an
-agentic pipeline that reads a codebase and emits documentation people actually adopt.
+**DocuHarnessX** generates developer documentation from a software repository: a
+bounded set of pages that answer **software questions** grounded in real source.
+The operator runs `dhx <repo> --out DIR` and gets a previewable site — or an
+honest empty site plus a report when nothing could be grounded.
 
-The product's premise: readers have no time, and static docs do not drive adoption.
-DocuHarnessX applies a **COBESY** (Cognitive-Behavioral-Systemic) flow so each reader
-reaches first success on the shortest path, framed for their role.
+The product's premise: developers already have the code. Generated docs are worth
+keeping only when they teach something the README and a five-minute read of the
+cited files do not. Outlines that restate planning prompts are worse than no site.
 
 ## Core Capabilities
 
-- **Role-based assembly** — one corpus, many views. Each project's reader roles get a
-  landing page and a guided agenda built by filtering shared content.
-- **Tri-modal ontology** — every content segment is tagged on three axes
-  (Subject = what/how, Intent = why-reading, Role = who) so segments are reused and
-  interconnected rather than duplicated.
-- **Project-configurable vocabulary (reusability core)** — the roles, intents, and
-  tags are NOT hardcoded. They are loaded from a per-project ontology config file; the
-  harness asks at setup (`dhx init`) which roles/intents/tags apply, or accepts a
-  shipped default profile. A different project gets a different vocabulary, so the same
-  `make_docgen` harness stays reusable everywhere.
-- **COBESY adoption flow** — per-role SCQA opener → one key action first (Minto) →
-  progressive disclosure → REDUCE-barrier fast path to first success.
-- **Decision-intelligence planning** — a planning stage decides *which* segments a
-  given project needs (coverage matrix), not a fixed template.
-- **Quality-gated generation** — an LLM-judge (HarnessX Evaluate dimension) grades
-  every segment for clarity, MECE, working-memory fit, and role-fit before publish.
-- **Aesthetic publish** — emits a Material for MkDocs site, deployed to GitHub Pages.
-
-## Default Profile — Reader Roles (10)
-
-These ship as the **default profile**, not as a fixed enum. A project may keep, trim,
-or extend them via its ontology config.
-
-Core: Possible Adopter · Developer · Tech-savvy User · Manager · DevOps/Admin ·
-Researcher.
-Extended: Security/Compliance Officer · Contributor · Integrator/API consumer ·
-Support/On-call (SRE).
-
-## Default Profile — Intent Axis
-
-Default intents (also project-configurable): install · configure · use · troubleshoot ·
-monitor · operate · integrate · extend · evaluate · assess-quality · understand ·
-contribute · deliver.
+- **Explore-first writing** — each page is written by a bounded agent that reads
+  the target repository. The page is not authored before that read.
+- **Question-shaped corpus** — pages answer questions such as how the program
+  starts, what a component does, where configuration is loaded, how to extend a
+  public surface. Reader job titles are not the page unit.
+- **Fail-closed publish** — a page that was not grounded in source is omitted.
+  Missing pages plus a run report beat a site full of generic instructions.
+- **Substance gate** — accepted pages cite real `file:line` locations, name real
+  symbols, and do not consist of template phrases.
+- **Wiki-style publish** — accepted pages become a Material for MkDocs site
+  organised by those questions. Optional GitHub Pages deploy remains available.
 
 ## Target Use Cases
 
-- Auto-document an existing repo with near-zero authoring time (reference example:
+- Auto-document an existing repo for developers who will work in it (reference:
   `/home/mc/Source/malware_hashes`, a ~6.8k LOC Go forensic-hashing CLI).
-- Give evaluators/managers a fast "should we adopt this, and how quickly" path.
-- Keep docs interconnected and reusable as the project grows.
+- Dogfood on DocuHarnessX itself: keep a page only if it teaches something.
+- Bounded output for ~25–40k LOC targets — a handful of grounded pages, not a
+  combinatorial Role × Intent matrix.
 
 ## Value Proposition
 
-Most generators produce reference dumps. DocuHarnessX produces an **adoption
-instrument**: role-targeted, COBESY-structured, quality-gated, and beautiful — built
-on a composable, evolvable harness so doc quality improves over time.
+Most generators dump reference or fill a template. DocuHarnessX produces a small
+set of grounded answers about how *this* repository actually works.
+
+## Prior generation (Waves 0–4)
+
+The first shipped product was a role-based, COBESY-structured adoption site
+driven by an 8-stage HarnessX dummy run. That authoring model is retired by
+Wave 5 (`explore-first-simplification`). Historical specs remain under
+`.kiro/specs/` for the old pipeline; they are not the current source of truth.
 
 ---
 _Focus on patterns and purpose, not exhaustive feature lists_

@@ -2,52 +2,72 @@
 
 ## Organization Philosophy
 
-Pipeline-first and dimension-aligned. The codebase mirrors the generation pipeline
-(Ingest → Analyze → Classify → Plan → Write → Review → Assemble → Deploy) and maps
-each concern onto a HarnessX dimension. The atomic content unit is a **segment**;
-everything else exists to produce, tag, assemble, and quality-gate segments.
+Pipeline-first. The codebase mirrors **analyze → questions → write → gate →
+assemble → deploy**. The atomic content unit is a **page that answers one
+software question**. Everything else exists to propose questions, ground
+answers in source, omit ungrounded pages, and emit a site.
+
+HarnessX processors are not the pipeline. Stages that only existed to fire on
+a dummy `step_end` are retired.
 
 ## Directory Patterns
 
 ### Generator package
 **Location**: `docuharnessx/`
-**Purpose**: the `make_docgen()` bundle, processors, ontology, planner, writer, assembler.
-**Example**: `docuharnessx/bundle.py` (composes `make_docgen`), `docuharnessx/ontology/`.
+**Purpose**: CLI, pipeline runner, analysis, question planner, writer adapter,
+substance gate, assembler, optional deployer.
 
-### Pipeline stages
-**Location**: `docuharnessx/<stage>/` (e.g. `ingest/`, `analyze/`, `classify/`, `plan/`, `write/`, `review/`, `assemble/`, `deploy/`)
-**Purpose**: one module per pipeline stage, each a processor or processor group.
+### Pipeline
+**Location**: `docuharnessx/pipeline/`
+**Purpose**: the ordinary-Python run that calls each step in order and writes
+the operator report. Not a HarnessX `HarnessConfig`.
 
-### Ontology
-**Location**: `docuharnessx/ontology/`
-**Purpose**: the tri-modal model — Role, Subject tags, Intent — and segment frontmatter schema + validation.
+### Analysis
+**Location**: `docuharnessx/analysis/`
+**Purpose**: deterministic repo scan → `RepoAnalysis`. Unchanged as a signal
+source; not a page author.
 
-### Templates / theme
-**Location**: `templates/` and MkDocs theme config
-**Purpose**: Material for MkDocs scaffolding, role landing-page skeletons (SCQA), nav generation.
+### Questions
+**Location**: `docuharnessx/planning/` (question planner; the Role × Intent
+matrix is retired)
+**Purpose**: `RepoAnalysis` → bounded list of software questions + evidence files.
+
+### Writer
+**Location**: `docuharnessx/composition/`
+**Purpose**: bounded HarnessX agent per question; task prompt is the question
+and evidence, not a filled outline. No publishable fallback renderer.
+
+### Gate
+**Location**: `docuharnessx/composition/` (substance gate) — not a COBESY LLM-judge
+**Purpose**: accept or omit a body. Never invent replacement prose.
+
+### Assembler / deploy
+**Location**: `docuharnessx/assembler/`, `docuharnessx/deployer/`
+**Purpose**: MkDocs tree from accepted pages; optional Pages publish.
 
 ### CLI
-**Location**: `docuharnessx/cli.py` (entry point `dhx`)
-**Purpose**: run the generator against a target repo.
+**Location**: `docuharnessx/cli.py` (`dhx`)
+**Purpose**: validate target, resolve model, run the pipeline, print the report.
 
-### Specs & steering (Kiro)
+### Specs & steering
 **Location**: `.kiro/specs/` and `.kiro/steering/`
-**Purpose**: spec-driven development artifacts; roadmap.md + per-feature specs.
+**Purpose**: spec-driven development. Wave 5 (`explore-first-simplification`) is
+the current authoring spec. Waves 0–4 are historical.
 
 ## Naming Conventions
 
 - **Files/modules**: snake_case (Python).
-- **Processors**: `<Concern>Processor` or hook-decorated functions (HarnessX style).
-- **Segments**: Markdown with frontmatter `{id, title, roles: [...], subjects: [...], intent: <one>, summary, related: [...]}`.
-- **Tags**: `role:<x>`, `subject:<x>`, and `intent:<x>` namespaced for the MkDocs tags plugin.
-- **Ontology config**: per-project vocabulary at `.docuharnessx/ontology.yaml` (roles, intents, subjects); a shipped default profile seeds it.
+- **Pages**: Markdown with frontmatter `{id, title, subjects[], summary, related[]}`.
+- **Citations** in body: repo-relative `path:line`.
+- **Questions**: stable ids derived from kind + subject (not role/intent keys).
 
 ## Code Organization Principles
 
-- Keep `make_docgen` composition declarative; behavior lives in processors.
-- Stages communicate through the harness state/slots and the segment store, not globals.
-- The coverage planner is deterministic and testable; the LLM-judge is gated and logged.
-- Output is plain Markdown + `mkdocs.yml`; publishing is a thin deploy step.
+- The pipeline runner imports step functions; steps do not import the CLI.
+- The writer adapter is the only module that constructs a HarnessX harness.
+- Analyze, question planner, and substance gate stay model-free.
+- Output is plain Markdown + `mkdocs.yml`; publishing is a thin optional step.
+- Do not keep a parallel “fallback page” path “just in case.”
 
 ---
 _Document patterns, not file trees. New files following patterns shouldn't require updates_

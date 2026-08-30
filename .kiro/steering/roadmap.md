@@ -121,12 +121,30 @@ on top of two foundations (the ontology and the harness skeleton).
   per-project sites with the correct `/<repo>/` base-path + emitted CI workflow. GO,
   0 remediations. Suite: **2147 passed**.
 
-## Status: COMPLETE
+## Status: Waves 0–4 COMPLETE (retired as the authoring model)
 
-All 9 specs across 5 waves are implemented, validated, and merged. `dhx <repo> --out DIR`
-runs the full 8-stage pipeline (ingest → analyze → classify → plan → write → review →
-assemble → deploy) and produces a publishable, per-project Material for MkDocs site +
-CI workflow — proven generic across Go/Python/JS/Rust (malware_hashes is just one
-example). Open follow-up (non-blocking, see memory): primary-language detection uses
-raw-LOC max incl. docs/config, so a doc-heavy repo can report a markup language as
-primary — consider weighting primary to source/code languages.
+All 9 specs across 5 waves were implemented, validated, and merged. `dhx <repo> --out DIR`
+ran the full 8-stage pipeline and produced a Material for MkDocs site. That pipeline is
+the **prior generation**: it authored Role × Intent pages from COBESY blueprints and
+published template fallbacks when the writer did not explore. Waves 0–4 remain the
+historical record; they are not the current product direction.
+
+Open leftover from Wave 4 (non-blocking): primary-language detection uses raw-LOC max
+incl. docs/config, so a doc-heavy repo can report a markup language as primary.
+
+## Wave 5 — Explore-first reduction (2026-08-30)
+
+- **Chosen**: One spec that inverts authoring — Python pipeline, software questions as
+  the page unit, HarnessX only as the per-page writer, fail-closed omission, wiki-style
+  site from accepted pages only.
+- **Why**: The dummy outer harness, Role × Intent matrix, and publishable fallback are
+  one authoring bug. Splitting the invert across the old specs would recreate the
+  overbuild. HarnessX itself is not the defect.
+- **Rejected alternatives**: prompt-tuning the current pipeline; 11-spec rewrite;
+  dropping HarnessX for the writer.
+
+### Specs (dependency order)
+
+- [ ] explore-first-simplification — invert authoring and reduce the project to
+      analyze → questions → explore-write → substance-gate → assemble. Dependencies: none
+      (reuses `RepoAnalysis`, inner writer harness, MkDocs emit, deploy modes).
