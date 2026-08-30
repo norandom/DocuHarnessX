@@ -43,13 +43,10 @@ from docuharnessx.assembler.model import (
     SiteIdentity,
 )
 from docuharnessx.assembler.pages import page_filename
-from docuharnessx.assembler.roles import role_page_path
 from docuharnessx.assembler.writer import assemble_site
 from docuharnessx.ontology import (
-    AxisTerm,
     Segment,
     Subject,
-    Vocabulary,
     default_profile,
 )
 from docuharnessx.review.model import (
@@ -112,19 +109,6 @@ def _identity() -> SiteIdentity:
         base_path="/malware_hashes/",
         edit_uri="edit/main/docs/",
     )
-
-
-_CUSTOM_VOCAB = Vocabulary(
-    roles=(
-        AxisTerm("operator", "Site Operator", "Runs the thing in production."),
-        AxisTerm("auditor", "Compliance Auditor", "Checks the controls."),
-    ),
-    intents=(
-        AxisTerm("first", "First Step", "Do this first."),
-        AxisTerm("second", "Second Step", "Then this."),
-    ),
-    subject_prefixes=("component:", "topic:"),
-)
 
 
 def _seeded_report() -> ReviewReport:
@@ -230,39 +214,6 @@ def test_page_count_matches_accepted_count(tmp_path: Path) -> None:
     assert len(top_level_md) == len(report.accepted) == site.page_count
 
 
-# --------------------------------------------------------------------------- #
-# One landing page per non-empty role; none for empty roles (Req 5.1, 5.5)     #
-# --------------------------------------------------------------------------- #
-
-
-def test_landing_page_per_non_empty_role_only(tmp_path: Path) -> None:
-    report = _seeded_report()
-    vocab = default_profile()
-    site = assemble_site(report, vocab, None, str(tmp_path), _identity())
-    docs = Path(site.docs_dir)
-
-    # developer + devops-admin have accepted segments -> landing pages exist.
-    assert (docs / role_page_path("developer")).is_file()
-    assert (docs / role_page_path("devops-admin")).is_file()
-    # A role with no accepted segment (e.g. manager) -> no landing page.
-    assert not (docs / role_page_path("manager")).exists()
-
-    # Exactly two roles carry content here.
-    assert site.role_page_count == 2
-
-
-def test_role_pages_in_vocabulary_order(tmp_path: Path) -> None:
-    report = _seeded_report()
-    vocab = default_profile()
-    site = assemble_site(report, vocab, None, str(tmp_path), _identity())
-    mkdocs_yml = Path(site.mkdocs_yml_path).read_text(encoding="utf-8")
-    # developer precedes devops-admin in the default vocabulary role order, so its nav
-    # entry must precede devops-admin's.
-    assert mkdocs_yml.index("developer/index.md") < mkdocs_yml.index(
-        "devops-admin/index.md"
-    )
-
-
 def test_no_role_pages_when_no_accepted_segments(tmp_path: Path) -> None:
     site = assemble_site(_report(), default_profile(), None, str(tmp_path), _identity())
     assert site.page_count == 0
@@ -320,26 +271,6 @@ def test_absent_analysis_still_produces_site(tmp_path: Path) -> None:
 # --------------------------------------------------------------------------- #
 # Configurable vocabulary: custom roles flow through, no code change (Req 5.6) #
 # --------------------------------------------------------------------------- #
-
-
-def test_custom_vocabulary_role_pages(tmp_path: Path) -> None:
-    report = _report(
-        _segment(
-            "boot-it",
-            title="Boot It",
-            roles=["operator"],
-            intent="first",
-            prefixes=("component:", "topic:"),
-        ),
-    )
-    site = assemble_site(report, _CUSTOM_VOCAB, None, str(tmp_path), _identity())
-    docs = Path(site.docs_dir)
-    assert (docs / role_page_path("operator")).is_file()
-    # The auditor role carries no accepted segment -> no landing page.
-    assert not (docs / role_page_path("auditor")).exists()
-    assert site.role_page_count == 1
-    content = (docs / role_page_path("operator")).read_text(encoding="utf-8")
-    assert "Site Operator" in content
 
 
 # --------------------------------------------------------------------------- #

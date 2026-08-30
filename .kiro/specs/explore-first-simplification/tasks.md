@@ -91,7 +91,7 @@
   - _Depends: 4.1_
 
 - [ ] 5. Reduction: remove the retired authoring path
-- [ ] 5.1 Delete publishable fallback, outline blueprints, persona planning, role landings, and the dummy harness bus from the default product
+- [x] 5.1 Delete publishable fallback, outline blueprints, persona planning, role landings, and the dummy harness bus from the default product
   - Remove the default-run use of outline fallback rendering, Role × Intent coverage as page identity, per-role landing generation, COBESY form-judge as the publish gate, and the dummy outer harness that exists only to fire pipeline processors.
   - Keep repository analysis functions, the inner writer harness factory, model resolution, site identity/theme emit, and deploy modes.
   - Delete or rewrite tests that treated template slogans, fallback headings, role landings, or dummy-harness participation as success.
@@ -118,3 +118,4 @@
 - Shipped `agentic_repo` scan reports no entrypoints (`app.py` is not a detector match); sample plan is `component:root` then `build:pyproject.toml`. Startup is covered by constructed analyses.
 - Substance gate title-restatement: omit only leftover prose that is the title plus trivial glue; subject tokens already in the title (e.g. Engine) must not false-reject grounded bodies.
 - ExploreWriter uses a local bounded harness loop (`build_question_task` + substance gate), not `AgenticProseRunner.run` (still COBESY until 5.1). Inspection is `steps <= 1` → `not_inspected`.
+- CLI `orchestrate_run` calls `run_pipeline as run_explore_pipeline`. Dummy `BaseTask` is unused; leftovers (`_SKELETON_TASK_DESCRIPTION`, `_thread_deploy_mode`) wait for 5.1. Default emit-ci-workflow still writes into the target after accepts — CLI tests that accept pages use `--deploy-mode build-only`.

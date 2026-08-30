@@ -37,20 +37,15 @@ _Requirements: 7.1, 7.2, 9.1, 9.2, 9.3, 9.4_
 
 from __future__ import annotations
 
-import asyncio
 import sys
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
 
 import pytest
 import yaml
-from harnessx.core.events import StepEndEvent, TaskStartEvent
-from harnessx.core.state import State
 
 from docuharnessx.assembler.identity import resolve_site_identity
 from docuharnessx.assembler.writer import assemble_site
-from docuharnessx.context import RunContext
 from docuharnessx.deployer.commands import CompletedResult, DefaultCommandRunner
 from docuharnessx.deployer.deploy import deploy_site
 from docuharnessx.deployer.model import DEPLOY_RESULT_SCHEMA_VERSION, DeployResult
@@ -60,7 +55,6 @@ from docuharnessx.review.model import (
     ReviewAggregate,
     ReviewReport,
 )
-from docuharnessx.stages.deploy import DeployStage
 
 # The doc framework is a declared runtime dependency (Req 9.3) and installed in the project venv;
 # the guard skips gracefully if it is somehow absent rather than failing the build E2E.
@@ -492,97 +486,4 @@ def test_emit_ci_workflow_orchestrator_opens_no_socket(monkeypatch, tmp_path: Pa
     runner = _NoPushRealRunner()
     result = deploy_site(site, str(target), str(out_dir), "emit-ci-workflow", runner=runner)
     assert result.status == "emitted"
-    assert runner.pushed is False
-
-
-# --------------------------------------------------------------------------- #
-# DeployStage adapter end-to-end with a real build (Boundary: DeployStage)      #
-# --------------------------------------------------------------------------- #
-
-
-class _RuntimeStub:
-    def __init__(self, tracer: Any | None = None) -> None:
-        self.tracer = tracer
-
-
-def _drive_stage_through_real_build(
-    state: State, runner: _NoPushRealRunner, *, mode: str | None = None
-) -> None:
-    """Drive the real :class:`DeployStage` over ``state`` with the real-build runner.
-
-    Captures the run ``State`` via ``on_task_start`` then runs ``on_step_end`` (the real slot
-    I/O + deploy), injecting the real-build runner the same way the CLI mode-wiring layer injects
-    ``_command_runner`` / ``_deploy_mode`` — so the boundary under test is the ``DeployStage``
-    adapter wired to a genuine ``mkdocs build``.
-    """
-    stage = DeployStage()
-    stage._bind_runtime(_RuntimeStub())
-    stage._command_runner = runner
-    if mode is not None:
-        stage._deploy_mode = mode
-
-    async def _run() -> None:
-        async for _ in stage.on_task_start(
-            TaskStartEvent(run_id=state.run_id, step_id=0, state=state)
-        ):
-            pass
-        event = StepEndEvent(
-            run_id=state.run_id,
-            step_id=7,
-            step_summary="prior",
-            tool_call_summary="readFile(a)",
-            cumulative_tokens=1,
-            cumulative_cost_usd=0.0,
-        )
-        async for _ in stage.on_step_end(event):
-            pass
-
-    asyncio.run(_run())
-
-
-def test_deploy_stage_emit_ci_workflow_real_build_end_to_end(tmp_path: Path) -> None:
-    """The real DeployStage adapter publishes an emitted result over a real build (Boundary 5.3).
-
-    Drives the in-place :class:`DeployStage` (the no-op-stub replacement) over a seeded run
-    ``State`` carrying a **real** assembled tree, in the default emit-ci-workflow mode, with the
-    real-build runner. Asserts the stage publishes a well-formed ``emitted``
-    :class:`~docuharnessx.deployer.model.DeployResult` into ``SLOT_DEPLOY_RESULT`` whose built
-    path is a real static site under the per-target base-path and whose written paths name the
-    three target-tree files — and that no gh-deploy push ran (Req 7.1, 7.2, 9.1, 9.2).
-    """
-    out_dir = tmp_path / "out"
-    target = tmp_path / "target_clone"
-    target.mkdir()
-    site = _assemble_real_site(out_dir)
-
-    state = State(run_id="run-5-3-stage")
-    rc = RunContext(state)
-    rc.set_assembled_site(site)
-    rc.set_output_dir(str(out_dir))
-    rc.set_target_repo(str(target))
-
-    runner = _NoPushRealRunner()
-    _drive_stage_through_real_build(state, runner)
-
-    result = RunContext(state).deploy_result()
-    assert isinstance(result, DeployResult)
-    assert result.mode == "emit-ci-workflow"
-    assert result.status == "emitted"
-    assert result.target_pages_url == _TARGET_PAGES_URL
-
-    # The three emit-ci-workflow files are present in the target tree (Req 9.1).
-    mkdocs_yml = target / "mkdocs.yml"
-    docs_dir = target / "docs"
-    workflow = target / ".github" / "workflows" / "docs.yml"
-    assert mkdocs_yml.is_file() and docs_dir.is_dir() and workflow.is_file()
-    assert {Path(p) for p in result.written_paths} == {mkdocs_yml, docs_dir, workflow}
-
-    # The build really ran and produced a static site under the per-target base-path (Req 7.2).
-    built = Path(result.built_path)
-    assert built.is_dir()
-    assert _TARGET_BASE_PATH_TOKEN in (built / "sitemap.xml").read_text(encoding="utf-8")
-
-    # The build output stayed under the run output tree; the push never ran (Req 9.1, 5.4).
-    assert built.is_relative_to(out_dir)
-    assert runner.build_count() == 1
     assert runner.pushed is False

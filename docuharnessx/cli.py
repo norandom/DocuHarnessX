@@ -59,7 +59,6 @@ from docuharnessx.ontology_loader import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
-    from harnessx.core.harness import Harness
     from harnessx.core.model_config import ModelConfig
 
     from docuharnessx._ontology import Vocabulary
@@ -83,8 +82,8 @@ EXIT_INIT_FAILED: int = 1
 
 _PROG = "dhx"
 _DESCRIPTION = (
-    "DocuHarnessX: human-centric, role-based documentation generator built on "
-    "HarnessX."
+    "DocuHarnessX: generate grounded developer documentation from a software "
+    "repository."
 )
 
 #: The recognised subcommand names. The bare CLI form
@@ -305,8 +304,9 @@ def build_parser() -> argparse.ArgumentParser:
 class PreparedRun:
     """The product of :func:`prepare_run`: validated inputs plus optional model.
 
-    The documentation run no longer binds ``ModelConfig.agentic(make_docgen())``.
-    ``model`` is the writer provider, or ``None`` for a no-model honest-empty run.
+    The documentation run binds a writer model only, never an outer dummy
+    harness. ``model`` is the writer provider, or ``None`` for a no-model
+    honest-empty run.
 
     Attributes:
         config: The validated :class:`DocgenConfig`.
@@ -345,34 +345,6 @@ class RunOutcome:
 #: Resolved relative to the target repo so a run is self-contained there.
 _DEFAULT_OUT_RELPATH = os.path.join(".docuharnessx", "out")
 
-
-def _env_int_default(name: str, default: int) -> int:
-    """Positive integer from environment variable *name*, else *default*."""
-    raw = os.environ.get(name, "").strip()
-    if raw.isdigit() and int(raw) > 0:
-        return int(raw)
-    return default
-
-
-#: The single user turn that drives the pipeline. The eight stages do all the work as
-#: processors firing on ``on_step_end``, so the model itself must do **nothing** and end its
-#: turn immediately: every extra model step re-fires the whole expensive pipeline (the
-#: agentic writer + the per-segment judges run again) and risks ``budget_exceeded`` before a
-#: clean ``done``. The instruction is therefore explicit — take no action, call no tools,
-#: answer in one word — so an agentic model does not treat "drive the pipeline" as a task and
-#: rabbit-hole on the ``todo_write`` tool the Control bundle exposes.
-_SKELETON_TASK_DESCRIPTION = (
-    "DocuHarnessX runs its entire documentation pipeline automatically through background "
-    "processors that execute the moment this turn ends. You do not need to do anything, and "
-    "you must NOT call any tools or write any todos. Reply with exactly the single word "
-    "DONE and nothing else."
-)
-
-#: Default per-run step budget for the skeleton task. The pipeline completes in a single
-#: model turn (the stages run on that turn's ``on_step_end``); this is a small ceiling so a
-#: degenerate, tool-looping run cannot spin and re-run the pipeline. Overridable via
-#: ``DHX_MAX_STEPS`` (or ``--config`` ``max_steps``) for a model that needs more turns.
-_SKELETON_MAX_STEPS = _env_int_default("DHX_MAX_STEPS", 4)
 
 #: Process exit code on a clean run (exit_reason 'done').
 EXIT_OK: int = 0
@@ -438,7 +410,7 @@ def prepare_run(
 
     Target validation runs first so a bad path aborts before ontology/model work.
     A missing model is ``PreparedRun.model is None`` (honest-empty), not a
-    resolution error. This does not bind ``make_docgen`` as the run harness.
+    resolution error. This does not construct an outer dummy harness.
 
     Args:
         args: The parsed ``run`` namespace (``target_repo``/``out``/``config``/``roles``).
@@ -520,61 +492,6 @@ def prepare_run(
     )
 
 
-def _locate_journal_jsonl(out_dir: str, run_id: str) -> str | None:
-    """Find the conversation-trace ``.jsonl`` HarnessJournal wrote for *run_id*.
-
-    HarnessJournal lays a run's files out as
-    ``<base_dir>/<session_id>/<run_id>.jsonl`` (plus a sibling
-    ``<run_id>_trace.jsonl``). The session id is generated inside ``harness.run``,
-    so rather than reconstruct it we walk the output tree for the segment file
-    named after the run's ``run_id``. Returns its absolute path, or ``None`` when
-    no matching trace was produced (e.g. journalling disabled).
-    """
-    if not os.path.isdir(out_dir):
-        return None
-    target_name = f"{run_id}.jsonl"
-    for root, _dirs, files in os.walk(out_dir):
-        if target_name in files:
-            return os.path.join(root, target_name)
-    # Fall back to any conversation jsonl under the out dir (single-run skeleton).
-    for root, _dirs, files in os.walk(out_dir):
-        for name in files:
-            if name.endswith(".jsonl") and not name.endswith("_trace.jsonl"):
-                return os.path.join(root, name)
-    return None
-
-
-def _thread_deploy_mode(harness: "Harness", deploy_mode: str) -> None:
-    """Place the configured deploy mode on the run harness's Deploy stage(s).
-
-    The Deploy stage (github-pages-deploy task 4.1) reads its mode from a
-    per-instance value via ``getattr(self, "_deploy_mode", None)`` — exactly the way
-    the model config is injected onto each processor at ``Harness.__init__``. This
-    threads the resolved :attr:`DocgenConfig.deploy_mode` onto every
-    :class:`~docuharnessx.stages.deploy.DeployStage` registered on the run harness
-    *before* the run, so the stage runs in the operator-selected mode (Req 3.2, 3.3).
-
-    The DeployStage is located on the harness's live processor table
-    (``harness._rt.processors``, hook-keyed) rather than re-composing the pipeline,
-    so this is purely additive and touches no other stage. The stage's
-    :func:`~docuharnessx.deployer.resolve_deploy_mode` still validates the value at
-    the run boundary, so a bad mode surfaces there as a ``DeployInputError`` (Req
-    3.4) — this CLI step only carries the configured string through. The DeployStage
-    import is deferred to call time so ``dhx --help`` / parser unit tests need no
-    harness wiring, mirroring the other local imports in this module.
-    """
-    from docuharnessx.stages.deploy import DeployStage
-
-    runtime = getattr(harness, "_rt", None)
-    processors = getattr(runtime, "processors", None)
-    if not processors:
-        return
-    for procs in processors.values():
-        for proc in procs:
-            if isinstance(proc, DeployStage):
-                proc._deploy_mode = deploy_mode
-
-
 def _publish_if_accepted(
     *,
     pages: tuple[Any, ...],
@@ -599,7 +516,7 @@ def _publish_if_accepted(
     if not os.path.isfile(mkdocs_yml):
         return
 
-    from docuharnessx.assembler import read_origin_remote, resolve_site_identity
+    from docuharnessx.assembler.identity import read_origin_remote, resolve_site_identity
     from docuharnessx.assembler.model import ASSEMBLED_SITE_SCHEMA_VERSION, AssembledSite
     from docuharnessx.deployer import DefaultCommandRunner, deploy_site, resolve_deploy_mode
 
@@ -642,9 +559,9 @@ def orchestrate_run(
 ) -> RunOutcome:
     """Drive the prepared documentation run through the explore-first pipeline.
 
-    Does **not** construct a dummy conversational ``BaseTask`` or bind
-    ``make_docgen`` as the outer harness. ``max_steps`` / ``task_description``
-    are accepted for call-site compatibility and ignored.
+    Does **not** construct a dummy conversational ``BaseTask`` or an outer
+    harness bus. ``max_steps`` / ``task_description`` are accepted for
+    call-site compatibility and ignored.
 
     Returns:
         A :class:`RunOutcome` with ``exit_code=0`` for a completed run, including

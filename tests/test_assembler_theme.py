@@ -73,36 +73,6 @@ def test_mkdocs_yaml_wires_palette_font_and_extra_css() -> None:
     assert "navigation.indexes" in raw and "navigation.expand" in raw
 
 
-# --------------------------------------------------------------------------- #
-# Nested sidebar nav — role sections with their segment pages                  #
-# --------------------------------------------------------------------------- #
-
-
-def test_nav_nests_segments_under_their_role_section() -> None:
-    segments_by_role = {
-        "developer/index.md": (
-            ("Extend the engine", "dev-extend-1.md"),
-            ("Build internals", "dev-build-2.md"),
-        ),
-        "manager/index.md": (("Evaluate fit", "mgr-eval-3.md"),),
-    }
-    raw = build_mkdocs_yaml(_identity(), _ROLE_PAGES, None, segments_by_role)
-    # The role landing page is the section index; its segments are listed under it.
-    assert "developer/index.md" in raw and "dev-extend-1.md" in raw
-    assert "Extend the engine: dev-extend-1.md" in raw
-    # Each segment's title labels its nav entry.
-    assert "Evaluate fit: mgr-eval-3.md" in raw
-    # Ordering: Home first, the developer section's segments before the manager section.
-    assert raw.find("dev-extend-1.md") < raw.find("mgr-eval-3.md")
-
-
-def test_nav_flat_when_no_segments_given() -> None:
-    # Back-compatible: with no mapping each role is a flat link (no nested section).
-    raw = build_mkdocs_yaml(_identity(), _ROLE_PAGES, None)
-    assert "Developer: developer/index.md" in raw
-    assert "Manager: manager/index.md" in raw
-
-
 def test_writer_emits_extra_css(tmp_path: Path) -> None:
     from docuharnessx.assembler.writer import assemble_site
     from docuharnessx.ontology import default_profile

@@ -12,9 +12,8 @@ Task 4.1 fleshes out :mod:`docuharnessx.cli` to:
   invalid file; Req 10.1, 10.3, 10.4);
 * load :class:`DocgenConfig` (YAML then CLI overrides) and validate roles against
   the loaded ``Vocabulary`` (``ConfigError`` listing valid roles; Req 7.3, 7.5);
-* resolve the model and bind it via ``ModelConfig(main=...).agentic(make_docgen(...))``
-  — model NOT in ``HarnessConfig`` (Req 3.1) — applying cost/step budgets through
-  the baseline Control capability.
+* resolve an optional writer model. Absence is an honest-empty run, not outline
+  substitution.
 
 These tests inject the test-scoped :class:`tests._fakes.FakeProvider` wherever a
 model is needed, so no network call and no real credentials are required. The
@@ -27,11 +26,10 @@ import os
 
 import pytest
 
-from harnessx.core.harness import Harness, HarnessConfig
 from harnessx.core.model_config import ModelConfig
 
 from docuharnessx import cli
-from docuharnessx.errors import ConfigError, OntologyConfigError, TargetRepoError
+from docuharnessx.errors import OntologyConfigError, TargetRepoError
 
 from _fakes import FakeProvider
 
@@ -119,48 +117,6 @@ def test_prepare_run_raises_target_repo_error_before_run(tmp_path) -> None:
     with pytest.raises(TargetRepoError) as exc:
         cli.prepare_run(args, model_config=_fake_model())
     assert missing in str(exc.value)
-
-
-# --------------------------------------------------------------------------- #
-# Model bound via .agentic, never in HarnessConfig (Req 3.1)                   #
-# --------------------------------------------------------------------------- #
-
-
-@pytest.mark.skip(reason="retired dummy harness; task 5.1")
-def test_model_bound_via_agentic_not_in_harness_config(tmp_path) -> None:
-    target = tmp_path / "repo"
-    target.mkdir()
-    out = tmp_path / "out"
-    args = cli.build_parser().parse_args(["run", str(target), "--out", str(out)])
-    prepared = cli.prepare_run(args, model_config=_fake_model())
-
-    # The model is bound on the Harness, not on the HarnessConfig.
-    assert isinstance(prepared.harness, Harness)
-    assert isinstance(prepared.harness.config, HarnessConfig)
-    assert not hasattr(prepared.harness.config, "model")
-    assert not hasattr(prepared.harness.config, "model_config")
-    # The bound provider is the injected fake (model lives on the model_config).
-    assert isinstance(prepared.harness.model_config.main, FakeProvider)
-
-
-@pytest.mark.skip(reason="retired dummy harness; task 5.1")
-def test_prepare_run_applies_cost_budget_through_control(tmp_path) -> None:
-    target = tmp_path / "repo"
-    target.mkdir()
-    config_yaml = tmp_path / "c.yaml"
-    config_yaml.write_text("max_cost_usd: 7.5\n", encoding="utf-8")
-    args = cli.build_parser().parse_args(
-        ["run", str(target), "--out", str(tmp_path / "out"), "--config", str(config_yaml)]
-    )
-    prepared = cli.prepare_run(args, model_config=_fake_model())
-    # The cost budget is applied through the baseline Control capability: a
-    # CostGuardProcessor appears in the composed HarnessConfig.
-    targets = [
-        p.get("_target_", "")
-        for p in prepared.harness.config.processors
-        if isinstance(p, dict)
-    ]
-    assert any(t.endswith("CostGuardProcessor") for t in targets)
 
 
 # --------------------------------------------------------------------------- #
@@ -297,31 +253,6 @@ def test_bare_form_does_not_shadow_init(tmp_path, capsys) -> None:
     code = cli.main(["init", str(project), "--default"])
     assert code == 0
     assert os.path.isfile(os.path.join(str(project), ".docuharnessx", "ontology.yaml"))
-
-
-# --------------------------------------------------------------------------- #
-# Configured step budget is applied to the run (Req 7.5, 8.4)                  #
-# --------------------------------------------------------------------------- #
-
-
-@pytest.mark.skip(reason="retired dummy harness; task 5.1")
-def test_configured_step_budget_is_applied_and_exits_nonzero(tmp_path, capsys) -> None:
-    # A configured `max_steps: 0` makes the run exceed its step budget before any
-    # model call, so it terminates with budget_exceeded → non-zero exit (Req 7.5,
-    # 8.4). This proves the configured step budget actually reaches the run (it was
-    # previously ignored in favour of a hardcoded ceiling).
-    target = tmp_path / "repo"
-    target.mkdir()
-    out = tmp_path / "out"
-    cfg = tmp_path / "c.yaml"
-    cfg.write_text("max_steps: 0\n", encoding="utf-8")
-    code = cli.main(
-        [str(target), "--out", str(out), "--config", str(cfg)],
-        model_config=_fake_model(),
-    )
-    assert code != 0
-    err = capsys.readouterr().err
-    assert "budget_exceeded" in err, err
 
 
 # --------------------------------------------------------------------------- #

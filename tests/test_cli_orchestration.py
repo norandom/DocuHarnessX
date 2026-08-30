@@ -1,43 +1,19 @@
-"""Tests for the ``dhx run`` end-to-end orchestration (task 4.2 boundary: dhx CLI).
+"""Tests for the ``dhx run`` explore-first orchestration (task 4.2 / 5.1).
 
-Task 4.2 takes the :class:`~docuharnessx.cli.PreparedRun` produced by task 4.1 and
-drives the run to completion:
-
-* populate the run-context slots (target-repo path, output dir, loaded
-  ``Vocabulary`` at ``SLOT_VOCABULARY``) **before** the run (Req 6.2, 10.2);
-* execute the composed pipeline **once** with a minimal skeleton ``BaseTask``;
-* write the HarnessJournal trace under the resolved output directory and report
-  the journal path on success (Req 4.4, 8.1);
-* map exit reasons to process exit codes: ``done`` → 0; ``budget_exceeded`` and
-  every error path → non-zero, with the budget-exceeded outcome recorded in the
-  journal (Req 4.5, 4.6, 8.3, 8.4, 8.5).
-
-Every test injects the test-scoped :class:`tests._fakes.FakeProvider`, so the
-empty pipeline reaches ``exit_reason='done'`` with no network call and no real
-credentials. The production model resolver is never exercised here.
+``orchestrate_run`` drives :func:`docuharnessx.pipeline.run.run_pipeline`.
+Completed runs including honest-empty exit 0 and write a run report. The dummy
+outer harness is not the documentation run.
 """
 
 from __future__ import annotations
 
-import json
 import os
 
-import pytest
 from harnessx.core.model_config import ModelConfig
 
 from docuharnessx import cli
-from docuharnessx.types import (
-    SLOT_OUTPUT_DIR,
-    SLOT_TARGET_REPO,
-    SLOT_VOCABULARY,
-)
 
 from _fakes import FakeProvider
-
-
-# --------------------------------------------------------------------------- #
-# Helpers                                                                      #
-# --------------------------------------------------------------------------- #
 
 
 def _fake_model() -> ModelConfig:
@@ -45,48 +21,7 @@ def _fake_model() -> ModelConfig:
     return ModelConfig(main=FakeProvider())
 
 
-def _find_journal_jsonl(out_dir: str) -> list[str]:
-    """Return every conversation ``.jsonl`` trace written under *out_dir*."""
-    found: list[str] = []
-    for root, _dirs, files in os.walk(out_dir):
-        for name in files:
-            if name.endswith(".jsonl") and not name.endswith("_trace.jsonl"):
-                found.append(os.path.join(root, name))
-    return found
-
-
-# --------------------------------------------------------------------------- #
-# orchestrate_run: slots populated before the run (Req 6.2, 10.2)             #
-# --------------------------------------------------------------------------- #
-
-
-@pytest.mark.skip(reason="retired dummy harness; task 5.1")
-def test_orchestrate_run_populates_all_slots_including_vocabulary(tmp_path) -> None:
-    target = tmp_path / "repo"
-    target.mkdir()
-    out = tmp_path / "out"
-    args = cli.build_parser().parse_args(["run", str(target), "--out", str(out)])
-    prepared = cli.prepare_run(args, model_config=_fake_model())
-
-    outcome = cli.orchestrate_run(prepared)
-
-    state = outcome.run_context.state
-    # All three run-data slots are populated before the run and survive it.
-    assert state.get_slot(SLOT_TARGET_REPO) is not None
-    assert state.get_slot(SLOT_OUTPUT_DIR) is not None
-    assert state.get_slot(SLOT_VOCABULARY) is not None
-    # The vocabulary slot carries the loaded Vocabulary (Req 10.2).
-    assert outcome.run_context.vocabulary() is prepared.vocabulary
-    assert outcome.run_context.target_repo() == prepared.target_repo
-    assert outcome.run_context.output_dir() == prepared.out_dir
-
-
-# --------------------------------------------------------------------------- #
-# orchestrate_run: clean run → exit 0, journal written + reported (Req 4.4)   #
-# --------------------------------------------------------------------------- #
-
-
-def test_orchestrate_run_clean_run_exits_zero_with_journal_path(tmp_path) -> None:
+def test_orchestrate_run_clean_run_exits_zero_with_report(tmp_path) -> None:
     target = tmp_path / "repo"
     target.mkdir()
     out = tmp_path / "out"
@@ -100,36 +35,7 @@ def test_orchestrate_run_clean_run_exits_zero_with_journal_path(tmp_path) -> Non
     assert os.path.isfile(os.path.join(str(out), "report.json"))
 
 
-@pytest.mark.skip(reason="retired dummy harness; task 5.1")
-def test_orchestrate_run_journal_records_run_start_and_end(tmp_path) -> None:
-    target = tmp_path / "repo"
-    target.mkdir()
-    out = tmp_path / "out"
-    args = cli.build_parser().parse_args(["run", str(target), "--out", str(out)])
-    prepared = cli.prepare_run(args, model_config=_fake_model())
-
-    outcome = cli.orchestrate_run(prepared)
-
-    # The conversation JSONL records the run boundaries and the turns. Record kinds
-    # are carried in the ``type`` field (session_start … episode_end), with the
-    # user/assistant turns recorded as ``raw_user`` / ``raw_assistant``.
-    with open(outcome.journal_path, "r", encoding="utf-8") as handle:
-        records = [json.loads(line) for line in handle if line.strip()]
-    types = [r.get("type") for r in records]
-    # Run start and run end are both recorded (Req 8.1).
-    assert "session_start" in types, types
-    assert "episode_end" in types, types
-    # The single user turn and the assistant's end-turn response are recorded.
-    assert "raw_user" in types, types
-    assert "raw_assistant" in types, types
-
-
-# --------------------------------------------------------------------------- #
-# main(): full run path through the CLI exits 0 and reports the journal        #
-# --------------------------------------------------------------------------- #
-
-
-def test_main_run_exits_zero_and_reports_journal_path(tmp_path, capsys) -> None:
+def test_main_run_exits_zero_and_reports_report_path(tmp_path, capsys) -> None:
     target = tmp_path / "repo"
     target.mkdir()
     out = tmp_path / "out"
@@ -145,8 +51,6 @@ def test_main_run_exits_zero_and_reports_journal_path(tmp_path, capsys) -> None:
 
 
 def test_main_run_uses_default_out_dir_when_omitted(tmp_path, capsys) -> None:
-    # When --out is omitted the run journal lands under the documented default
-    # (<target>/.docuharnessx/out), so a run is self-contained in the target.
     target = tmp_path / "repo"
     target.mkdir()
     code = cli.main(["run", str(target)], model_config=_fake_model())
@@ -157,129 +61,8 @@ def test_main_run_uses_default_out_dir_when_omitted(tmp_path, capsys) -> None:
     )
 
 
-# --------------------------------------------------------------------------- #
-# Budget-exceeded simulation → non-zero exit, recorded in the journal          #
-# (Req 4.5, 8.4)                                                               #
-# --------------------------------------------------------------------------- #
-
-
-@pytest.mark.skip(reason="retired dummy harness; task 5.1")
-def test_orchestrate_run_budget_exceeded_exits_nonzero(tmp_path) -> None:
-    target = tmp_path / "repo"
-    target.mkdir()
-    out = tmp_path / "out"
-    args = cli.build_parser().parse_args(["run", str(target), "--out", str(out)])
-    prepared = cli.prepare_run(args, model_config=_fake_model())
-
-    # max_steps=0 makes State.budget_exceeded() true before the first step, so the
-    # run loop exits with exit_reason='budget_exceeded' with NO model call/network.
-    outcome = cli.orchestrate_run(prepared, max_steps=0)
-
-    assert outcome.exit_reason == "budget_exceeded"
-    assert outcome.exit_code != 0
-
-
-@pytest.mark.skip(reason="retired dummy harness; task 5.1")
-def test_budget_exceeded_recorded_in_journal(tmp_path) -> None:
-    target = tmp_path / "repo"
-    target.mkdir()
-    out = tmp_path / "out"
-    args = cli.build_parser().parse_args(["run", str(target), "--out", str(out)])
-    prepared = cli.prepare_run(args, model_config=_fake_model())
-
-    outcome = cli.orchestrate_run(prepared, max_steps=0)
-
-    # The budget-exceeded outcome is recorded in the run journal (Req 8.4): the
-    # trace file carries a task_end record with exit_reason 'budget_exceeded'.
-    assert outcome.journal_path is not None
-    trace_path = outcome.journal_path.replace(".jsonl", "_trace.jsonl")
-    assert os.path.isfile(trace_path)
-    blob = open(trace_path, "r", encoding="utf-8").read()
-    assert "budget_exceeded" in blob
-
-
-@pytest.mark.skip(reason="retired dummy harness; task 5.1")
-def test_main_budget_exceeded_exits_nonzero(tmp_path, capsys) -> None:
-    target = tmp_path / "repo"
-    target.mkdir()
-    out = tmp_path / "out"
-    code = cli.main(
-        ["run", str(target), "--out", str(out)],
-        model_config=_fake_model(),
-        max_steps=0,
-    )
-    assert code != 0
-
-
-# --------------------------------------------------------------------------- #
-# Exit-reason → exit-code mapping is total (Req 4.6, 8.5)                       #
-# --------------------------------------------------------------------------- #
-
-
 def test_exit_code_for_reason_maps_done_to_zero_and_others_nonzero() -> None:
     assert cli.exit_code_for_reason("done") == 0
     for reason in ("budget_exceeded", "loop_detected", "error", "interrupted"):
         assert cli.exit_code_for_reason(reason) != 0
-    # An unrecognised reason is conservatively non-zero (never silently 0).
     assert cli.exit_code_for_reason("some-unexpected-reason") != 0
-
-
-# --------------------------------------------------------------------------- #
-# Deploy-mode threading: orchestrate_run reaches the Deploy stage (Req 3.2,3.3) #
-# github-pages-deploy task 4.3                                                  #
-# --------------------------------------------------------------------------- #
-# The Deploy stage reads its mode from a per-instance ``_deploy_mode`` value
-# (getattr(self, "_deploy_mode", None)), exactly the way the integration suite
-# sets it. orchestrate_run threads the configured DocgenConfig.deploy_mode onto
-# the live DeployStage processor instance(s) on the run harness BEFORE the run, so
-# a bare `dhx <repo>` run reaches the stage with the emit-ci-workflow default and
-# a `--deploy-mode` flag reaches it with the selected mode — without any network.
-
-
-def _deploy_stages(prepared) -> list:
-    """Return the live DeployStage processor instances on the prepared harness."""
-    from docuharnessx.stages.deploy import DeployStage
-
-    found: list = []
-    for procs in prepared.harness._rt.processors.values():
-        for proc in procs:
-            if isinstance(proc, DeployStage):
-                found.append(proc)
-    return found
-
-
-@pytest.mark.skip(reason="retired dummy harness; task 5.1")
-def test_orchestrate_run_threads_default_deploy_mode_to_stage(tmp_path) -> None:
-    """A run with no --deploy-mode reaches the Deploy stage with the default mode."""
-    target = tmp_path / "repo"
-    target.mkdir()
-    out = tmp_path / "out"
-    args = cli.build_parser().parse_args(["run", str(target), "--out", str(out)])
-    prepared = cli.prepare_run(args, model_config=_fake_model())
-
-    cli.orchestrate_run(prepared)
-
-    stages = _deploy_stages(prepared)
-    assert stages, "the composed pipeline must register a DeployStage"
-    # The resolved mode reaches the stage via its per-instance accessor.
-    for stage in stages:
-        assert stage._deploy_mode_value() == "emit-ci-workflow"
-
-
-@pytest.mark.skip(reason="retired dummy harness; task 5.1")
-def test_orchestrate_run_threads_selected_deploy_mode_to_stage(tmp_path) -> None:
-    """A --deploy-mode flag reaches the Deploy stage with that mode."""
-    target = tmp_path / "repo"
-    target.mkdir()
-    out = tmp_path / "out"
-    args = cli.build_parser().parse_args(
-        ["run", str(target), "--out", str(out), "--deploy-mode", "build-only"]
-    )
-    prepared = cli.prepare_run(args, model_config=_fake_model())
-
-    cli.orchestrate_run(prepared)
-
-    stages = _deploy_stages(prepared)
-    assert stages, "the composed pipeline must register a DeployStage"
-    for stage in stages:
-        assert stage._deploy_mode_value() == "build-only"

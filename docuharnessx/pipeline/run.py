@@ -17,12 +17,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from docuharnessx.analysis import analyze, scan
-from docuharnessx.assembler import (
-    assemble_question_site,
-    read_origin_remote,
-    resolve_site_identity,
-)
+from docuharnessx.assembler.identity import read_origin_remote, resolve_site_identity
 from docuharnessx.assembler.pages import render_question_page
+from docuharnessx.assembler.question_site import assemble_question_site
 from docuharnessx.composition.explore_writer import write_questions
 from docuharnessx.pages.model import Page
 from docuharnessx.pipeline.report import RunReport, write_run_report

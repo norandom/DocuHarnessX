@@ -3,8 +3,7 @@
 These tests pin the observable contract of the package root that task 1.1 owns:
 
 * ``import docuharnessx`` works and exposes a version (Req 1.5 — package root).
-* The top-level package contains the ``stages`` sub-package and the ``cli``
-  module (Req 1.3 — package layout; ``cli`` carries the ``dhx`` entry point).
+* The top-level package contains the ``cli`` module (the ``dhx`` entry point).
 * The ``dhx`` console-script entry point is declared and runnable as
   ``main(["--help"])`` (Req 1.2 — exposes the ``dhx`` command).
 * ``main`` exposes ``init`` and run subcommand placeholders so 4.x can flesh
@@ -26,22 +25,6 @@ def test_docuharnessx_imports_and_has_version() -> None:
     pkg = importlib.import_module("docuharnessx")
     assert isinstance(pkg.__version__, str)
     assert pkg.__version__  # non-empty
-
-
-def test_docuharnessx_reexports_make_docgen() -> None:
-    # Req 1.5: the package root re-exports the bundle composition seam so callers
-    # reach it as ``docuharnessx.make_docgen`` (not only via the bundle module).
-    import docuharnessx
-    from docuharnessx.bundle import make_docgen as bundle_make_docgen
-
-    assert docuharnessx.make_docgen is bundle_make_docgen
-    assert "make_docgen" in docuharnessx.__all__
-
-
-def test_stages_subpackage_exists() -> None:
-    # Req 1.3: top-level package provides the stages sub-package.
-    stages = importlib.import_module("docuharnessx.stages")
-    assert stages is not None
 
 
 def test_cli_module_exposes_main() -> None:
