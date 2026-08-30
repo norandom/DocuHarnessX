@@ -26,6 +26,7 @@ network. The production resolver is otherwise never exercised here.
 
 from __future__ import annotations
 
+import json
 import os
 
 import pytest
@@ -37,7 +38,6 @@ from harnessx.core.processor import Processor
 import docuharnessx.stages as stages_pkg
 from docuharnessx import cli
 from docuharnessx.errors import (
-    ModelResolutionError,
     OntologyConfigError,
     TargetRepoError,
 )
@@ -162,38 +162,40 @@ def test_target_that_is_a_file_exits_nonzero(tmp_path, capsys) -> None:
 # --------------------------------------------------------------------------- #
 
 
-def test_unresolved_model_exits_nonzero_with_explicit_message(
+def test_unresolved_model_completes_honest_empty(
     tmp_path, capsys, monkeypatch
 ) -> None:
-    """With a valid target but no model in config or env, the run fails fast.
+    """With a valid target but no model, the run is honest-empty (Req 1.3).
 
-    No ``model_config`` is injected, so the production resolver runs against an
-    **empty** provider environment and raises :class:`ModelResolutionError` before
-    any provider is constructed (still no network). The CLI maps that to a non-zero
-    exit and an explicit, env-var-naming message (Req 3.4).
+    No ``model_config`` is injected and the provider environment is empty, so
+    writing is skipped. The CLI still writes a report, emits zero documentation
+    pages, and exits 0 rather than substituting outline text.
     """
     for var in _PROVIDER_ENV_VARS:
         monkeypatch.delenv(var, raising=False)
     target = _target(tmp_path)
+    out = tmp_path / "out"
 
-    code = cli.main(["run", target, "--out", str(tmp_path / "out")])
+    code = cli.main(["run", target, "--out", str(out)])
 
-    assert code != 0
-    err = capsys.readouterr().err
-    assert "ModelResolutionError" in err
-    # The message guides the operator to the env-var convention (Req 3.4).
-    assert "ANTHROPIC_API_KEY" in err or "OPENAI_API_KEY" in err
+    assert code == 0
+    report = out / "report.json"
+    assert report.is_file()
+    payload = json.loads(report.read_text(encoding="utf-8"))
+    assert payload["accepted"] == 0
+    pages = out / "pages"
+    assert not pages.exists() or list(pages.rglob("*")) == []
 
 
-def test_unresolved_model_raises_before_run(tmp_path, monkeypatch) -> None:
-    """prepare_run raises ``ModelResolutionError`` (not a run failure) when unresolved."""
+def test_unresolved_model_prepare_run_binds_none(tmp_path, monkeypatch) -> None:
+    """prepare_run succeeds with ``model is None`` when unresolved (Req 1.3)."""
     for var in _PROVIDER_ENV_VARS:
         monkeypatch.delenv(var, raising=False)
     target = _target(tmp_path)
     args = cli.build_parser().parse_args(["run", target, "--out", str(tmp_path / "out")])
 
-    with pytest.raises(ModelResolutionError):
-        cli.prepare_run(args)  # no model_config → real resolver, empty env
+    prepared = cli.prepare_run(args)
+    assert prepared.model is None
 
 
 # --------------------------------------------------------------------------- #

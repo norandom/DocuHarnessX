@@ -1,67 +1,43 @@
-"""The ``dhx`` command-line entry point (task 1.1 scaffold; tasks 4.1–4.2).
+"""The ``dhx`` command-line entry point.
 
-This module is the **dhx CLI** boundary. Task 1.1 scaffolded the argparse surface
-so the ``dhx`` console-script (declared in ``pyproject.toml`` as
-``docuharnessx.cli:main``) is runnable and ``dhx --help`` works. Task 4.1 fleshes
-out the ``run`` subcommand's argument parsing, validation, ontology loading,
-config loading, role validation, model resolution, and **model binding**. Task 4.2
-adds the run *orchestration*: populating the run-context slots, executing the
-composed pipeline once, writing/reporting the journal, and mapping exit reasons to
-exit codes. Task 4.3 wires the ``init`` subcommand to
-:func:`docuharnessx.ontology_setup.run_init` (build/seed the vocabulary, write
-``.docuharnessx/ontology.yaml``, report the path; refused overwrite → non-zero).
+This module is the **dhx CLI** boundary. ``dhx --help`` works. ``run`` validates
+the target, optionally resolves a writer model, and drives
+:func:`docuharnessx.pipeline.run.run_pipeline`. ``init`` scaffolds ontology.
+``mcp`` launches the refine server.
 
-What the ``run`` path does (task 4.1, in order)
------------------------------------------------
+What the ``run`` path does (in order)
+-------------------------------------
 1. **Validate the target** is an existing directory *before any run*
-   (:class:`TargetRepoError`, mapped to a non-zero exit; Req 4.7). This happens
-   first so an invalid target aborts before any ontology/model work.
-2. **Load the project vocabulary** via
-   :func:`docuharnessx.ontology_loader.load_project_vocabulary`: an absent
-   ``.docuharnessx/ontology.yaml`` falls back to the ``ontology-engine`` default
-   profile and a ``dhx init`` hint is printed (Req 10.3); a present-but-invalid
-   file raises :class:`OntologyConfigError` → non-zero exit (Req 10.4).
-3. **Load the config** (``--config`` YAML overlaid with CLI overrides) and
-   **validate roles** against the loaded ``Vocabulary``: an unknown ``--roles``
-   value raises :class:`ConfigError` listing the valid roles (Req 7.3, 7.5, 7.6).
-4. **Resolve the model** via :func:`docuharnessx.model_resolver.resolve_model`
-   (config-then-env; :class:`ModelResolutionError` when none; Req 3.2–3.4).
-5. **Bind the model** via ``ModelConfig(main=...).agentic(make_docgen(...))`` —
-   the model is bound on the resulting ``Harness``, never placed into the
-   ``HarnessConfig`` (Req 3.1). Cost/step budgets are applied through the baseline
-   Control capability composed by ``make_docgen`` (Req 2.3).
+   (:class:`TargetRepoError`, mapped to a non-zero exit). An invalid target
+   writes no documentation pages (Req 1.2).
+2. **Load config** (``--config`` YAML overlaid with CLI overrides). Ontology may
+   still load for config/role validation; it is not a write prerequisite and
+   reader-role selection is not required (Req 1.4, 10.3).
+3. **Resolve the model** via :func:`docuharnessx.model_resolver.resolve_model`
+   when none is injected. Absence is an honest-empty run (zero pages + report),
+   not a hard resolution failure and not outline substitution (Req 1.3).
+4. **Run the explore-first pipeline** — not a dummy ``BaseTask`` that replies
+   ``DONE`` and forbids tools.
 
-What the ``run`` orchestration does (task 4.2, in order)
--------------------------------------------------------
-1. **Populate the run-context slots** on a fresh harness :class:`State`: the
-   validated target-repository path, the resolved output dir, and the loaded
-   ``Vocabulary`` at ``SLOT_VOCABULARY`` — *before* the run so stages can read
-   them (Req 6.2, 10.2).
-2. **Execute the pipeline once** with a minimal skeleton ``BaseTask``. The slotted
-   ``State`` is handed to ``harness.run(..., _resume_state=state)`` so the slots
-   are present on the run's state; the empty pipeline drives one model turn and
-   exits.
-3. **Locate the journal trace** HarnessJournal wrote under the resolved output dir
-   (``<out>/<session_id>/<run_id>.jsonl``) and **report it** on success (Req 4.4,
-   8.1).
-4. **Map the exit reason to an exit code** (Req 4.5, 4.6, 8.3–8.5): ``done`` → 0;
-   ``budget_exceeded`` (recorded in the journal) and every other terminal reason
-   (loop_detected, error, interrupted, …) → non-zero.
+What the ``run`` orchestration does
+-----------------------------------
+:func:`orchestrate_run` calls ``run_pipeline`` (imported under an alias so it
+does not smash this module's :class:`RunOutcome`). Completed runs including
+honest-empty exit 0. Invalid target exits non-zero. Optional publish modes are
+offered only after at least one accepted page (Req 8.5).
 
 Test-injected model
 -------------------
 :func:`prepare_run` / :func:`main` accept an optional ``model_config`` keyword.
-Production callers (the console script) pass nothing, so the real resolver runs.
-Tests pass a no-network fake provider here so credential-free runs are possible
-*without* baking any fake into the production resolution path (the resolver is
-only called when ``model_config`` is ``None``).
+Production callers pass nothing. Tests inject ``None`` (no-model) or a
+``ModelConfig`` wrapping a no-network fake / inspecting provider.
 
 Error strategy
 -------------
 Every boundary failure raises a typed :class:`DocuHarnessXError`; :func:`main`
 catches the whole family, prints ``<ErrorType>: <message>`` to stderr, and returns
-a non-zero exit code (design "Error Handling"). The required-dependency check
-(Req 1.4) still runs before any real command is dispatched.
+a non-zero exit code. The required-dependency check still runs before any real
+command is dispatched.
 """
 
 from __future__ import annotations
@@ -76,7 +52,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from docuharnessx.config import DocgenConfig, load_config
-from docuharnessx.errors import DocuHarnessXError, TargetRepoError
+from docuharnessx.errors import DocuHarnessXError, ModelResolutionError, TargetRepoError
 from docuharnessx.ontology_loader import (
     ONTOLOGY_CONFIG_RELPATH,
     load_project_vocabulary,
@@ -119,6 +95,8 @@ _DESCRIPTION = (
 #: the bare-form normaliser leaves ``dhx mcp <repo>`` intact rather than rewriting it to
 #: ``run mcp <repo>`` (mcp-refine Req 1.3).
 _SUBCOMMANDS: frozenset[str] = frozenset({"run", "init", "mcp"})
+
+_log = logging.getLogger(__name__)
 
 
 def _normalize_argv(argv: Sequence[str] | None) -> list[str] | None:
@@ -325,64 +303,49 @@ def build_parser() -> argparse.ArgumentParser:
 
 @dataclass(frozen=True)
 class PreparedRun:
-    """The product of :func:`prepare_run`: everything wired up to the bind point.
+    """The product of :func:`prepare_run`: validated inputs plus optional model.
 
-    Task 4.1 owns producing this (validation → ontology → config → model bind);
-    task 4.2 consumes it to populate the run-context slots and invoke the run.
+    The documentation run no longer binds ``ModelConfig.agentic(make_docgen())``.
+    ``model`` is the writer provider, or ``None`` for a no-model honest-empty run.
 
     Attributes:
-        harness: The model-bound :class:`~harnessx.core.harness.Harness`, produced
-            by ``ModelConfig(main=...).agentic(make_docgen(...))``. The model lives
-            on ``harness.model_config``; ``harness.config`` (the ``HarnessConfig``)
-            carries no model (Req 3.1).
-        config: The validated :class:`DocgenConfig` (roles already checked).
+        config: The validated :class:`DocgenConfig`.
         vocabulary: The loaded project ``Vocabulary`` (default profile when absent).
-        used_default: ``True`` when the default profile was used (no ontology file);
-            the CLI prints a ``dhx init`` hint on this flag (Req 10.3).
+        used_default: ``True`` when the default profile was used (no ontology file).
         target_repo: The validated absolute target-repository path.
-        out_dir: The resolved output directory (the journal/docs root).
+        out_dir: The resolved output directory (report and optional site root).
+        model: Writer provider (``ModelConfig.main``) or ``None`` when unresolved.
     """
 
-    harness: "Harness"
     config: DocgenConfig
     vocabulary: "Vocabulary"
     used_default: bool
     target_repo: str
     out_dir: str
+    model: object | None
 
 
 @dataclass(frozen=True)
 class RunOutcome:
     """The product of :func:`orchestrate_run`: the run's result and exit mapping.
 
-    Task 4.2 produces this after driving ``harness.run`` once; :func:`_run_command`
-    consumes it to report the journal path and return the exit code.
-
-    Attributes:
-        exit_reason: The HarnessX ``TaskEndEvent.exit_reason`` (``done``,
-            ``budget_exceeded``, ``error``, …).
-        exit_code: The process exit code mapped from *exit_reason* via
-            :func:`exit_code_for_reason` (``0`` only for ``done``; Req 4.6, 8.5).
-        journal_path: The conversation-trace ``.jsonl`` HarnessJournal wrote under
-            the output dir, or ``None`` if none could be located.
-        out_dir: The resolved output directory the journal is rooted at.
-        run_context: The :class:`~docuharnessx.context.RunContext` whose ``State``
-            carries the populated run-data slots (target-repo, out-dir, vocabulary),
-            exposed so callers/tests can assert the slots were set (Req 6.2, 10.2).
+    Honest-empty (zero accepted pages) is ``exit_code=0``. ``journal_path`` and
+    ``run_context`` remain on the type for older callers; they are ``None`` on
+    the explore-first path (the dummy outer harness is no longer the run).
     """
 
     exit_reason: str
     exit_code: int
     journal_path: str | None
     out_dir: str
-    run_context: "RunContext"
+    run_context: "RunContext | None" = None
 
 
 #: The output directory used when ``--out`` is omitted (documented default).
 #: Resolved relative to the target repo so a run is self-contained there.
 _DEFAULT_OUT_RELPATH = os.path.join(".docuharnessx", "out")
 
-#: The skeleton's minimal run task description. The empty pipeline performs no real
+
 def _env_int_default(name: str, default: int) -> int:
     """Positive integer from environment variable *name*, else *default*."""
     raw = os.environ.get(name, "").strip()
@@ -471,33 +434,27 @@ def prepare_run(
     model_config: "ModelConfig | None" = None,
     stream: Any = None,
 ) -> PreparedRun:
-    """Validate inputs, load ontology/config, resolve and bind the model.
+    """Validate inputs, load config, and optionally resolve a writer model.
 
-    This is the task-4.1 core: it performs every step from target validation up to
-    and including model binding, and returns a :class:`PreparedRun`. It does NOT
-    run the harness (task 4.2).
-
-    Ordering is significant and matches the design: the target is validated
-    *before* any ontology/model work so a bad target aborts cleanly (Req 4.7).
+    Target validation runs first so a bad path aborts before ontology/model work.
+    A missing model is ``PreparedRun.model is None`` (honest-empty), not a
+    resolution error. This does not bind ``make_docgen`` as the run harness.
 
     Args:
         args: The parsed ``run`` namespace (``target_repo``/``out``/``config``/``roles``).
-        model_config: An optional pre-built ``ModelConfig`` (used by tests to inject
-            a no-network fake provider). When ``None``, the real resolver builds the
-            ``ModelConfig`` from config-then-env (Req 3.2–3.4).
+        model_config: An optional pre-built ``ModelConfig`` (tests inject a
+            no-network fake or inspecting provider). When ``None``, the real
+            resolver is tried; failure yields no model rather than aborting.
         stream: Where the ``dhx init`` hint is printed. ``None`` (the default)
             resolves to ``sys.stdout`` *at call time* so test capture works.
 
     Returns:
-        A :class:`PreparedRun` with the model-bound ``Harness`` and resolved inputs.
+        A :class:`PreparedRun` with resolved paths, config, and optional model.
 
     Raises:
-        TargetRepoError: The target is missing or not a directory (Req 4.7).
-        OntologyConfigError: A present ontology file failed to load (Req 10.4).
-        ConfigError: Malformed/unknown config, or a role not in the vocabulary
-            (Req 7.3, 7.6).
-        ModelResolutionError: No model resolvable from config or environment
-            (Req 3.4).
+        TargetRepoError: The target is missing or not a directory (Req 1.2).
+        OntologyConfigError: A present ontology file failed to load.
+        ConfigError: Malformed/unknown config, or a role not in the vocabulary.
     """
     # 1. Validate the target FIRST — before any ontology/model work (Req 4.7).
     target_repo = _validate_target_repo(args.target_repo)
@@ -541,30 +498,25 @@ def prepare_run(
     )
 
     # 5. Resolve the model (config-then-env) unless a ModelConfig was injected.
+    #    No usable model is a valid run: the pipeline writes a zero-page report
+    #    with reason ``no_model`` instead of substituting outline pages (Req 1.3).
     if model_config is None:
         from docuharnessx.model_resolver import resolve_model
 
-        model_config = resolve_model(config.model)
+        try:
+            model_config = resolve_model(config.model)
+        except ModelResolutionError:
+            model_config = None
 
-    # 6. Bind the model via .agentic(make_docgen(...)): the model is bound on the
-    #    Harness, never placed in the HarnessConfig (Req 3.1). Cost/step budgets are
-    #    applied through the baseline Control capability composed by make_docgen.
-    from docuharnessx.bundle import make_docgen
-
-    harness_config = make_docgen(
-        max_cost_usd=config.max_cost_usd,
-        max_steps=config.max_steps,
-        journal_dir=out_dir,
-    )
-    harness = model_config.agentic(harness_config)
+    model = None if model_config is None else getattr(model_config, "main", model_config)
 
     return PreparedRun(
-        harness=harness,
         config=config,
         vocabulary=vocabulary,
         used_default=used_default,
         target_repo=target_repo,
         out_dir=out_dir,
+        model=model,
     )
 
 
@@ -623,104 +575,113 @@ def _thread_deploy_mode(harness: "Harness", deploy_mode: str) -> None:
                 proc._deploy_mode = deploy_mode
 
 
+def _publish_if_accepted(
+    *,
+    pages: tuple[Any, ...],
+    repo_path: str,
+    out_dir: str,
+    deploy_mode: str,
+) -> None:
+    """Run existing publish modes only after at least one accepted page (Req 8.5).
+
+    ``run_pipeline`` already assembled ``<out>/site`` when accepted ≥ 1. Zero
+    accepted pages must not deploy (Req 8.4). Invokes
+    :func:`docuharnessx.deployer.deploy_site` against that site — not the dummy
+    ``DeployStage`` bus. ``mkdocs`` is launched via ``python -m mkdocs`` so the
+    venv-installed package is used even when no ``mkdocs`` console script is on
+    ``PATH``.
+    """
+    if not pages:
+        return
+    site_dir = os.path.join(out_dir, "site")
+    mkdocs_yml = os.path.join(site_dir, "mkdocs.yml")
+    docs_dir = os.path.join(site_dir, "docs")
+    if not os.path.isfile(mkdocs_yml):
+        return
+
+    from docuharnessx.assembler import read_origin_remote, resolve_site_identity
+    from docuharnessx.assembler.model import ASSEMBLED_SITE_SCHEMA_VERSION, AssembledSite
+    from docuharnessx.deployer import DefaultCommandRunner, deploy_site, resolve_deploy_mode
+
+    class _PythonMkdocsRunner(DefaultCommandRunner):
+        def run(self, args, cwd, timeout=None):  # type: ignore[no-untyped-def]
+            argv = list(args)
+            if argv and argv[0] == "mkdocs":
+                argv = [sys.executable, "-m", "mkdocs", *argv[1:]]
+            return super().run(argv, cwd, timeout=timeout)
+
+    identity = resolve_site_identity(repo_path, read_origin_remote(repo_path), {})
+    site = AssembledSite(
+        schema_version=ASSEMBLED_SITE_SCHEMA_VERSION,
+        site_dir=os.path.abspath(site_dir),
+        docs_dir=os.path.abspath(docs_dir),
+        mkdocs_yml_path=os.path.abspath(mkdocs_yml),
+        identity=identity,
+        page_count=len(pages),
+        role_page_count=0,
+    )
+    _log.info(
+        "publishing accepted site under %s (deploy_mode=%s)",
+        site_dir,
+        deploy_mode,
+    )
+    deploy_site(
+        site,
+        repo_path,
+        out_dir,
+        resolve_deploy_mode(deploy_mode),
+        runner=_PythonMkdocsRunner(),
+    )
+
+
 def orchestrate_run(
     prepared: PreparedRun,
     *,
     max_steps: int | None = None,
-    task_description: str = _SKELETON_TASK_DESCRIPTION,
+    task_description: str | None = None,
 ) -> RunOutcome:
-    """Drive the prepared run once, journal it, and map the exit reason (task 4.2).
+    """Drive the prepared documentation run through the explore-first pipeline.
 
-    Populates the run-context slots (target-repo, output dir, loaded ``Vocabulary``
-    at ``SLOT_VOCABULARY``) on a fresh harness :class:`State` *before* the run
-    (Req 6.2, 10.2), executes the composed pipeline once with a minimal
-    ``BaseTask`` (passing the slotted ``State`` so the slots are present during the
-    run), locates the journal trace under the output dir, and maps the run's
-    ``exit_reason`` to an exit code (Req 4.4–4.6, 8.1, 8.3–8.5).
-
-    Args:
-        prepared: The :class:`PreparedRun` from :func:`prepare_run` (validated
-            inputs + model-bound ``Harness``).
-        max_steps: Per-run step budget for the skeleton task. ``None`` uses the
-            small default ceiling. ``0`` makes ``State.budget_exceeded()`` true
-            before the first step, so the run loop exits with
-            ``exit_reason='budget_exceeded'`` *without any model call* — the
-            credential-free way to exercise the budget-exceeded mapping (Req 8.4).
-        task_description: The skeleton task's single user turn.
+    Does **not** construct a dummy conversational ``BaseTask`` or bind
+    ``make_docgen`` as the outer harness. ``max_steps`` / ``task_description``
+    are accepted for call-site compatibility and ignored.
 
     Returns:
-        A :class:`RunOutcome` with the exit reason/code, the located journal path,
-        the output dir, and the :class:`~docuharnessx.context.RunContext` whose
-        ``State`` carries the populated slots.
+        A :class:`RunOutcome` with ``exit_code=0`` for a completed run, including
+        honest-empty (zero accepted pages).
     """
-    # Local HarnessX imports (drift-mitigation: keep HarnessX coupling local).
-    from harnessx.core.events import make_run_id
-    from harnessx.core.harness import BaseTask
-    from harnessx.core.state import State
-
-    # Local ontology import (drift-mitigation: keep ontology-engine coupling local,
-    # mirroring the local HarnessX imports above). The CLI owns the concrete
-    # SegmentStore adapter choice; stages consume only the SegmentStore port.
-    from docuharnessx.ontology import FilesystemSegmentStore
-
-    from docuharnessx.context import RunContext
+    _ = max_steps
+    _ = task_description
+    # Alias: this module already exports ``RunOutcome`` for the CLI contract.
+    from docuharnessx.pipeline.run import run_pipeline as run_explore_pipeline
 
     os.makedirs(prepared.out_dir, exist_ok=True)
-
-    # 1. Populate the run-context slots on a fresh State BEFORE the run (Req 6.2,
-    #    10.2). A fresh run_id lets us pass the slotted State as _resume_state so
-    #    the slots are present on the run's state for the registered stages to read.
-    state = State(run_id=make_run_id())
-    run_context = RunContext(state)
-    run_context.set_target_repo(prepared.target_repo)
-    run_context.set_output_dir(prepared.out_dir)
-    run_context.set_vocabulary(prepared.vocabulary)
-
-    # Provision the SegmentStore the Write stage (Wave 2 cobesy-writer) requires:
-    # a filesystem-backed store rooted at <out_dir>/segments and bound to the loaded
-    # vocabulary, placed in the run context BEFORE the run so write/review/assemble
-    # can read it (Req 6.3, 6.4). Persisting each segment as <id>.md under the output
-    # dir is the intended inspectable artifact. Without this the now-real Write stage
-    # halts on the unset SLOT_SEGMENT_STORE and review has nothing to review — this is
-    # the CLI orchestration concern that wires the store, not a stage-boundary change.
-    segment_store = FilesystemSegmentStore(
-        os.path.join(prepared.out_dir, "segments"),
-        prepared.vocabulary,
-    )
-    run_context.set_segment_store(segment_store)
-
-    # github-pages-deploy task 4.3: thread the configured deploy mode onto the live
-    # Deploy-stage processor instance(s) on the run harness BEFORE the run, so the
-    # stage reads it from its per-instance ``_deploy_mode`` accessor (the same seam
-    # the deploy integration suite drives, and the same per-instance injection
-    # HarnessX itself uses for ``_model_config``). A bare ``dhx <repo>`` run threads
-    # the emit-ci-workflow default; a ``--deploy-mode`` flag threads the selection.
-    # The string's validity is checked at the stage boundary by the deploy-mode
-    # resolver (Req 3.2, 3.3, 3.4).
-    _thread_deploy_mode(prepared.harness, prepared.config.deploy_mode)
-
-    steps = _SKELETON_MAX_STEPS if max_steps is None else max_steps
-    task = BaseTask(description=task_description, max_steps=steps)
-
-    # 2. Execute the composed pipeline ONCE. Passing _resume_state hands our
-    #    slotted State to the run loop directly (no disk wake()), so the slots are
-    #    live during the run while the journal still records the full trajectory.
-    result = prepared.harness.run(task, _resume_state=state)
-    harness_result = asyncio.run(result)
-
-    exit_reason = harness_result.task_end.exit_reason
-
-    # 3. Locate the journal trace HarnessJournal wrote under the output dir. The
-    #    budget-exceeded outcome is recorded there too (the task_end record carries
-    #    exit_reason='budget_exceeded'; Req 8.4).
-    journal_path = _locate_journal_jsonl(prepared.out_dir, state.run_id)
-
-    return RunOutcome(
-        exit_reason=exit_reason,
-        exit_code=exit_code_for_reason(exit_reason),
-        journal_path=journal_path,
+    pipeline_outcome = run_explore_pipeline(
+        repo_path=prepared.target_repo,
         out_dir=prepared.out_dir,
-        run_context=run_context,
+        model=prepared.model,
+        deploy_mode=prepared.config.deploy_mode,
+    )
+    try:
+        _publish_if_accepted(
+            pages=pipeline_outcome.pages,
+            repo_path=prepared.target_repo,
+            out_dir=prepared.out_dir,
+            deploy_mode=prepared.config.deploy_mode,
+        )
+    except Exception as exc:
+        _log.error("publish after accept failed: %s", exc)
+        return RunOutcome(
+            exit_reason="error",
+            exit_code=EXIT_RUN_FAILED,
+            journal_path=None,
+            out_dir=prepared.out_dir,
+        )
+    return RunOutcome(
+        exit_reason="done",
+        exit_code=EXIT_OK,
+        journal_path=None,
+        out_dir=prepared.out_dir,
     )
 
 
@@ -730,44 +691,27 @@ def _run_command(
     model_config: "ModelConfig | None",
     max_steps: int | None = None,
 ) -> int:
-    """Handle ``dhx run``: prepare (4.1) → orchestrate + report + map exit (4.2).
+    """Handle ``dhx run``: prepare → explore-first pipeline → report.
 
-    Validates/loads/binds via :func:`prepare_run`, then drives the run via
-    :func:`orchestrate_run`, reports the journal path on success, and returns the
-    exit code mapped from the run's exit reason (Req 4.4–4.6, 8.3–8.5).
-
-    The configured step budget (Req 7.5) is applied to the run: the operator's
-    ``max_steps`` (from ``--config`` YAML) becomes the run's step ceiling, so a run
-    that exceeds it terminates with ``budget_exceeded`` (mapped to a non-zero exit;
-    Req 8.4). When no step budget is configured, the small skeleton default ceiling
-    is used.
-
-    *max_steps* is a test seam: when given it overrides the configured budget so a
-    test can force ``budget_exceeded`` (``max_steps=0``) without a network call.
-    Production callers leave it ``None``, so the configured budget (or the default)
-    applies.
+    Validates/loads via :func:`prepare_run`, drives :func:`orchestrate_run`,
+    prints the run-report path on success, and returns the mapped exit code.
+    Honest-empty is success. *max_steps* is kept as a test-compatible keyword
+    and is not used to drive a dummy outer harness.
     """
     prepared = prepare_run(args, model_config=model_config)
-    # Req 7.5: apply the configured step budget. The explicit test-seam value wins;
-    # otherwise the operator's configured max_steps; otherwise the default ceiling.
-    effective_max_steps = (
-        max_steps if max_steps is not None else prepared.config.max_steps
-    )
-    outcome = orchestrate_run(prepared, max_steps=effective_max_steps)
+    outcome = orchestrate_run(prepared, max_steps=max_steps)
+    report_path = os.path.join(outcome.out_dir, "report.json")
+    where = report_path if os.path.isfile(report_path) else outcome.out_dir
 
     if outcome.exit_code == EXIT_OK:
-        where = outcome.journal_path or outcome.out_dir
         print(
             f"dhx run: completed (exit_reason={outcome.exit_reason}). "
-            f"Journal trace: {where}"
+            f"Report: {where}"
         )
     else:
-        # The run reached a non-clean terminal state (budget exceeded, loop, …).
-        # The full outcome is recorded in the journal under the output dir.
-        where = outcome.journal_path or outcome.out_dir
         print(
             f"dhx run: ended with exit_reason='{outcome.exit_reason}'. "
-            f"See the run journal for details: {where}",
+            f"See the run report for details: {where}",
             file=sys.stderr,
         )
     return outcome.exit_code

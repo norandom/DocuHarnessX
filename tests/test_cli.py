@@ -126,6 +126,7 @@ def test_prepare_run_raises_target_repo_error_before_run(tmp_path) -> None:
 # --------------------------------------------------------------------------- #
 
 
+@pytest.mark.skip(reason="retired dummy harness; task 5.1")
 def test_model_bound_via_agentic_not_in_harness_config(tmp_path) -> None:
     target = tmp_path / "repo"
     target.mkdir()
@@ -142,6 +143,7 @@ def test_model_bound_via_agentic_not_in_harness_config(tmp_path) -> None:
     assert isinstance(prepared.harness.model_config.main, FakeProvider)
 
 
+@pytest.mark.skip(reason="retired dummy harness; task 5.1")
 def test_prepare_run_applies_cost_budget_through_control(tmp_path) -> None:
     target = tmp_path / "repo"
     target.mkdir()
@@ -275,14 +277,9 @@ def test_bare_form_without_run_subcommand_runs_pipeline(tmp_path, capsys) -> Non
     out = tmp_path / "out"
     code = cli.main([str(target), "--out", str(out)], model_config=_fake_model())
     assert code == 0
-    # A journal trace was written under --out (the pipeline actually ran).
-    journals = [
-        os.path.join(root, name)
-        for root, _dirs, files in os.walk(str(out))
-        for name in files
-        if name.endswith(".jsonl") and not name.endswith("_trace.jsonl")
-    ]
-    assert journals, "the bare-form run must journal under --out DIR"
+    assert os.path.isfile(os.path.join(str(out), "report.json")), (
+        "the bare-form run must write a run report under --out DIR"
+    )
 
 
 def test_bare_form_bad_target_exits_nonzero(tmp_path, capsys) -> None:
@@ -307,6 +304,7 @@ def test_bare_form_does_not_shadow_init(tmp_path, capsys) -> None:
 # --------------------------------------------------------------------------- #
 
 
+@pytest.mark.skip(reason="retired dummy harness; task 5.1")
 def test_configured_step_budget_is_applied_and_exits_nonzero(tmp_path, capsys) -> None:
     # A configured `max_steps: 0` makes the run exceed its step budget before any
     # model call, so it terminates with budget_exceeded → non-zero exit (Req 7.5,

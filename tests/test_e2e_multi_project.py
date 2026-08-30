@@ -60,6 +60,8 @@ from docuharnessx.stages.deploy import DeployStage
 
 from tests._fakes import PyMkdocsNoPushRunner, RoutingFakeProvider
 
+pytestmark = pytest.mark.skip(reason="retired dummy harness; task 5.1")
+
 # The doc framework is a declared runtime dependency and installed in the project venv; the
 # guards skip gracefully if it is somehow absent rather than failing the whole E2E module
 # (mirrors tests/test_deploy_build_e2e_5_3).

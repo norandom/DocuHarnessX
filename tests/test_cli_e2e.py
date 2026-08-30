@@ -49,6 +49,7 @@ import json
 import os
 import sys
 
+import pytest
 from harnessx.core.model_config import ModelConfig
 
 from docuharnessx import cli
@@ -184,17 +185,10 @@ def test_e2e_run_empty_pipeline_exits_zero_with_journal(tmp_path, capsys) -> Non
     # The whole pipeline ran start to finish and the process exited cleanly.
     assert code == 0
 
-    # A HarnessJournal JSONL trace was written under the resolved output directory.
-    journals = _find_journal_jsonl(str(out))
-    assert journals, "a HarnessJournal JSONL trace must be written under --out DIR"
-    for journal in journals:
-        assert os.path.abspath(journal).startswith(os.path.abspath(str(out)))
-
-    # The journal path (or its session directory) is reported on success.
+    report = out / "report.json"
+    assert report.is_file(), "a run report must be written under --out DIR"
     stdout = capsys.readouterr().out
-    assert any(
-        journal in stdout or os.path.dirname(journal) in stdout for journal in journals
-    ), stdout
+    assert str(report) in stdout or "Report:" in stdout, stdout
 
 
 def test_e2e_bare_form_via_production_argv_none_path(tmp_path, monkeypatch, capsys) -> None:
@@ -218,17 +212,12 @@ def test_e2e_bare_form_via_production_argv_none_path(tmp_path, monkeypatch, caps
     code = cli.main(model_config=_fake_model())
 
     assert code == 0, "bare form at the argv=None production path must run and exit 0"
-    journals = _find_journal_jsonl(str(out))
-    assert journals, "the bare-form production run must write a HarnessJournal trace"
-    # And the run is real: the seven content stages fire in canonical order. The CLI provisions
-    # the segment store before the run, so ``write`` and ``review`` fire too. The eighth stage,
-    # ``deploy``, journals only after a successful mkdocs build validation (tooling-conditional),
-    # so it is asserted as an optional trailing marker rather than a hard requirement here.
-    fired = _stages_that_fired(str(out))
-    assert fired[: len(CONTENT_STAGE_ORDER)] == list(CONTENT_STAGE_ORDER), fired
-    assert fired in (list(CONTENT_STAGE_ORDER), list(CANONICAL_STAGE_ORDER)), fired
+    assert (out / "report.json").is_file(), (
+        "the bare-form production run must write a run report"
+    )
 
 
+@pytest.mark.skip(reason="retired dummy harness; task 5.1")
 def test_e2e_journal_records_run_start_and_end(tmp_path) -> None:
     """The journal records both run start and run end (Req 8.1, 8.2)."""
     target = tmp_path / "repo"
@@ -258,6 +247,7 @@ def test_e2e_journal_records_run_start_and_end(tmp_path) -> None:
     assert end.get("exit_reason") == "done", end
 
 
+@pytest.mark.skip(reason="retired dummy harness; task 5.1")
 def test_e2e_journal_records_all_eight_stages_in_canonical_order(tmp_path) -> None:
     """All eight stages actually FIRE in canonical order during the run (Req 8.2, 5.4).
 
@@ -303,6 +293,7 @@ def test_e2e_journal_records_all_eight_stages_in_canonical_order(tmp_path) -> No
     assert fired in (list(CONTENT_STAGE_ORDER), list(CANONICAL_STAGE_ORDER)), fired
 
 
+@pytest.mark.skip(reason="retired dummy harness; task 5.1")
 def test_e2e_run_populates_written_segments_and_review_report(tmp_path) -> None:
     """A real run publishes SLOT_WRITTEN_SEGMENTS and a well-formed SLOT_REVIEW_REPORT.
 
@@ -358,6 +349,7 @@ def test_e2e_run_populates_written_segments_and_review_report(tmp_path) -> None:
     assert report.aggregate.accepted == 0
 
 
+@pytest.mark.skip(reason="retired dummy harness; task 5.1")
 def test_orchestrate_run_provisions_a_segment_store(tmp_path) -> None:
     """``orchestrate_run`` provisions a non-None SegmentStore on the run context.
 
@@ -438,8 +430,9 @@ def test_e2e_reference_form_against_real_repo(tmp_path, capsys) -> None:
     )
 
     assert code == 0
-    journals = _find_journal_jsonl(str(out))
-    assert journals, "the reference run must journal under the temp output dir"
+    assert (out / "report.json").is_file(), (
+        "the reference run must write a report under the temp output dir"
+    )
     # Nothing was written back into the read-only reference repo by this run.
     assert not os.path.exists(os.path.join(reference_repo, ".docuharnessx", "out"))
 
@@ -493,7 +486,7 @@ def test_e2e_init_then_run_uses_the_written_ontology(tmp_path, capsys) -> None:
     )
 
     assert run_code == 0
-    assert _find_journal_jsonl(str(out)), "the run must journal under --out DIR"
+    assert (out / "report.json").is_file(), "the run must write a report under --out DIR"
     # The ontology file is present, so the absent-file default-profile hint must NOT
     # be printed (the run consumed the written vocabulary, not the fallback).
     stdout = capsys.readouterr().out

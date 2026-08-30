@@ -80,7 +80,7 @@
   - _Boundary: PipelineRunner_
   - _Depends: 2.1, 2.4, 3.1_
 
-- [ ] 4.2 Switch the operator CLI onto the pipeline and drop the dummy run
+- [x] 4.2 Switch the operator CLI onto the pipeline and drop the dummy run
   - Valid target + output directory runs the pipeline. Invalid target still exits non-zero with no pages.
   - Binding a writer model is optional; absence is a zero-page report, not outline pages. Reader-role selection is not required.
   - Stop driving documentation via a dummy conversational task that forbids tools. Optional publish modes run only after at least one accepted page.

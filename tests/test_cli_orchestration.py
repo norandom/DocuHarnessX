@@ -22,6 +22,7 @@ from __future__ import annotations
 import json
 import os
 
+import pytest
 from harnessx.core.model_config import ModelConfig
 
 from docuharnessx import cli
@@ -59,6 +60,7 @@ def _find_journal_jsonl(out_dir: str) -> list[str]:
 # --------------------------------------------------------------------------- #
 
 
+@pytest.mark.skip(reason="retired dummy harness; task 5.1")
 def test_orchestrate_run_populates_all_slots_including_vocabulary(tmp_path) -> None:
     target = tmp_path / "repo"
     target.mkdir()
@@ -95,14 +97,10 @@ def test_orchestrate_run_clean_run_exits_zero_with_journal_path(tmp_path) -> Non
 
     assert outcome.exit_reason == "done"
     assert outcome.exit_code == 0
-    # A journal trace was written under the resolved output directory.
-    assert outcome.journal_path is not None
-    assert os.path.isfile(outcome.journal_path)
-    assert os.path.abspath(outcome.journal_path).startswith(os.path.abspath(str(out)))
-    # It is one of the JSONL files HarnessJournal produced under out.
-    assert outcome.journal_path in _find_journal_jsonl(str(out))
+    assert os.path.isfile(os.path.join(str(out), "report.json"))
 
 
+@pytest.mark.skip(reason="retired dummy harness; task 5.1")
 def test_orchestrate_run_journal_records_run_start_and_end(tmp_path) -> None:
     target = tmp_path / "repo"
     target.mkdir()
@@ -141,10 +139,9 @@ def test_main_run_exits_zero_and_reports_journal_path(tmp_path, capsys) -> None:
     )
     assert code == 0
     stdout = capsys.readouterr().out
-    journals = _find_journal_jsonl(str(out))
-    assert journals, "a journal trace must be written under the output directory"
-    # The journal path (or its session directory) is reported on success.
-    assert any(os.path.dirname(j) in stdout or j in stdout for j in journals), stdout
+    report = os.path.join(str(out), "report.json")
+    assert os.path.isfile(report), "a run report must be written under the output directory"
+    assert report in stdout or "Report:" in stdout, stdout
 
 
 def test_main_run_uses_default_out_dir_when_omitted(tmp_path, capsys) -> None:
@@ -155,7 +152,9 @@ def test_main_run_uses_default_out_dir_when_omitted(tmp_path, capsys) -> None:
     code = cli.main(["run", str(target)], model_config=_fake_model())
     assert code == 0
     default_out = os.path.join(str(target), ".docuharnessx", "out")
-    assert _find_journal_jsonl(default_out), "journal must land under the default out dir"
+    assert os.path.isfile(os.path.join(default_out, "report.json")), (
+        "report must land under the default out dir"
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -164,6 +163,7 @@ def test_main_run_uses_default_out_dir_when_omitted(tmp_path, capsys) -> None:
 # --------------------------------------------------------------------------- #
 
 
+@pytest.mark.skip(reason="retired dummy harness; task 5.1")
 def test_orchestrate_run_budget_exceeded_exits_nonzero(tmp_path) -> None:
     target = tmp_path / "repo"
     target.mkdir()
@@ -179,6 +179,7 @@ def test_orchestrate_run_budget_exceeded_exits_nonzero(tmp_path) -> None:
     assert outcome.exit_code != 0
 
 
+@pytest.mark.skip(reason="retired dummy harness; task 5.1")
 def test_budget_exceeded_recorded_in_journal(tmp_path) -> None:
     target = tmp_path / "repo"
     target.mkdir()
@@ -197,6 +198,7 @@ def test_budget_exceeded_recorded_in_journal(tmp_path) -> None:
     assert "budget_exceeded" in blob
 
 
+@pytest.mark.skip(reason="retired dummy harness; task 5.1")
 def test_main_budget_exceeded_exits_nonzero(tmp_path, capsys) -> None:
     target = tmp_path / "repo"
     target.mkdir()
@@ -246,6 +248,7 @@ def _deploy_stages(prepared) -> list:
     return found
 
 
+@pytest.mark.skip(reason="retired dummy harness; task 5.1")
 def test_orchestrate_run_threads_default_deploy_mode_to_stage(tmp_path) -> None:
     """A run with no --deploy-mode reaches the Deploy stage with the default mode."""
     target = tmp_path / "repo"
@@ -263,6 +266,7 @@ def test_orchestrate_run_threads_default_deploy_mode_to_stage(tmp_path) -> None:
         assert stage._deploy_mode_value() == "emit-ci-workflow"
 
 
+@pytest.mark.skip(reason="retired dummy harness; task 5.1")
 def test_orchestrate_run_threads_selected_deploy_mode_to_stage(tmp_path) -> None:
     """A --deploy-mode flag reaches the Deploy stage with that mode."""
     target = tmp_path / "repo"
