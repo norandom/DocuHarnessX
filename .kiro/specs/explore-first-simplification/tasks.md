@@ -101,7 +101,7 @@
   - _Depends: 4.2_
 
 - [ ] 6. Validation: fixture-grounded accept and no-explore omit
-- [ ] 6.1 Prove the shipped sample repository against both writer behaviours
+- [x] 6.1 Prove the shipped sample repository against both writer behaviours
   - Inspecting writer: at least one accepted page cites real sample files and names a symbol defined in those files; home lists that question; report counts add up.
   - Non-inspecting writer: zero accepted pages; omissions are `not_inspected` or `gate_rejected`; no template-slogan bodies in the output directory; report is written.
   - Two planning passes on the unchanged sample yield the same question ids in the same order.
@@ -119,3 +119,4 @@
 - Substance gate title-restatement: omit only leftover prose that is the title plus trivial glue; subject tokens already in the title (e.g. Engine) must not false-reject grounded bodies.
 - ExploreWriter uses a local bounded harness loop (`build_question_task` + substance gate), not `AgenticProseRunner.run` (still COBESY until 5.1). Inspection is `steps <= 1` → `not_inspected`.
 - CLI `orchestrate_run` calls `run_pipeline as run_explore_pipeline`. Dummy `BaseTask` is unused; leftovers (`_SKELETON_TASK_DESCRIPTION`, `_thread_deploy_mode`) wait for 5.1. Default emit-ci-workflow still writes into the target after accepts — CLI tests that accept pages use `--deploy-mode build-only`.
+- 5.1: dummy CLI leftovers removed; `make_docgen` no longer re-exported. Retired `fallback.py` / `stages/` / `roles.py` remain on disk for MCP (out of spec). Two MCP git-diff freeze tests skipped.
