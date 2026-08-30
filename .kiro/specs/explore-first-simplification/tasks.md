@@ -15,7 +15,7 @@
   - _Requirements: 1.4, 9.1, 9.2, 9.3, 10.3_
   - _Boundary: RunReport_
 
-- [ ] 1.3 Build a pipeline skeleton that analyzes, plans, reports, and never writes outline pages
+- [x] 1.3 Build a pipeline skeleton that analyzes, plans, reports, and never writes outline pages
   - The runner calls the existing analyzer, then the question planner (stub returning empty is acceptable until 2.1), skips writing when no model is bound, writes the run report under the output directory, and does not emit documentation pages or a role-based site shell.
   - The skeleton must not invoke the retired fallback outline renderer.
   - Observable completion: a no-model run against the shipped sample repository writes a report with zero accepted pages, no files under the pages output, and no “locate / smallest action” text anywhere in the output directory.
