@@ -60,7 +60,7 @@
   - _Depends: 1.2_
 
 - [ ] 3. Writer adapter: explore, then omit on failure
-- [ ] 3.1 Run one bounded writer per question and omit instead of substituting an outline
+- [x] 3.1 Run one bounded writer per question and omit instead of substituting an outline
   - For each planned question, run the existing bounded writer over a read-only copy of the target repository using the explore-first task.
   - If stats show no tool loop (`steps <= 1`), if the body is empty, or if the substance gate rejects, record an omission with the matching closed-set reason and do not write a page.
   - Never call the retired fallback outline renderer. Continue remaining questions after an omission.
