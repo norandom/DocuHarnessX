@@ -42,7 +42,7 @@
   - _Boundary: SubstanceGate_
   - _Depends: 1.1_
 
-- [ ] 2.3 (P) Build the explore-first writer task from the question and evidence only
+- [x] 2.3 (P) Build the explore-first writer task from the question and evidence only
   - The task description states the software question, the read-only repo root, the evidence files to read first, the duty to cite `path:line` and name real symbols, and that the final message is the Markdown body.
   - It must not include filled situation/complication/key-message/fast-path sentences, COBESY method names, or instructions to copy an outline.
   - Observable completion: a unit test over a sample question asserts evidence paths and the question title appear, and asserts the forbidden outline/slogan strings do not.
@@ -116,3 +116,4 @@
 - Question ids: reject the retired `{role}__{intent}` delimiter (2–3 non-empty `__` tokens on the basename), not any `__`; keep `__main__.py` / `__init__.py` in the slug. Mint ids via `make_question_id`, not raw `Question(id=...)`.
 - Pipeline skeleton: `plan_questions` is an empty stub until 2.1, so a default fixture no-model report is `planned=0`; `no_model` omissions appear only when the planner returns questions.
 - Shipped `agentic_repo` scan reports no entrypoints (`app.py` is not a detector match); sample plan is `component:root` then `build:pyproject.toml`. Startup is covered by constructed analyses.
+- Substance gate title-restatement: omit only leftover prose that is the title plus trivial glue; subject tokens already in the title (e.g. Engine) must not false-reject grounded bodies.
