@@ -22,6 +22,9 @@ htmlcov/
 .DS_Store
 *.swp
 
+# Local secrets (copy .env.example → .env)
+.env
+
 # DocuHarnessX generated output
 /site/
 /_docs_out/

@@ -4,10 +4,15 @@ version = "1.1.0"
 description = "Human-centric, role-based GitHub Pages documentation generator built on HarnessX"
 requires-python = ">=3.12"
 dependencies = [
-    # HarnessX is not published on PyPI; pull it directly from the source repo.
-    "harnessx @ git+https://github.com/Darwin-Agent/HarnessX.git",
+    # HarnessX is not on PyPI and has no GitHub tags/releases (still 0.1.0).
+    # Pin a commit archive (not git+) so installs stay reproducible without
+    # cloning the broken `recipe/verl_harnessX/verl` submodule. Switch to a
+    # version specifier when Darwin-Agent ships a real release.
+    "harnessx @ https://github.com/Darwin-Agent/HarnessX/archive/bf5f199ee65034d55db0c536e582f1e7c8abf669.tar.gz",
     # YAML parser used for the optional --config file and the ontology.yaml seam.
     "pyyaml>=6.0",
+    # Loads the project ``.env`` (API keys, OpenAI-compatible base URL) at CLI start.
+    "python-dotenv>=1.0",
     # Material for MkDocs site generator: the assembler emits a buildable
     # MkDocs source tree and the deploy stage runs `mkdocs build` (Req 8.3).
     "mkdocs>=1.6",
@@ -15,7 +20,8 @@ dependencies = [
     # MCP SDK: the `dhx mcp` stdio server is built on the low-level
     # `mcp.server` API. Available transitively via HarnessX's MCP client today,
     # but this feature makes it a direct runtime dependency, so declare it.
-    "mcp>=1.28",
+    # v2 rewrites that low-level API; stay on the v1 line until we migrate.
+    "mcp>=1.28,<2",
 ]
 
 [project.optional-dependencies]
@@ -31,7 +37,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.metadata]
-# Required to declare the harnessx git-URL dependency (not published on PyPI).
+# Required to declare the harnessx direct-URL dependency (not published on PyPI).
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]

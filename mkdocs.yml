@@ -1,0 +1,52 @@
+site_name: DocuHarnessX
+site_url: https://norandom.github.io/DocuHarnessX/
+repo_url: https://github.com/norandom/DocuHarnessX
+edit_uri: edit/main/docs/
+use_directory_urls: true
+theme:
+  name: material
+  features:
+  - navigation.instant
+  - navigation.tracking
+  - navigation.indexes
+  - navigation.expand
+  - navigation.top
+  - navigation.footer
+  - toc.follow
+  - content.code.copy
+  - content.tabs.link
+  - search.suggest
+  - search.highlight
+  palette:
+  - scheme: default
+    toggle:
+      icon: material/weather-night
+      name: Switch to dark mode
+  - scheme: slate
+    toggle:
+      icon: material/weather-sunny
+      name: Switch to light mode
+  font:
+    text: Noto Sans JP
+    code: Roboto Mono
+extra_css:
+- stylesheets/extra.css
+plugins:
+- search
+nav:
+- Home: index.md
+- How does this program start?: startup-cli-py-126eba90.md
+- What does docuharnessx do?: component-docuharnessx-3986831c.md
+- What does analysis do?: component-analysis-5fb37dc2.md
+- What does assembler do?: component-assembler-d9228a8c.md
+- What does deployer do?: component-deployer-f8b1b75f.md
+- What does mcp do?: component-mcp-bdf519de.md
+- How is the public surface used or extended?: public-surface-init-py-a3934091.md
+- How is this project built and verified?: build-pyproject-toml-a625bf0a.md
+- How are tests organized?: tests-tests-37e0cc9c.md
+markdown_extensions:
+- pymdownx.superfences:
+    custom_fences:
+    - name: mermaid
+      class: mermaid
+      format: !!python/name:pymdownx.superfences.fence_code_format ''

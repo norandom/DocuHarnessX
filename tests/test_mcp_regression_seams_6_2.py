@@ -9,7 +9,7 @@ package is:
   * the one ``dhx mcp`` subcommand in ``docuharnessx/cli.py``;
   * the additive, backward-compatible ``guidance: str = ""`` keyword on the bounded
     writer (``docuharnessx/composition/agent.py`` + ``docuharnessx/composition/task_prompt.py``);
-  * the ``mcp>=1.28`` direct dependency in ``pyproject.toml``.
+  * the ``mcp>=1.28,<2`` direct dependency in ``pyproject.toml``.
 
 Everything else must be untouched: the frozen **data** seams (``Segment`` /
 ``WrittenSegments`` / the ``SegmentStore`` Protocol / ``ReviewReport`` /
@@ -52,7 +52,7 @@ ALLOWED_NON_MCP_CHANGES = frozenset(
         "docuharnessx/cli.py",  # the one `dhx mcp` subcommand
         "docuharnessx/composition/agent.py",  # additive guidance kw
         "docuharnessx/composition/task_prompt.py",  # additive guidance kw (renderer)
-        "pyproject.toml",  # mcp>=1.28 direct dependency
+        "pyproject.toml",  # mcp>=1.28,<2 direct dependency
     }
 )
 

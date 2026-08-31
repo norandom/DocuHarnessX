@@ -49,6 +49,7 @@ import os
 import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from docuharnessx.config import DocgenConfig, load_config
@@ -96,6 +97,33 @@ _DESCRIPTION = (
 _SUBCOMMANDS: frozenset[str] = frozenset({"run", "init", "mcp"})
 
 _log = logging.getLogger(__name__)
+
+
+def _env_file_paths() -> list[Path]:
+    """``.env`` locations: cwd first, then the install/source project root."""
+    cwd = Path.cwd() / ".env"
+    root = Path(__file__).resolve().parent.parent / ".env"
+    paths = [cwd]
+    if root.resolve() != cwd.resolve():
+        paths.append(root)
+    return paths
+
+
+def _load_env_files(*, force: bool = False) -> None:
+    """Load ``.env`` files into ``os.environ`` without overriding existing vars.
+
+    Skipped while pytest is running so the credential-free suite cannot pick up a
+    developer's local secrets. Tests that need this helper pass ``force=True``.
+    """
+    if not force and os.environ.get("PYTEST_CURRENT_TEST"):
+        return
+    try:
+        from dotenv import load_dotenv
+    except ImportError:  # pragma: no cover - declared runtime dependency
+        return
+    for path in _env_file_paths():
+        if path.is_file():
+            load_dotenv(path, override=False)
 
 
 def _normalize_argv(argv: Sequence[str] | None) -> list[str] | None:
@@ -149,7 +177,7 @@ def _require_harnessx() -> None:
         raise DependencyError(
             "DocuHarnessX requires the 'harnessx' runtime dependency, which is "
             "not importable. Install it with "
-            "'uv pip install \"harnessx @ git+https://github.com/Darwin-Agent/HarnessX.git\"' "
+            "'uv pip install \"harnessx @ https://github.com/Darwin-Agent/HarnessX/archive/bf5f199ee65034d55db0c536e582f1e7c8abf669.tar.gz\"' "
             "(or 'pip install -e .')."
         ) from exc
 
@@ -653,8 +681,8 @@ def _require_mcp() -> None:
         from docuharnessx.errors import DependencyError
 
         raise DependencyError(
-            "DocuHarnessX 'mcp' requires the 'mcp' SDK (>=1.28), which is not "
-            "importable. Install it with 'pip install \"mcp>=1.28\"' (or "
+            "DocuHarnessX 'mcp' requires the 'mcp' SDK (>=1.28,<2), which is not "
+            "importable. Install it with 'pip install \"mcp>=1.28,<2\"' (or "
             "'pip install -e .')."
         ) from exc
 
@@ -1029,6 +1057,7 @@ def main(
             path (Req 9.2) so tests can script answers without a real TTY. Production
             callers leave it ``None`` (``input`` / TTY detection is used).
     """
+    _load_env_files()
     parser = build_parser()
     # Support the bare form `dhx <target-repo> --out DIR --config YAML` (Req 4.1,
     # 4.8) by defaulting to the `run` subcommand when the first token is a path

@@ -4,12 +4,13 @@ Requirement 1.4 — this feature makes the MCP SDK a **direct** runtime
 dependency of ``docuharnessx`` (the stdio server is built on the low-level
 ``mcp.server`` API). The SDK is importable in the working venv (1.28.0) today
 only because HarnessX pulls it in transitively for its MCP *client*; relying on
-a transitive dep is fragile, so ``mcp>=1.28`` must be declared directly in
+a transitive dep is fragile, so ``mcp>=1.28,<2`` must be declared directly in
 ``[project].dependencies`` — a version floor matching the existing
-``mkdocs>=1.6`` style, with no upper pin. This is the only build-config change
-for the feature.
+``mkdocs>=1.6`` style, plus an upper bound that keeps a fresh install on the
+v1 SDK (v2 rewrites the low-level ``mcp.server`` API). This is the only
+build-config change for the feature.
 
-Observable completion: ``pyproject.toml`` lists ``mcp>=1.28`` as a direct
+Observable completion: ``pyproject.toml`` lists ``mcp>=1.28,<2`` as a direct
 dependency and a fresh install resolves it (offline: importing ``mcp.server``
 succeeds against the declared floor).
 """
@@ -84,19 +85,23 @@ def test_runtime_dependency_declarations_are_unique() -> None:
     )
 
 
-def test_mcp_dependency_has_version_floor_no_upper_pin() -> None:
-    # Req 1.4: a ``>=1.28`` floor (mkdocs>=1.6 style) with no upper pin.
+def test_mcp_dependency_has_version_floor_and_v1_upper_bound() -> None:
+    # Req 1.4: a ``>=1.28`` floor (mkdocs>=1.6 style). Cap below v2: that line
+    # rewrites the low-level ``mcp.server`` API this package uses, and an
+    # unpinned ``>=1.28`` now resolves to 2.x on a fresh install.
     req = Requirement(_mcp_requirement())
     specifiers = list(req.specifier)
     assert specifiers, f"{_DEP_NAME!r} must carry a version floor: {req!r}"
-    assert all(spec.operator == ">=" for spec in specifiers), (
-        f"{_DEP_NAME!r} must use a `>=` floor with no upper pin: {req!r}"
-    )
+    operators = {spec.operator for spec in specifiers}
+    assert ">=" in operators, f"{_DEP_NAME!r} must use a `>=` floor: {req!r}"
+    assert "<" in operators, f"{_DEP_NAME!r} must cap below v2: {req!r}"
     # The declared floor is exactly 1.28 (no laxer, no stricter than the task).
     floors = {Version(spec.version) for spec in specifiers if spec.operator == ">="}
     assert _DEP_FLOOR in floors, (
         f"{_DEP_NAME!r} floor must be >={_DEP_FLOOR}: {req!r}"
     )
+    uppers = {Version(spec.version) for spec in specifiers if spec.operator == "<"}
+    assert Version("2") in uppers, f"{_DEP_NAME!r} upper bound must be <2: {req!r}"
 
 
 # --- Observable completion: a resolved install satisfies the declared floor --
