@@ -193,6 +193,18 @@ def test_build_job_uploads_the_pages_artifact() -> None:
     assert any(u.startswith("actions/upload-pages-artifact@") for u in uses)
 
 
+def test_build_job_uploads_the_mkdocs_site_directory() -> None:
+    # upload-pages-artifact defaults to ``_site/`` (Jekyll); MkDocs writes ``site/``.
+    steps = _jobs(_parsed())["build"]["steps"]
+    upload = next(
+        s
+        for s in steps
+        if isinstance(s, dict)
+        and str(s.get("uses", "")).startswith("actions/upload-pages-artifact@")
+    )
+    assert upload["with"]["path"] == "site"
+
+
 # --------------------------------------------------------------------------- #
 # Deploy job: deploy-pages on the github-pages environment (Req 4.2)           #
 # --------------------------------------------------------------------------- #

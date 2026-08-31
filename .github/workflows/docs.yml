@@ -26,6 +26,8 @@ jobs:
       run: mkdocs build --strict
     - name: Upload Pages artifact
       uses: actions/upload-pages-artifact@v3
+      with:
+        path: site
   deploy:
     needs: build
     runs-on: ubuntu-latest

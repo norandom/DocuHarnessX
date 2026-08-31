@@ -71,8 +71,12 @@ _PAGES_ENVIRONMENT: str = "github-pages"
 _PIP_INSTALL_CMD: str = "python -m pip install --upgrade pip\npython -m pip install mkdocs-material"
 
 #: The build command. Runs against the ``mkdocs.yml`` the writer places at the repo root,
-#: producing the static site under ``site/`` (the default ``upload-pages-artifact`` path).
+#: producing the static site under ``site/``. ``upload-pages-artifact`` defaults to
+#: ``_site/`` (Jekyll), so the upload step must pass ``path: site`` explicitly.
 _BUILD_CMD: str = "mkdocs build --strict"
+
+#: MkDocs output directory uploaded as the Pages artifact. Must match ``mkdocs build``.
+_PAGES_ARTIFACT_PATH: str = "site"
 
 
 def _on_block(default_branch: str) -> dict:
@@ -121,7 +125,11 @@ def _build_job() -> dict:
             },
             {"name": "Install MkDocs Material", "run": _PIP_INSTALL_CMD},
             {"name": "Build site", "run": _BUILD_CMD},
-            {"name": "Upload Pages artifact", "uses": _UPLOAD_PAGES_ARTIFACT_REF},
+            {
+                "name": "Upload Pages artifact",
+                "uses": _UPLOAD_PAGES_ARTIFACT_REF,
+                "with": {"path": _PAGES_ARTIFACT_PATH},
+            },
         ],
     }
 
