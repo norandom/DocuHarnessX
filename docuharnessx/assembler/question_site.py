@@ -15,6 +15,7 @@ from __future__ import annotations
 import os
 from collections.abc import Sequence
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from docuharnessx.assembler.home import HOME_PAGE_PATH, render_question_home
 from docuharnessx.assembler.mkdocs_config import build_question_mkdocs_yaml
@@ -26,6 +27,9 @@ from docuharnessx.assembler.model import (
 from docuharnessx.assembler.pages import page_filename, render_question_page
 from docuharnessx.assembler.theme import EXTRA_CSS_PATH, render_extra_css
 from docuharnessx.pages.model import Page
+
+if TYPE_CHECKING:  # pragma: no cover - typing only
+    from docuharnessx.analysis.model import RepoAnalysis
 
 __all__ = ["assemble_question_site"]
 
@@ -45,6 +49,7 @@ def assemble_question_site(
     pages: Sequence[Page],
     identity: SiteIdentity,
     out_dir: str,
+    analysis: "RepoAnalysis | None" = None,
 ) -> AssembledSite | None:
     """Assemble a question-organised site from accepted pages, or skip.
 
@@ -53,6 +58,9 @@ def assemble_question_site(
             not passed in and leave no stub (Req 8.3).
         identity: Resolved per-target :class:`SiteIdentity`.
         out_dir: Run output directory. The tree is written under ``<out_dir>/site``.
+        analysis: Optional frozen ``RepoAnalysis`` used to enrich per-page
+            Mermaid companions (entrypoints, components, public surface). The
+            site still builds when this is ``None``.
 
     Returns:
         A frozen :class:`AssembledSite` with ``role_page_count == 0`` when at
@@ -68,7 +76,9 @@ def assemble_question_site(
     docs_dir.mkdir(parents=True, exist_ok=True)
 
     for page in accepted:
-        rel_path, content = render_question_page(page, accepted)
+        rel_path, content = render_question_page(
+            page, accepted, analysis=analysis
+        )
         _write_text(docs_dir / rel_path, content)
 
     _write_text(docs_dir / HOME_PAGE_PATH, render_question_home(identity, accepted))

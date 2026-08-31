@@ -29,11 +29,16 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 import yaml
 
+from docuharnessx.assembler.graphs import render_page_diagrams
 from docuharnessx.ontology import Segment, Vocabulary, emit_tags
 from docuharnessx.pages.model import Page
+
+if TYPE_CHECKING:  # pragma: no cover - typing only
+    from docuharnessx.analysis.model import RepoAnalysis
 
 __all__ = ["page_filename", "render_segment_page", "render_question_page"]
 
@@ -194,14 +199,25 @@ def _question_related_links(page: Page, accepted: Sequence[Page]) -> list[str]:
 
 
 def render_question_page(
-    page: Page, accepted: Sequence[Page]
+    page: Page,
+    accepted: Sequence[Page],
+    *,
+    analysis: "RepoAnalysis | None" = None,
+    include_diagrams: bool = True,
 ) -> tuple[str, str]:
     """Render one accepted question ``page`` to ``(relative_docs_path, markdown)``.
 
     Filename comes from :func:`page_filename`. Related links resolve only to
-    other accepted pages (Req 8.3). The page ends with a single trailing newline.
+    other accepted pages (Req 8.3). When ``include_diagrams`` is true (the
+    published site path), deterministic Mermaid companions are inserted
+    immediately under the H1, before the prose. The page ends with a single
+    trailing newline.
     """
     parts: list[str] = [_question_frontmatter(page), f"# {page.title}\n"]
+    if include_diagrams:
+        diagrams = render_page_diagrams(page, accepted, analysis)
+        if diagrams:
+            parts.append("\n" + diagrams)
     body = page.body
     if body:
         parts.append("\n" + body if not body.startswith("\n") else body)

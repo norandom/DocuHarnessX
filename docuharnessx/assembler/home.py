@@ -19,6 +19,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
+from docuharnessx.assembler.graphs import render_home_diagrams
 from docuharnessx.assembler.mkdocs_config import HOME_PAGE_PATH, TAGS_INDEX_PATH
 from docuharnessx.assembler.pages import page_filename
 from docuharnessx.pages.model import Page
@@ -90,9 +91,12 @@ def render_question_home(
         "",
         f"Documentation for {target}.",
         "",
-        "## Questions",
-        "",
     ]
+    diagrams = render_home_diagrams(pages)
+    if diagrams:
+        lines.append(diagrams.rstrip("\n"))
+        lines.append("")
+    lines.extend(["## Questions", ""])
     for page in pages:
         lines.append(f"- [{page.title}]({page_filename(page.id)})")
     return "\n".join(lines) + "\n"

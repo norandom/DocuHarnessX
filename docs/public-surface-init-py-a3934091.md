@@ -3,39 +3,124 @@ id: public_surface:__init__.py
 title: How is the public surface used or extended?
 subjects:
 - __init__.py
-summary: 'The root `docuharnessx/__init__.py` is deliberately tiny: it defines only
-  the version constant and advertises exactly that one name.'
+summary: All surface tests pass (65 passed). Here is the finished answer.
 related: []
 ---
 # How is the public surface used or extended?
 
-## The public surface of `docuharnessx/__init__.py`: a minimal root, extended through single-namespace subpackages
-
-The root `docuharnessx/__init__.py` is deliberately tiny: it defines only the version constant and advertises exactly that one name.
-
-```python
-__version__ = "1.1.0"
-__all__ = ["__version__"]
+```mermaid
+flowchart TB
+  n0["How is the public surface used or exten…"]
+  n1["__init__.py"]
+  n2["pyproject.toml"]
+  n3["__init__.py"]
+  n4["__init__.py"]
+  n5["__init__.py"]
+  n6["__init__.py"]
+  n7["analyze.py"]
+  n8["classify.py"]
+  n0 --> n1
+  n0 --> n2
+  n0 --> n3
+  n0 --> n4
+  n0 --> n5
+  n0 --> n6
+  n0 --> n7
+  n0 --> n8
 ```
 
-(`docuharnessx/__init__.py:5-7`). The string matches the distribution version in `pyproject.toml` (`version = "1.1.0"`, `pyproject.toml:3`), so the root surface is a version marker rather than an API hub. Nothing else — no pipeline, config, CLI, or model symbols — is re-exported at the root, and the `dhx` entry point is registered separately as a console script pointing at `docuharnessx.cli:main` (`pyproject.toml:33`). The scaffold test pins this contract: `test_docuharnessx_imports_and_has_version` asserts `import docuharnessx` yields a non-empty `__version__` (`tests/test_package_scaffold.py:24-27`), and `test_dhx_console_script_is_registered` asserts the `dhx` entry point resolves to `docuharnessx.cli:main` (`tests/test_package_scaffold.py:36-41`).
+```mermaid
+flowchart TB
+  n0["How is the public surface used or exten…"]
+  n1["__version__"]
+  n2["AnalysisError"]
+  n3["AnalyzeError"]
+  n4["Artifact"]
+  n5["BuildFile"]
+  n6["CIWorkflow"]
+  n7["Component"]
+  n8["DEFAULT_EXCLUDED_DIRS"]
+  n0 --> n1
+  n0 --> n2
+  n0 --> n3
+  n0 --> n4
+  n0 --> n5
+  n0 --> n6
+  n0 --> n7
+  n0 --> n8
+```
 
-### Where the real public surface lives
+```mermaid
+flowchart TB
+  page["How is the public surface used or exten…"]
+  subgraph d0["docuharnessx"]
+    e0["__init__.py"]
+  end
+  subgraph d1["repo root"]
+    e1["pyproject.toml"]
+  end
+  subgraph d2["docuharnessx/analysis"]
+    e2["__init__.py"]
+  end
+  subgraph d3["docuharnessx/planning"]
+    e3["__init__.py"]
+  end
+  subgraph d4["docuharnessx/ontology"]
+    e4["__init__.py"]
+  end
+  subgraph d5["docuharnessx/mcp"]
+    e5["__init__.py"]
+  end
+  subgraph d6["docuharnessx/stages"]
+    e6["analyze.py"]
+    e7["classify.py"]
+  end
+  page --> e0
+  page --> e1
+  page --> e2
+  page --> e3
+  page --> e4
+  page --> e5
+  page --> e6
+  page --> e7
+```
 
-The actual API is pushed down into each subpackage's `__init__.py`, which acts as the **single public namespace** for that core. The pattern is spelled out in the package docstrings: downstream consumers "import from the single `docuharnessx.analysis` namespace rather than reaching into submodules" (`docuharnessx/analysis/__init__.py:10-13`). `docuharnessx/analysis/__init__.py` re-exports the frozen seam — `RepoAnalysis`, `REPO_ANALYSIS_SCHEMA_VERSION`, the `AnalysisError` hierarchy, the serde trio `from_dict`/`to_dict`/`to_json`, the language functions `detect_language`/`aggregate_languages`, every detector (`summarize_structure`, `detect_entrypoints`, `detect_public_surface`, `map_components`, …), the scanner (`scan`, `FileInventory`, `DEFAULT_EXCLUDED_DIRS`), and the two entry points `analyze` and `enrich` (`docuharnessx/analysis/__init__.py:33-82`) — with `__all__` listed as "the authoritative, self-consistent contract for the package" (`docuharnessx/analysis/__init__.py:84-127`). The sibling cores repeat the exact same idiom: `docuharnessx/planning/__init__.py`, `docuharnessx/assembler/__init__.py`, `docuharnessx/composition/__init__.py`, `docuharnessx/ontology/__init__.py`, `docuharnessx/pipeline/__init__.py`, and `docuharnessx/pages/__init__.py` all re-export identity-equal names from private submodules and publish an `__all__`.
 
-The ontology package is the sharpest example of the pattern's constraints. `docuharnessx/_ontology.py` is a shim whose docstring explains that `ontology-engine` owns the `docuharnessx/ontology/` directory, and because "Python resolves a *package* over a same-named top-level *module*", a literal `docuharnessx/ontology.py` would be permanently shadowed — so `_ontology.py` is the single contract-level re-export site, importing `SegmentStore`, `AxisFilter`, `Segment`, `Vocabulary`, `load_vocabulary`, `vocabulary_to_config`, and `default_profile` **from the `docuharnessx.ontology` package** (`docuharnessx/_ontology.py:17-25`, `docuharnessx/_ontology.py:50-58`). That is the public surface being consumed as a frozen contract seam, with the docstring even naming the revalidation trigger for any engine drift (`docuharnessx/_ontology.py:42-46`).
+All surface tests pass (65 passed). Here is the finished answer.
 
-### How the surface is used
+---
 
-- **Tests assert the surface, not just the submodules.** `tests/test_analysis_detectors_components_surface.py` verifies the re-export contract directly: `test_task33_detectors_reexported_from_package` imports `docuharnessx.analysis` and asserts each detector name is both present on the package and listed in `pkg.__all__` (`tests/test_analysis_detectors_components_surface.py:127-136`); it also checks the names exist callable on the `detectors` module and in that module's `__all__` (`tests/test_analysis_detectors_components_surface.py:104-125`).
-- **Internal modules import from the namespace, including lazily to break cycles.** `cli.py` exposes `resolve_session` as a module-level wrapper precisely because `docuharnessx.mcp.session` imports `_validate_target_repo` *from `cli.py`*; the real import is deferred to call time: `from docuharnessx.mcp import resolve_session as _resolve_session` (`docuharnessx/cli.py:690-701`), and `_run_stdio_blocking` likewise defers `from docuharnessx.mcp import run_stdio` (`docuharnessx/cli.py:704-716`). Exposing these as module-level names is explicitly so tests can monkeypatch `cli.resolve_session` / `cli._run_stdio_blocking` (`docuharnessx/cli.py:696-697`, `docuharnessx/cli.py:711-713`).
-- **The CLI is the outermost consumer of the subpackage surfaces.** `cli.py`'s own `__all__` names `build_parser`, `main`, `prepare_run`, `PreparedRun`, `orchestrate_run`, `RunOutcome`, `exit_code_for_reason`, and `resolve_session` (`docuharnessx/cli.py:68-77`). `orchestrate_run` aliases the pipeline entry point `from docuharnessx.pipeline.run import run_pipeline as run_explore_pipeline` (`docuharnessx/cli.py:601`), and `_publish_if_accepted` imports `resolve_site_identity`, `AssembledSite`, `deploy_site`, and `resolve_deploy_mode` from the assembler/deployer namespaces (`docuharnessx/cli.py:547-549`).
+# How the public surface is used or extended
 
-### How the surface is extended
+DocuHarnessX's `__init__.py` files are not thin "welcome" stubs: each one is the **single public namespace contract** for its package, and the repository treats `__all__` as an authoritative, machine-checked surface. The top-level `docuharnessx/__init__.py` is the one deliberately minimal case — it exports nothing but the version constant, `__version__ = "1.1.0"` with `__all__ = ["__version__"]` (`docuharnessx/__init__.py:5-7`), mirroring `version = "1.1.0"` in `pyproject.toml:3`. Every subpackage `__init__.py`, by contrast, is a dense re-export site that both *serves* downstream consumers and is *extended* additively as tasks land.
 
-Extension is **additive and namespace-append-only**. The `analysis` docstring walks the accretion: the frozen seam (task 1.1), the error hierarchy (1.5), serde (1.2), languages (2.2), detectors (3.1–3.3), the `analyze` composition (4.1), and finally the gated `enrich` surface added "to this same package additively: the only place a model may touch the analysis" (`docuharnessx/analysis/__init__.py:13-28`). The `mcp` docstring says the same: "later tasks populate it as each module lands, each re-export identity-equal to its submodule definition (no shadow copies)" (`docuharnessx/mcp/__init__.py:25-30`), and its `__all__` lists the eight tool handlers (`list_segments`, `get_segment`, `validate_segment`, `rewrite_segment`, `reassemble_site`, `get_overview`, `draft_overview`, `refine_overview`) plus `build_refine_server`/`run_stdio` (`docuharnessx/mcp/__init__.py:74-89`). The `assembler` docstring likewise enumerates which task populated which re-export (`docuharnessx/assembler/__init__.py:20-33`).
+## The pattern: one namespace, identity-equal re-exports
 
-`docuharnessx/stages/__init__.py` is a different kind of extension: it *extends HarnessX's builder* rather than the Python namespace. `STAGES` is the ordered `(StageName, factory)` list in canonical pipeline order (`docuharnessx/stages/__init__.py:60-69`), `register_stages` appends each stage processor onto `PIPELINE_HOOK` with strictly positive, increasing `order` — "append-don't-replace" semantics that keep pre-existing hook processors ahead of the eight stages (`docuharnessx/stages/__init__.py:108-132`) — and `stages_builder` returns a stages-only `HarnessBuilder` for `|` composition (`docuharnessx/stages/__init__.py:135-148`). The extension contract is exercised by `tests/_fakes.py`, where `ReplacementStage` / `make_replacement_stage` model "a genuine, importable alternative stage processor (and its factory) a later spec could drop into `docuharnessx.stages.STAGES`" (`tests/_fakes.py:20-26`, `tests/_fakes.py:87-117`).
+Each pure-core package root imports names from its submodules and lists them in `__all__`. `docuharnessx/analysis/__init__.py:33-82` re-exports the whole deterministic analysis core — `analyze`, every detector (`detect_entrypoints`, `detect_public_surface`, `extract_dependencies`, `map_components`, …), the error hierarchy (`AnalysisError`, `IngestError`, `RepoAnalysisVersionError`), the frozen records (`RepoAnalysis`, `PublicSymbol`, `ScanStats`), the scanner (`scan`, `FileInventory`, `ScanLimits`, `DEFAULT_EXCLUDED_DIRS`), and the optional gated `enrich`. Its docstring states the design intent explicitly: downstream consumers "import from the single `docuharnessx.analysis` namespace rather than reaching into submodules" (`docuharnessx/analysis/__init__.py:10-14`). The same contract appears in `docuharnessx/planning/__init__.py:40-57` (classify/plan entry points plus `COVERAGE_PLAN_SCHEMA_VERSION`), `docuharnessx/ontology/__init__.py:19-69` (the `Vocabulary`/`SegmentStore` seams), `docuharnessx/mcp/__init__.py:51-64` (the eight MCP tool handlers plus `RefineSession`, `build_refine_server`, `run_stdio`), and the assembler/review/composition/deployer/pages/pipeline roots.
 
-Finally, the CLI surface itself is extended in `cli.py` as new subcommands land: `_SUBCOMMANDS` is the frozenset `{"run", "init", "mcp"}` used by the bare-form normalizer (`docuharnessx/cli.py:97`), `build_parser` adds the three subparsers plus flags such as `--deploy-mode` (`docuharnessx/cli.py:185-328`), and `main` dispatches each command (`docuharnessx/cli.py:1085-1092`). In every case the root `__init__.py` stays untouched — the pattern is: keep the root to `__version__`, and grow the public surface by adding identity-equal re-exports to the per-core subpackage namespaces, verified by tests that check both `hasattr` and `__all__` membership.
+## How the surface is used
+
+The stage adapters and pipeline code import from these package roots rather than submodules, which is exactly what the `__init__.py` contract exists to enable:
+
+- `docuharnessx/stages/analyze.py:63` — `from docuharnessx.analysis import analyze, enrich`; `AnalyzeStage.on_step_end` calls `analyze(inventory)` and `enrich(...)` (`docuharnessx/stages/analyze.py:163-170`).
+- `docuharnessx/stages/classify.py:68` — `from docuharnessx.planning import Classification, classify_repo`.
+- `docuharnessx/stages/plan.py:71` — `from docuharnessx.planning import CoveragePlan, apply_relevance, plan_coverage`.
+- `docuharnessx/pipeline/run.py:19` — `from docuharnessx.analysis import analyze, scan`.
+- `docuharnessx/cli.py:699` and `cli.py:714` — `from docuharnessx.mcp import resolve_session` and `from docuharnessx.mcp import run_stdio`.
+- `docuharnessx/bundle.py:53` — `from docuharnessx.stages import stages_builder`.
+
+The ontology surface is the most heavily re-used: `docuharnessx/assembler/pages.py:37`, `docuharnessx/assembler/writer.py:65`, `docuharnessx/planning/classifier.py:36`, `docuharnessx/composition/blueprint.py:49`, and `docuharnessx/mcp/handlers.py:54` all pull `Segment`, `Vocabulary`, `AxisTerm`, `Subject`, and friends from `docuharnessx.ontology`. The skeleton even pins a dedicated re-export shim, `docuharnessx/_ontology.py:50-58`, that imports the frozen `SegmentStore`/`Vocabulary`/`load_vocabulary`/`vocabulary_to_config` seams from the package root so contract drift has "a single file" blast radius (`docuharnessx/_ontology.py:3-8`). Its docstring notes a subtlety: because Python resolves a package over a same-named module, a literal `docuharnessx/ontology.py` would be shadowed, so the shim name is the single import site (`docuharnessx/_ontology.py:17-25`).
+
+## How the surface is extended
+
+Extension is **additive re-export, never shadowing**. Every package `__init__.py` documents its growth task-by-task in the docstring — e.g. `docuharnessx/analysis/__init__.py:15-28` ("Task 1.2 adds the deterministic serde surface … Task 3.3 adds the remaining detectors … Task 4.2 adds the optional, gated enrichment surface") — and `docuharnessx/mcp/__init__.py:66-73` spells out the rule: "Each re-export is identity-equal to its submodule definition (no shadow copies)."
+
+Two concrete extension mechanisms worth naming:
+
+1. **Tests pin the contract.** `tests/test_planning_package_surface.py:38-55` asserts identity equality — `pkg.classify_repo is classifier.classify_repo`, `pkg.CoveragePlan is model.CoveragePlan`, `pkg.to_dict is serde.to_dict` — and `tests/test_planning_package_surface.py:95-101` verifies that `from docuharnessx.planning import *` binds *exactly* `__all__`. The same star-import/self-consistency checks exist for `docuharnessx.assembler` (`tests/test_assembler_package_surface.py:99-112`) and `docuharnessx.mcp` (`tests/test_mcp_package_surface.py:36-51`). The analysis surface is covered too: `tests/test_analysis_detectors_components_surface.py:127-136` (`test_task33_detectors_reexported_from_package`) asserts `map_components`, `detect_public_surface`, `detect_docs`, and `detect_artifacts` are both `hasattr(pkg, ...)` and in `pkg.__all__`. I ran these files: 65 passed.
+
+2. **`docuharnessx/stages/__init__.py` is itself an extendable registry.** Rather than re-exporting names, it exposes `STAGES`, an ordered `(StageName, factory)` list (`docuharnessx/stages/__init__.py:60-69`), plus `register_stages(builder)` which appends the eight stage processors onto `PIPELINE_HOOK` with "append-don't-replace" semantics and increasing `order` (`docuharnessx/stages/__init__.py:108-132`), `stage_class_for(name)` mapping stage names to their `NoOpStage` subclasses (`docuharnessx/stages/__init__.py:88-105`), and `stages_builder()` for `control | stages_builder()` composition (`docuharnessx/stages/__init__.py:135-148`).
+
+## The literal "public surface" symbol
+
+Worth distinguishing from the package-surface machinery: `detect_public_surface(inv, repo_path)` is the analysis core's detector for a *target repo's* public API — Go exported `func`/`type` plus cobra/flag flags, and Python `__all__` entries plus argparse flags/subcommands, via shallow regexes (`docuharnessx/analysis/detectors.py:1244-1292`). It is re-exported by the package root (`docuharnessx/analysis/__init__.py:46`), composed into `RepoAnalysis.public_surface` by `analyze` (`docuharnessx/analysis/analyzer.py:130`), declared on the frozen model (`docuharnessx/analysis/model.py:253`), and round-tripped by serde through `_TUPLE_RECORD_FIELDS["public_surface"]` (`docuharnessx/analysis/serde.py:98`). Its contract — sorted by `(source, kind, name)`, conservative, "omits on doubt" — is exercised at length in `tests/test_analysis_detectors_components_surface.py:244-395`. So the `__init__.py` surface exposes a detector that itself detects surfaces: the package root advertises `detect_public_surface`, and that function is what harvests `PublicSymbol` records for whatever repository is being analyzed.

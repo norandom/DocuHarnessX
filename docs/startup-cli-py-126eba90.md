@@ -3,52 +3,97 @@ id: startup:cli.py
 title: How does this program start?
 subjects:
 - cli.py
-summary: 'The whole program starts at one function: `main` in `docuharnessx/cli.py`.
-  It is installed as the `dhx` console script by `pyproject.toml` (`[project.scripts]
-  dhx = "docuharnessx.cli:main"`, `pyproject.toml:39`), and it is also the module
-  entry point — `if __name__ == "__main__": raise SystemExit(main())` (`docuharnessx/cli.py:1106`).
-  So a bare `dhx` command, and `python` execution of the module, both land in `main(argv:
-  Sequence[str] | None = None, *, model_config=None, max_steps=None, init_input=None)`
-  (`docuharnessx/cli.py:1032`).'
+summary: 'The program is installed as the `dhx` console script. `pyproject.toml:33`
+  declares `dhx = "docuharnessx.cli:main"`, so a shell invocation of `dhx` (or `dhx
+  --help`, `dhx run …`, etc.) is a direct call into `main()` in `docuharnessx/cli.py`.
+  The module also supports running the file directly: `cli.py:1106-1107` has the guard
+  `if __name__ == "__main__": raise SystemExit(main())`. There is no `docuharnessx/__main__.py`,
+  so `python -m docuharnessx` is not an entry point — only the `dhx` script and `python
+  docuharnessx/cli.py`.'
 related: []
 ---
 # How does this program start?
 
-# How `dhx` starts: the `docuharnessx/cli.py` entry path
+```mermaid
+flowchart TB
+  n0["How does this program start?"]
+  n1["pyproject.toml"]
+  n2["ontology_loader.py"]
+  n0 --> n1
+  n0 --> n2
+```
 
-The whole program starts at one function: `main` in `docuharnessx/cli.py`. It is installed as the `dhx` console script by `pyproject.toml` (`[project.scripts] dhx = "docuharnessx.cli:main"`, `pyproject.toml:39`), and it is also the module entry point — `if __name__ == "__main__": raise SystemExit(main())` (`docuharnessx/cli.py:1106`). So a bare `dhx` command, and `python` execution of the module, both land in `main(argv: Sequence[str] | None = None, *, model_config=None, max_steps=None, init_input=None)` (`docuharnessx/cli.py:1032`).
+```mermaid
+flowchart LR
+  n0["cli.py"]
+  n1["pyproject.toml"]
+  n2["ontology_loader.py"]
+  n0 --> n1
+  n1 --> n2
+```
 
-## Startup sequence inside `main`
+```mermaid
+flowchart TB
+  page["How does this program start?"]
+  subgraph d0["repo root"]
+    e0["pyproject.toml"]
+  end
+  subgraph d1["docuharnessx"]
+    e1["ontology_loader.py"]
+  end
+  page --> e0
+  page --> e1
+```
 
-`main` runs the following steps in order (`docuharnessx/cli.py:1060-1103`):
 
-1. **Load `.env` files** via `_load_env_files()` (`docuharnessx/cli.py:1060`, helper at `docuharnessx/cli.py:112`). It calls `python-dotenv`'s `load_dotenv(path, override=False)` for `.env` in the cwd and then the install/source project root (`_env_file_paths`, `docuharnessx/cli.py:102`). It is skipped while pytest runs unless `force=True` (`docuharnessx/cli.py:118`).
-2. **Build the argparse parser** with `build_parser()` (`docuharnessx/cli.py:1061`; parser at `docuharnessx/cli.py:185`). The parser exposes three subcommands — `run`, `init`, `mcp` — via `parser.add_subparsers(dest="command", ...)` (`docuharnessx/cli.py:201`).
-3. **Normalize the bare CLI form**: `_normalize_argv(argv)` (`docuharnessx/cli.py:1071`, helper at `docuharnessx/cli.py:129`) prepends the implicit `run` subcommand when the first token is a positional that is not one of the known subcommands in `_SUBCOMMANDS = frozenset({"run", "init", "mcp"})` (`docuharnessx/cli.py:97`). This is what makes `dhx <target-repo> --out DIR --config YAML` work without typing `run` (`docuharnessx/cli.py:132-158`). When `argv is None` it is resolved to `sys.argv[1:]` before normalization (`docuharnessx/cli.py:1069-1070`).
-4. **Handle the no-command case**: if `args.command is None` (e.g. bare `dhx`), it prints help and returns exit code `2` (`docuharnessx/cli.py:1073-1075`). `--help` exits via argparse's normal `SystemExit(0)` (`docuharnessx/cli.py:1041-1042`).
-5. **Check the runtime dependency**: `_require_harnessx()` (`docuharnessx/cli.py:1079`, helper at `docuharnessx/cli.py:161`) does a deferred `import harnessx` and, on `ImportError`, raises `DependencyError` with the exact install command for the pinned HarnessX archive (`docuharnessx/cli.py:172-182`). The import is deferred so `dhx --help` and parser unit tests never need HarnessX.
-6. **Configure logging**: `_configure_run_logging(getattr(args, "verbose", False))` (`docuharnessx/cli.py:1082`, helper at `docuharnessx/cli.py:961`) calls `harnessx.logging.configure_logging`, sets structlog's level, and installs two noise filters: `_DropHarnessSerializationNoise` (`docuharnessx/cli.py:920`) and `_DropEventLoopClosedNoise` (`docuharnessx/cli.py:938`). Without `-v` it also silences LiteLLM (`docuharnessx/cli.py:1017-1029`).
-7. **Dispatch on the subcommand** (`docuharnessx/cli.py:1084-1098`): `run` → `_run_command`, `init` → `_init_command(args, input_fn=init_input)`, `mcp` → `_mcp_command(args)`; anything else prints `unknown command` and returns `1`.
-8. **Catch the whole error family**: every boundary failure raises a `DocuHarnessXError` (base class at `docuharnessx/errors.py:38`, with subclasses `ConfigError`, `ModelResolutionError`, `TargetRepoError`, `DependencyError`, `OntologyConfigError`), which `main` prints to stderr as `<ErrorType>: <message>` and maps to exit code `1` (`docuharnessx/cli.py:1099-1103`).
+## How `dhx` starts: from console script to `cli.main` to the dispatched command
 
-## The `run` path
+### Entry points
 
-`_run_command` (`docuharnessx/cli.py:633`) is three steps: `prepare_run` → `orchestrate_run` → print the report path.
+The program is installed as the `dhx` console script. `pyproject.toml:33` declares `dhx = "docuharnessx.cli:main"`, so a shell invocation of `dhx` (or `dhx --help`, `dhx run …`, etc.) is a direct call into `main()` in `docuharnessx/cli.py`. The module also supports running the file directly: `cli.py:1106-1107` has the guard `if __name__ == "__main__": raise SystemExit(main())`. There is no `docuharnessx/__main__.py`, so `python -m docuharnessx` is not an entry point — only the `dhx` script and `python docuharnessx/cli.py`.
 
-`prepare_run(args, *, model_config=None, stream=None)` (`docuharnessx/cli.py:431`) validates in a fixed order:
+`main(argv=None, *, model_config=None, max_steps=None, init_input=None)` is defined at `cli.py:1032`. Its production callers pass nothing; `model_config`, `max_steps`, and `init_input` are test seams (a fake `ModelConfig` provider, `max_steps=0` to force `budget_exceeded`, and a scripted line-reader for `dhx init` respectively — `cli.py:1033-1037`).
 
-- **Target first**: `_validate_target_repo(args.target_repo)` (`docuharnessx/cli.py:460`, helper at `docuharnessx/cli.py:411`) raises `TargetRepoError` when the path is missing, nonexistent, or not a directory — before any run work (`docuharnessx/cli.py:418-428`).
-- **Output directory**: `--out` absolutized, or the documented per-target default `os.path.join(target_repo, ".docuharnessx", "out")` from `_DEFAULT_OUT_RELPATH` (`docuharnessx/cli.py:374, 463-467`).
-- **Ontology**: `load_project_vocabulary(target_repo)` (`docuharnessx/cli.py:471`) from `docuharnessx/ontology_loader.py:54` returns `(vocabulary, used_default)`. An absent `.docuharnessx/ontology.yaml` yields the engine's `default_profile()` plus a `dhx init` hint printed to stdout (`docuharnessx/cli.py:472-479`, `docuharnessx/ontology_loader.py:80-81`); a present-but-invalid file raises `OntologyConfigError` (`docuharnessx/ontology_loader.py:85-90`).
-- **Config**: `load_config(config_path=args.config, cli_overrides=..., vocabulary=vocabulary)` (`docuharnessx/cli.py:494`, definition at `docuharnessx/config.py:238`) reads the YAML file first, then overlays CLI overrides (`out_dir`, `roles`, `deploy_mode`) so CLI wins (`docuharnessx/cli.py:483-493`). Roles are validated against the loaded `Vocabulary` and default to all of its role ids (`docuharnessx/config.py:288-291`).
-- **Model**: unless a `ModelConfig` was injected, `resolve_model(config.model)` from `docuharnessx/model_resolver.py:246` is tried, and a `ModelResolutionError` is swallowed to `model=None` — an honest-empty run rather than a hard failure (`docuharnessx/cli.py:503-511`). The resolver itself uses config-then-env precedence and builds an `AnthropicProvider`, native `OpenAIProvider`, or `LiteLLMProvider` (`docuharnessx/model_resolver.py:246-279`).
+### Startup sequence inside `main`
 
-`orchestrate_run(prepared, *, max_steps=None, task_description=None)` (`docuharnessx/cli.py:582`) creates the output dir, then calls `run_pipeline` imported as `run_explore_pipeline` from `docuharnessx.pipeline.run` (`docuharnessx/cli.py:601, 604-609`). `run_pipeline` (`docuharnessx/pipeline/run.py:82`) runs the sequential explore-first pipeline: `scan(repo_path)` → `analyze(inventory)` → `plan_questions(analysis)` → `write_questions(...)` → write the `RunReport` and accepted pages → assemble a site only when accepted ≥ 1 (`docuharnessx/pipeline/run.py:102-126`). Back in the CLI, `_publish_if_accepted` (`docuharnessx/cli.py:523`) invokes `deploy_site` via `docuharnessx/deployer` only when there is at least one accepted page and a `<out>/site/mkdocs.yml` exists (`docuharnessx/cli.py:539-579`). The outcome maps to exit code `0` for `done`, else `1` (`exit_code_for_reason`, `docuharnessx/cli.py:386-396`), and `_run_command` prints the `report.json` path (`docuharnessx/cli.py:648-662`).
+1. **Load `.env` files** — `main` first calls `_load_env_files()` (`cli.py:1060`). That helper (`cli.py:112-127`) loads `.env` from the current working directory and then the project root (`_env_file_paths`, `cli.py:102-109`) via `python-dotenv`'s `load_dotenv(path, override=False)`, never overriding existing environment variables. It is skipped while pytest is running (`PYTEST_CURRENT_TEST` check, `cli.py:118`) so the credential-free suite cannot pick up local secrets.
 
-## The `init` and `mcp` paths
+2. **Build and run the argument parser** — `parser = build_parser()` (`cli.py:1061`). `build_parser` (`cli.py:185-328`) creates an `argparse.ArgumentParser` with `prog="dhx"` and three subcommands via `add_subparsers(dest="command", ...)` (`cli.py:201`): `run` (`cli.py:204-254`, with `target_repo`, `--out`, `--config`, `--roles`, `--deploy-mode`, `-v/--verbose`), `init` (`cli.py:257-283`, with `project_dir`, `--default`, `--force`, `-v`), and `mcp` (`cli.py:292-326`, mirroring `run`'s `target_repo`/`--out`/`--config`/`-v`).
 
-`_init_command` (`docuharnessx/cli.py:850`) skips HarnessX entirely and delegates to `docuharnessx.ontology_setup.run_init` (`docuharnessx/ontology_setup.py:129`). With `--default` it seeds the shipped default profile; otherwise, when stdin is a TTY (or an `input_fn` is injected), it gathers roles/intents/subjects through `_gather_init_answers` / `_prompt_axis_terms` / `_prompt_subjects` (`docuharnessx/cli.py:782-847`) before calling `run_init` (`docuharnessx/cli.py:899-905`). A refused overwrite (`FileExistsError` without `--force`) returns `EXIT_INIT_FAILED = 1` (`docuharnessx/cli.py:906-914`); success prints the written `ontology.yaml` path and returns `0` (`docuharnessx/cli.py:916-917`).
+3. **Normalize the bare invocation form** — before parsing, `main` resolves `argv = sys.argv[1:]` when `None` (`cli.py:1069-1070`) and passes it through `_normalize_argv(argv)` (`cli.py:1071`). `_normalize_argv` (`cli.py:129-158`) implements the spec's bare form `dhx <target-repo> --out DIR --config YAML` (Req 4.1, 4.8): if the first token is a positional that is *not* one of the recognised subcommands in `_SUBCOMMANDS = frozenset({"run", "init", "mcp"})` (`cli.py:97`), it prepends `"run"` and returns `["run", *args]` (`cli.py:158`). Leading flags and explicit subcommands pass through unchanged (`cli.py:154-155`).
 
-`_mcp_command` (`docuharnessx/cli.py:719`) first guards the MCP SDK with `_require_mcp()` (`docuharnessx/cli.py:750`, helper at `docuharnessx/cli.py:665`), then — only when a `target_repo` was given — validates it with the same `_validate_target_repo` and builds a per-target session via `resolve_session(target_repo, out_dir, config_path=...)` (`docuharnessx/cli.py:759-763`, resolver at `docuharnessx/mcp/session.py:99`). Finally `_run_stdio_blocking(session)` (`docuharnessx/cli.py:778`, helper at `docuharnessx/cli.py:704`) wraps `asyncio.run(run_stdio(session))`, where `run_stdio` from `docuharnessx/mcp/server.py:206` builds the refine server and runs it over the stdio transport until the client disconnects. The launcher's human-readable messages go to stderr so stdout stays a clean MCP protocol channel (`docuharnessx/cli.py:764-774`).
+4. **Handle the no-command case** — after `parser.parse_args(...)`, if `args.command is None` (e.g. bare `dhx` with no arguments), `main` prints help and returns exit code `2` (`cli.py:1073-1075`).
 
-In short: **`pyproject.toml:39` wires the `dhx` script to `cli.main`; `cli.py:1060-1103` loads env, parses/normalizes args, guards dependencies, configures logging, and dispatches to `_run_command` / `_init_command` / `_mcp_command`; the `run` path then flows through `prepare_run` (`cli.py:431`) → `orchestrate_run` (`cli.py:582`) → `run_pipeline` (`pipeline/run.py:82`) → `deploy_site` (`cli.py:573`).**
+5. **Guard the runtime dependency** — for any real command, `_require_harnessx()` (`cli.py:1079`) is called before dispatch. It defers `import harnessx` to call time (`cli.py:172-173`) so `dhx --help` does not require it, and on `ImportError` raises `DependencyError` naming the exact install command (`cli.py:174-182`). The `mcp` command has a parallel guard `_require_mcp()` (`cli.py:665-687`) that checks `mcp.server` / `mcp.server.stdio`.
+
+6. **Configure logging** — `_configure_run_logging(getattr(args, "verbose", False))` (`cli.py:1082`) sets the console level to `INFO` with `-v` or `WARNING` otherwise via `harnessx.logging.configure_logging` (`cli.py:974-978`), configures `structlog` (`cli.py:988-997`), installs two noise-suppressing filters — `_DropHarnessSerializationNoise` (`cli.py:920-935`) and `_DropEventLoopClosedNoise` (`cli.py:938-958`) — and, when not verbose, silences LiteLLM's loggers (`cli.py:1017-1029`).
+
+7. **Dispatch on `args.command`** (`cli.py:1084-1098`):
+   - `"run"` → `_run_command(args, model_config=model_config, max_steps=max_steps)` (`cli.py:1085-1088`);
+   - `"init"` → `_init_command(args, input_fn=init_input)` (`cli.py:1089-1090`);
+   - `"mcp"` → `_mcp_command(args)` (`cli.py:1091-1092`);
+   - anything else → stderr message and exit `1` (`cli.py:1094-1098`).
+
+   The whole dispatch is wrapped in `except DocuHarnessXError` (`cli.py:1099-1103`), which prints `<ErrorType>: <message>` to stderr and returns exit code `1` — the single non-zero failure contract for every typed boundary error.
+
+### What the `run` path does once started
+
+`_run_command` (`cli.py:633-662`) calls `prepare_run(args, model_config=model_config)` (`cli.py:646`), then `orchestrate_run(prepared, max_steps=max_steps)` (`cli.py:647`), and finally prints the `report.json` location (`cli.py:648-661`), returning the outcome's exit code.
+
+`prepare_run` (`cli.py:431-520`) validates in order:
+1. **Target first** — `_validate_target_repo(args.target_repo)` (`cli.py:460`) raises `TargetRepoError` for a missing path, a non-directory, or no path at all (`cli.py:411-428`).
+2. **Output directory** — `--out` absolutized, or the documented default `<target>/.docuharnessx/out` (`cli.py:463-467`, `_DEFAULT_OUT_RELPATH` at `cli.py:374`).
+3. **Ontology** — `load_project_vocabulary(target_repo)` from `docuharnessx/ontology_loader.py:471` (`cli.py:471`); an absent `.docuharnessx/ontology.yaml` yields the default profile plus a printed `dhx init` hint (`cli.py:472-479`).
+4. **Config** — `load_config(config_path=args.config, cli_overrides=..., vocabulary=vocabulary)` (`cli.py:494-498`) overlays CLI overrides (`out_dir`, `roles` from `_split_roles`, `deploy_mode`) on the YAML file.
+5. **Model** — unless a `ModelConfig` was injected, `resolve_model(config.model)` from `docuharnessx/model_resolver.py` is tried, and a `ModelResolutionError` is swallowed to `None` (`cli.py:503-509`) — a no-model run is an honest-empty run, not a failure. The product is a frozen `PreparedRun` (`cli.py:513-520`, dataclass at `cli.py:331-353`).
+
+`orchestrate_run` (`cli.py:582-630`) imports the pipeline under an alias so as not to shadow this module's `RunOutcome` — `from docuharnessx.pipeline.run import run_pipeline as run_explore_pipeline` (`cli.py:601`) — makes `prepared.out_dir` (`cli.py:603`), then calls `run_explore_pipeline(repo_path=..., out_dir=..., model=..., deploy_mode=...)` (`cli.py:604-609`). If the outcome has at least one accepted page, `_publish_if_accepted` (`cli.py:611-616`, defined at `cli.py:523-579`) invokes `docuharnessx.deployer.deploy_site` with a `_PythonMkdocsRunner` that rewrites `mkdocs` to `sys.executable -m mkdocs` (`cli.py:551-556`). A completed run — including zero accepted pages — returns `exit_reason="done"`, `exit_code=EXIT_OK` (0) (`cli.py:625-630`); `exit_code_for_reason` (`cli.py:386-396`) maps only `"done"` to 0 and every other reason to `EXIT_RUN_FAILED` (1).
+
+Downstream, `run_pipeline` itself (`pipeline/run.py:86`) sequences `scan(repo_path)` → `analyze(inventory)` → `plan_questions(analysis)` → `write_questions(plan.questions, repo_path=..., model=...)`, then writes the `RunReport`, persists accepted pages, and assembles a site only when accepted ≥ 1 (`pipeline/run.py:94-108`, `RunOutcome` return at `pipeline/run.py:110`).
+
+### The other two commands' startup
+
+- **`init`** — `_init_command` (`cli.py:850-917`) decides interactivity from an injected `input_fn` or `sys.stdin.isatty()` (`cli.py:885`), gathers roles/intents/subjects via `_prompt_axis_terms`/`_prompt_subjects` (`cli.py:782-847`), then dispatches to `docuharnessx.ontology_setup.run_init` (`cli.py:880`, `ontology_setup.py:129`) which writes `<project>/.docuharnessx/ontology.yaml` (refusing overwrite without `--force` via `FileExistsError`, `cli.py:906-914`). Note `init` runs without the `_require_harnessx` gate — no harness is run.
+- **`mcp`** — `_mcp_command` (`cli.py:719-779`) runs `_require_mcp()` first (`cli.py:750`), validates the optional `target_repo` with the same `_validate_target_repo` (`cli.py:761`), resolves a `RefineSession` via `resolve_session` (`cli.py:763`, defined at `mcp/session.py:99`), and then blocks serving the stdio protocol through `_run_stdio_blocking(session)` (`cli.py:778`), which wraps the async `docuharnessx.mcp.run_stdio` in `asyncio.run(...)` (`cli.py:714-716`; `run_stdio` itself lives at `mcp/server.py:206`). Its launcher notes go to stderr so stdout stays the MCP channel (`cli.py:764-774`).
+
+In short: the `dhx` console script (`pyproject.toml:33`) lands in `main()` (`cli.py:1032`), which loads `.env`, parses and normalizes argv, guards the `harnessx` dependency, configures logging, and dispatches to `_run_command` / `_init_command` / `_mcp_command` (`cli.py:1084-1092`) — with every typed boundary failure caught at `cli.py:1099-1103` and mapped to a non-zero exit.

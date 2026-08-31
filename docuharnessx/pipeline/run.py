@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from docuharnessx.analysis import analyze, scan
+from docuharnessx.analysis.model import RepoAnalysis
 from docuharnessx.assembler.identity import read_origin_remote, resolve_site_identity
 from docuharnessx.assembler.pages import render_question_page
 from docuharnessx.assembler.question_site import assemble_question_site
@@ -46,7 +47,9 @@ def _persist_accepted_pages(pages: tuple[Page, ...], out_dir: str) -> None:
     dest = Path(out_dir) / "pages"
     dest.mkdir(parents=True, exist_ok=True)
     for page in pages:
-        rel_path, content = render_question_page(page, pages)
+        rel_path, content = render_question_page(
+            page, pages, include_diagrams=False
+        )
         path = dest / rel_path
         with open(path, "w", encoding="utf-8", newline="") as handle:
             handle.write(content)
@@ -58,6 +61,7 @@ def _assemble_if_accepted(
     repo_path: str,
     out_dir: str,
     deploy_mode: str,
+    analysis: RepoAnalysis | None = None,
 ) -> None:
     """Write a question-organised site only when accepted ≥ 1.
 
@@ -70,7 +74,7 @@ def _assemble_if_accepted(
     identity = resolve_site_identity(
         repo_path, read_origin_remote(repo_path), {}
     )
-    assemble_question_site(pages, identity, out_dir)
+    assemble_question_site(pages, identity, out_dir, analysis=analysis)
     _log.info(
         "assembled question site under %s/site (accepted=%s, deploy_mode=%s)",
         out_dir,
@@ -122,6 +126,10 @@ def run_pipeline(
     _persist_accepted_pages(pages, out_dir)
     write_run_report(report, out_dir)
     _assemble_if_accepted(
-        pages, repo_path=repo_path, out_dir=out_dir, deploy_mode=deploy_mode
+        pages,
+        repo_path=repo_path,
+        out_dir=out_dir,
+        deploy_mode=deploy_mode,
+        analysis=analysis,
     )
     return RunOutcome(report=report, out_dir=out_dir, pages=pages)
