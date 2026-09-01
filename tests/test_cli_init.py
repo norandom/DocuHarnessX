@@ -21,6 +21,8 @@ import os
 
 from docuharnessx import cli
 from docuharnessx._ontology import Vocabulary, default_profile, load_vocabulary
+from docuharnessx.adoption import ADOPTION_RELPATH, load_adoption
+from docuharnessx.blueprint import BLUEPRINT_NAME, BLUEPRINT_VERSION
 
 _CONFIG_RELPATH = os.path.join(".docuharnessx", "ontology.yaml")
 
@@ -192,3 +194,105 @@ def test_init_interactive_does_not_overwrite_without_force(tmp_path, capsys) -> 
     assert _config_path(str(project)) in capsys.readouterr().err
     # The existing default-profile file is intact.
     assert load_vocabulary(_config_path(str(project))) == default_profile()
+
+
+# --------------------------------------------------------------------------- #
+# Task 2.1 — --default also seeds adoption.yaml (Req 1.2, 1.4, 1.6, 12.7)      #
+# --------------------------------------------------------------------------- #
+
+
+def _adoption_path(project_dir: str) -> str:
+    return os.path.join(project_dir, ADOPTION_RELPATH)
+
+
+def test_init_default_writes_adoption_and_reports_paths_and_version(tmp_path, capsys) -> None:
+    project = tmp_path / "proj"
+    project.mkdir()
+
+    code = cli.main(["init", str(project), "--default"])
+
+    assert code == 0
+    ontology = _config_path(str(project))
+    adoption = _adoption_path(str(project))
+    assert os.path.isfile(ontology)
+    assert os.path.isfile(adoption)
+    assert load_vocabulary(ontology) == default_profile()
+
+    record = load_adoption(str(project))
+    assert record is not None
+    assert record.blueprint_name == BLUEPRINT_NAME
+    assert record.blueprint_version == BLUEPRINT_VERSION
+    assert record.sufficient is False
+
+    out = capsys.readouterr().out
+    assert ontology in out, out
+    assert adoption in out, out
+    assert BLUEPRINT_VERSION in out, out
+    assert "not agent-managed" in out, out
+
+
+def test_init_default_second_run_without_force_leaves_files_unchanged(tmp_path, capsys) -> None:
+    project = tmp_path / "proj"
+    project.mkdir()
+
+    assert cli.main(["init", str(project), "--default"]) == 0
+    ontology = _config_path(str(project))
+    adoption = _adoption_path(str(project))
+    with open(ontology, "rb") as handle:
+        ontology_bytes = handle.read()
+    with open(adoption, "rb") as handle:
+        adoption_bytes = handle.read()
+    capsys.readouterr()
+
+    second = cli.main(["init", str(project), "--default"])
+
+    assert second != 0
+    err = capsys.readouterr().err
+    assert ontology in err, err
+    assert "adopted blueprint" in err, err
+    with open(ontology, "rb") as handle:
+        assert handle.read() == ontology_bytes
+    with open(adoption, "rb") as handle:
+        assert handle.read() == adoption_bytes
+
+
+def test_init_default_force_overwrites_ontology_and_adoption(tmp_path) -> None:
+    project = tmp_path / "proj"
+    project.mkdir()
+    assert cli.main(["init", str(project), "--default"]) == 0
+    adoption = _adoption_path(str(project))
+    with open(adoption, "w", encoding="utf-8") as handle:
+        handle.write("blueprint_name: tampered\nblueprint_version: 0.0.0\n")
+
+    assert cli.main(["init", str(project), "--default", "--force"]) == 0
+
+    record = load_adoption(str(project))
+    assert record is not None
+    assert record.blueprint_name == BLUEPRINT_NAME
+    assert record.blueprint_version == BLUEPRINT_VERSION
+    assert record.sufficient is False
+    assert load_vocabulary(_config_path(str(project))) == default_profile()
+
+
+def test_init_default_does_not_prompt_for_credentials_or_print_secrets(
+    tmp_path, capsys, monkeypatch
+) -> None:
+    project = tmp_path / "proj"
+    project.mkdir()
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-super-secret-value")
+    prompted: list[str] = []
+
+    def _reader(prompt: str = "") -> str:
+        prompted.append(prompt)
+        raise AssertionError(f"dhx init --default must not prompt: {prompt!r}")
+
+    code = cli.main(["init", str(project), "--default"], init_input=_reader)
+
+    assert code == 0
+    assert prompted == []
+    captured = capsys.readouterr()
+    combined = captured.out + captured.err
+    assert "sk-super-secret-value" not in combined
+    assert "API key" not in combined
+    assert "api key" not in combined.lower()
+    assert "OPENAI_API_KEY" not in combined

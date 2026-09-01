@@ -30,7 +30,7 @@
   - _Boundary: ProjectStore_
 
 - [ ] 2. Adopt and adjust
-- [ ] 2.1 No-model / `--default` setup still seeds the blueprint
+- [x] 2.1 No-model / `--default` setup still seeds the blueprint
   - `dhx init --default` or init with no model dumps shipped `default_profile`, writes `AdoptionRecord` with `BLUEPRINT_VERSION`, `sufficient=False`.
   - Refuse overwrite without `--force`. Print paths and blueprint version. Do not prompt for credentials or print secrets.
   - Observable completion: `dhx init --default` in an empty temp project writes `ontology.yaml` and `adoption.yaml` with `BLUEPRINT_VERSION`; a second init without `--force` exits non-zero and leaves files unchanged; no credential prompts appear.

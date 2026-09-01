@@ -853,9 +853,12 @@ def _init_command(args: argparse.Namespace, *, input_fn: "Any" = None) -> int:
     Delegates the whole build-and-write to
     :func:`docuharnessx.ontology_setup.run_init`, passing the resolved project dir,
     the ``--default`` choice, and ``--force`` (Req 9.1, 9.3). On success the written
-    ``.docuharnessx/ontology.yaml`` path is reported to stdout and ``0`` is returned
-    (Req 9.1). A refused overwrite — an existing file with no ``--force`` — is mapped
-    to a non-zero exit with an explicit message naming the file (Req 9.6).
+    ``.docuharnessx/ontology.yaml`` and ``.docuharnessx/adoption.yaml`` paths plus
+    the adopted blueprint version are reported to stdout and ``0`` is returned
+    (Req 9.1, 1.2, 1.6). A refused overwrite — an existing file with no
+    ``--force`` — is mapped to a non-zero exit with an explicit message naming
+    the file (Req 9.6, 1.4). ``--default`` does not prompt for credentials
+    (Req 12.7).
 
     Mode selection:
 
@@ -877,6 +880,8 @@ def _init_command(args: argparse.Namespace, *, input_fn: "Any" = None) -> int:
     HarnessX is not required for ``init`` (no harness is run), so it is dispatched
     without the runtime-dependency check that gate the ``run`` path.
     """
+    from docuharnessx.adoption import ADOPTION_RELPATH
+    from docuharnessx.blueprint import BLUEPRINT_VERSION
     from docuharnessx.ontology_setup import run_init
 
     answers: Any = None
@@ -904,16 +909,22 @@ def _init_command(args: argparse.Namespace, *, input_fn: "Any" = None) -> int:
             answers=answers,
         )
     except FileExistsError as exc:
-        # Refused overwrite: existing file without --force (Req 9.6). run_init
-        # raises FileExistsError (a stdlib error, not a DocuHarnessXError), so it
-        # is handled here with an explicit, file-naming message + non-zero exit.
+        # Refused overwrite: existing file without --force (Req 9.6, 1.4).
+        # run_init raises FileExistsError (a stdlib error, not a
+        # DocuHarnessXError), so it is handled here with an explicit,
+        # file-naming message + non-zero exit.
         print(
             f"dhx init: {exc} Re-run with '--force' to overwrite.",
             file=sys.stderr,
         )
         return EXIT_INIT_FAILED
 
+    adoption_path = os.path.join(args.project_dir, ADOPTION_RELPATH)
     print(f"dhx init: wrote ontology config: {written}")
+    print(f"dhx init: wrote adoption record: {adoption_path}")
+    print(f"dhx init: blueprint version: {BLUEPRINT_VERSION}")
+    if args.default:
+        print("dhx init: ontology was not agent-managed")
     return EXIT_OK
 
 

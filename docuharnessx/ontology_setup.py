@@ -1,8 +1,8 @@
-"""``dhx init`` ontology setup helpers (task 2.7 boundary).
+"""``dhx init`` ontology setup helpers (OntologySetup boundary).
 
 This module owns the ``OntologySetup`` service: a single function,
 :func:`run_init`, that the ``dhx init`` subcommand calls to create a per-project
-``.docuharnessx/ontology.yaml`` (design "OntologySetup (dhx init)"; Req 9.1-9.6).
+``.docuharnessx/ontology.yaml`` and seed ``.docuharnessx/adoption.yaml``.
 
 What this module owns vs. delegates
 -----------------------------------
@@ -16,17 +16,22 @@ shaped is delegated to ``ontology-engine``:
 * the loader ``load_vocabulary`` used to round-trip-validate the written file
   (Req 9.5).
 
+Adoption identity is delegated to :mod:`docuharnessx.blueprint` and
+:mod:`docuharnessx.adoption` (Req 1.2, 1.6).
+
 Flow (design "dhx init ontology setup")
 ---------------------------------------
 1. Resolve the target ``<project_dir>/.docuharnessx/ontology.yaml`` path (Req 9.1)
-   and refuse to overwrite a present file unless ``force=True`` (Req 9.6).
+   and refuse to overwrite a present file unless ``force=True`` (Req 9.6, 1.4).
 2. Build a :class:`Vocabulary` — from the shipped default profile when
    ``use_default`` is set or no ``answers`` are supplied (Req 9.3), or from the
    interactive ``answers`` (roles, intents, tags/subjects) otherwise (Req 9.2).
 3. Convert it to a config dict via the engine's ``vocabulary_to_config`` and dump
    that dict to YAML at the resolved path (Req 9.4).
 4. Round-trip-load the written file via the engine's ``load_vocabulary`` to prove
-   it is a valid vocabulary file (Req 9.5), then return its path.
+   it is a valid vocabulary file (Req 9.5).
+5. Write ``AdoptionRecord`` with the shipped blueprint name/version and
+   ``sufficient=False`` (Req 1.2, 1.6), then return the ontology path.
 
 Revalidation trigger (recorded risk): a change to the ``Vocabulary`` model, the
 ``vocabulary_to_config`` / ``default_profile`` / ``load_vocabulary`` signatures,
@@ -37,6 +42,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from typing import Any, Mapping, Sequence
 
 import yaml
@@ -47,6 +53,8 @@ from docuharnessx._ontology import (
     load_vocabulary,
     vocabulary_to_config,
 )
+from docuharnessx.adoption import AdoptionRecord, save_adoption
+from docuharnessx.blueprint import BLUEPRINT_NAME, BLUEPRINT_VERSION
 from docuharnessx.ontology import AxisTerm
 
 __all__ = ["run_init", "VocabularyAnswers", "ONTOLOGY_CONFIG_RELPATH"]
@@ -126,6 +134,11 @@ def _vocabulary_from_answers(answers: VocabularyAnswers | Mapping[str, Any]) -> 
     )
 
 
+def _utc_now_iso() -> str:
+    """ISO-8601 UTC timestamp with an explicit offset (``...+00:00``)."""
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
 def run_init(
     project_dir: str,
     *,
@@ -139,22 +152,25 @@ def run_init(
     ``use_default`` is set or no ``answers`` are given; Req 9.3) or from the
     interactive ``answers`` (Req 9.2), serializes it via the ``ontology-engine``
     ``vocabulary_to_config`` API, writes the resulting dict as YAML (Req 9.4),
-    round-trip-validates it via ``load_vocabulary`` (Req 9.5), and returns the
-    written path.
+    round-trip-validates it via ``load_vocabulary`` (Req 9.5), seeds
+    ``.docuharnessx/adoption.yaml`` with the shipped blueprint identity
+    (Req 1.2, 1.6), and returns the ontology path.
 
     Refuses to overwrite an existing config unless ``force=True``, raising
-    :class:`FileExistsError` naming the file (Req 9.6).
+    :class:`FileExistsError` naming the file (Req 9.6, 1.4). ``force=True``
+    rewrites both the ontology and the adoption record.
 
     Raises :class:`ValueError` when neither ``use_default`` nor ``answers`` is
     supplied (there is nothing to build).
     """
     config_path = os.path.join(project_dir, ONTOLOGY_CONFIG_RELPATH)
 
-    # Req 9.6 — never overwrite silently; require an explicit --force.
+    # Req 9.6 / 1.4 — never overwrite silently; require an explicit --force.
     if os.path.exists(config_path) and not force:
         raise FileExistsError(
             f"ontology config already exists: '{config_path}' "
-            "(pass force=True / --force to overwrite)"
+            "(project already has an adopted blueprint; "
+            "pass force=True / --force to overwrite)"
         )
 
     # Build the Vocabulary. Default profile when the operator requests it (Req
@@ -181,5 +197,19 @@ def run_init(
 
     # Req 9.5 — prove validity by round-trip-loading via the engine loader.
     load_vocabulary(config_path)
+
+    # Req 1.2, 1.6 — record the shipped blueprint; not yet sufficient.
+    save_adoption(
+        project_dir,
+        AdoptionRecord(
+            blueprint_name=BLUEPRINT_NAME,
+            blueprint_version=BLUEPRINT_VERSION,
+            adopted_at=_utc_now_iso(),
+            sufficient=False,
+            sufficient_at=None,
+            sufficient_stale=False,
+            harness_snapshot=None,
+        ),
+    )
 
     return config_path
