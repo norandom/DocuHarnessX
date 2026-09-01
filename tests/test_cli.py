@@ -191,6 +191,7 @@ def test_absent_ontology_falls_back_to_default_profile_with_hint(tmp_path, capsy
     # The CLI surfaces a `dhx init` hint when the default profile is used.
     out = capsys.readouterr().out
     assert "dhx init" in out
+    assert "not adopted" in out.lower() or "has not adopted" in out.lower()
 
 
 # --------------------------------------------------------------------------- #
@@ -328,3 +329,72 @@ def test_prepare_run_defaults_deploy_mode_when_flag_absent(tmp_path) -> None:
     args = cli.build_parser().parse_args(["run", str(target), "--out", str(out)])
     prepared = cli.prepare_run(args, model_config=_fake_model())
     assert prepared.config.deploy_mode == "emit-ci-workflow"
+
+
+# --------------------------------------------------------------------------- #
+# Adopted vocabulary on run (blueprint-adoption-loop 2.2; Req 3.1-3.3)        #
+# --------------------------------------------------------------------------- #
+
+
+def _write_adopted_custom_ontology(project_dir: str) -> None:
+    from docuharnessx.adoption import AdoptionRecord, save_adoption
+    from docuharnessx.blueprint import BLUEPRINT_NAME, BLUEPRINT_VERSION
+
+    cfg_dir = os.path.join(project_dir, ".docuharnessx")
+    os.makedirs(cfg_dir, exist_ok=True)
+    with open(os.path.join(cfg_dir, "ontology.yaml"), "w", encoding="utf-8") as handle:
+        handle.write(
+            "roles:\n"
+            "  - id: solo\n"
+            "    label: Solo\n"
+            "    description: The only role.\n"
+            "intents:\n"
+            "  - id: read\n"
+            "    label: Read\n"
+            "    description: Read it.\n"
+            "subjects:\n"
+            '  - "topic:"\n'
+        )
+    save_adoption(
+        project_dir,
+        AdoptionRecord(
+            blueprint_name=BLUEPRINT_NAME,
+            blueprint_version=BLUEPRINT_VERSION,
+            adopted_at="2026-09-01T12:00:00+00:00",
+            sufficient=False,
+            sufficient_at=None,
+            sufficient_stale=False,
+            harness_snapshot=None,
+        ),
+    )
+
+
+def test_adopted_custom_vocabulary_used_on_run_without_roles_flag(tmp_path) -> None:
+    target = tmp_path / "repo"
+    target.mkdir()
+    _write_adopted_custom_ontology(str(target))
+    args = cli.build_parser().parse_args(
+        ["run", str(target), "--out", str(tmp_path / "out")]
+    )
+    prepared = cli.prepare_run(args, model_config=_fake_model())
+    assert prepared.used_default is False
+    assert prepared.config.roles == ("solo",)
+
+
+def test_deleting_adoption_uses_default_and_prints_not_adopted_hint(
+    tmp_path, capsys
+) -> None:
+    target = tmp_path / "repo"
+    target.mkdir()
+    _write_adopted_custom_ontology(str(target))
+    os.remove(os.path.join(str(target), ".docuharnessx", "adoption.yaml"))
+    args = cli.build_parser().parse_args(
+        ["run", str(target), "--out", str(tmp_path / "out")]
+    )
+    prepared = cli.prepare_run(args, model_config=_fake_model())
+    assert prepared.used_default is True
+    assert "developer" in prepared.config.roles
+    assert "solo" not in prepared.config.roles
+    out = capsys.readouterr().out
+    assert "dhx init" in out
+    assert "not adopted" in out.lower() or "has not adopted" in out.lower()

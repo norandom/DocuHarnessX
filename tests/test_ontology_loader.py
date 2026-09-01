@@ -30,6 +30,8 @@ from docuharnessx._ontology import (
     load_vocabulary,
     vocabulary_to_config,
 )
+from docuharnessx.adoption import AdoptionRecord, load_adoption, save_adoption
+from docuharnessx.blueprint import BLUEPRINT_NAME, BLUEPRINT_VERSION
 from docuharnessx.errors import OntologyConfigError
 from docuharnessx.ontology_loader import load_project_vocabulary
 
@@ -46,6 +48,40 @@ def _write_ontology(project_dir: str, content: str) -> str:
     return config_path
 
 
+def _write_adoption(
+    project_dir: str,
+    *,
+    blueprint_version: str = BLUEPRINT_VERSION,
+) -> None:
+    """Write a valid adoption record so the loader treats the project as adopted."""
+    save_adoption(
+        project_dir,
+        AdoptionRecord(
+            blueprint_name=BLUEPRINT_NAME,
+            blueprint_version=blueprint_version,
+            adopted_at="2026-09-01T12:00:00+00:00",
+            sufficient=False,
+            sufficient_at=None,
+            sufficient_stale=False,
+            harness_snapshot=None,
+        ),
+    )
+
+
+_CUSTOM_ONTOLOGY = (
+    "roles:\n"
+    "  - id: solo\n"
+    "    label: Solo\n"
+    "    description: The only role.\n"
+    "intents:\n"
+    "  - id: read\n"
+    "    label: Read\n"
+    "    description: Read it.\n"
+    "subjects:\n"
+    '  - "topic:"\n'
+)
+
+
 # --------------------------------------------------------------------------- #
 # Req 10.1 — a valid file loads into a Vocabulary, used_default is False.       #
 # --------------------------------------------------------------------------- #
@@ -60,6 +96,7 @@ def test_loads_valid_ontology_file_into_vocabulary(tmp_path) -> None:
     config_path = _write_ontology(
         project_dir, yaml.safe_dump(vocabulary_to_config(default_profile()))
     )
+    _write_adoption(project_dir)
     assert os.path.exists(config_path)
 
     vocab, used_default = load_project_vocabulary(project_dir)
@@ -73,19 +110,8 @@ def test_loads_valid_ontology_file_into_vocabulary(tmp_path) -> None:
 def test_custom_file_overrides_default_profile(tmp_path) -> None:
     """A non-default valid file is loaded as-is, not the default profile."""
     project_dir = str(tmp_path)
-    _write_ontology(
-        project_dir,
-        "roles:\n"
-        "  - id: solo\n"
-        "    label: Solo\n"
-        "    description: The only role.\n"
-        "intents:\n"
-        "  - id: read\n"
-        "    label: Read\n"
-        "    description: Read it.\n"
-        "subjects:\n"
-        '  - "topic:"\n',
-    )
+    _write_ontology(project_dir, _CUSTOM_ONTOLOGY)
+    _write_adoption(project_dir)
 
     vocab, used_default = load_project_vocabulary(project_dir)
 
@@ -175,3 +201,72 @@ def test_loader_defines_no_local_storage_or_schema_class() -> None:
 def test_signature_matches_design_contract() -> None:
     sig = inspect.signature(load_project_vocabulary)
     assert list(sig.parameters) == ["project_dir"]
+
+
+# --------------------------------------------------------------------------- #
+# blueprint-adoption-loop 2.2 — adopted config vs not-adopted hint (Req 3.1-3.3)
+# --------------------------------------------------------------------------- #
+
+
+def test_custom_ontology_with_adoption_is_loaded(tmp_path) -> None:
+    project_dir = str(tmp_path)
+    _write_ontology(project_dir, _CUSTOM_ONTOLOGY)
+    _write_adoption(project_dir)
+
+    vocab, used_default = load_project_vocabulary(project_dir)
+
+    assert used_default is False
+    assert [r.id for r in vocab.roles] == ["solo"]
+
+
+def test_deleting_adoption_yaml_falls_back_to_default_profile(tmp_path) -> None:
+    project_dir = str(tmp_path)
+    _write_ontology(project_dir, _CUSTOM_ONTOLOGY)
+    _write_adoption(project_dir)
+    os.remove(os.path.join(project_dir, ".docuharnessx", "adoption.yaml"))
+
+    vocab, used_default = load_project_vocabulary(project_dir)
+
+    assert used_default is True
+    assert vocab == default_profile()
+    assert [r.id for r in vocab.roles] != ["solo"]
+
+
+def test_editing_ontology_yaml_does_not_rewrite_blueprint_version(tmp_path) -> None:
+    project_dir = str(tmp_path)
+    _write_ontology(project_dir, _CUSTOM_ONTOLOGY)
+    _write_adoption(project_dir, blueprint_version="2.0.0")
+
+    _write_ontology(
+        project_dir,
+        "roles:\n"
+        "  - id: reviewer\n"
+        "    label: Reviewer\n"
+        "    description: Reviews.\n"
+        "intents:\n"
+        "  - id: read\n"
+        "    label: Read\n"
+        "    description: Read it.\n"
+        "subjects:\n"
+        '  - "topic:"\n',
+    )
+
+    vocab, used_default = load_project_vocabulary(project_dir)
+    record = load_adoption(project_dir)
+
+    assert used_default is False
+    assert [r.id for r in vocab.roles] == ["reviewer"]
+    assert record is not None
+    assert record.blueprint_version == "2.0.0"
+    assert record.blueprint_name == BLUEPRINT_NAME
+
+
+def test_invalid_ontology_still_names_the_offending_file(tmp_path) -> None:
+    project_dir = str(tmp_path)
+    _write_adoption(project_dir)
+    config_path = _write_ontology(project_dir, "not_a_known_key: true\n")
+
+    with pytest.raises(OntologyConfigError) as excinfo:
+        load_project_vocabulary(project_dir)
+
+    assert config_path in str(excinfo.value)

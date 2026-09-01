@@ -41,6 +41,7 @@ from docuharnessx._ontology import (
     default_profile,
     load_vocabulary,
 )
+from docuharnessx.adoption import load_adoption
 from docuharnessx.errors import OntologyConfigError
 from docuharnessx.ontology.errors import MalformedConfigError
 
@@ -57,10 +58,12 @@ def load_project_vocabulary(project_dir: str) -> tuple[Vocabulary, bool]:
     Returns a ``(vocabulary, used_default)`` pair (design Service Interface):
 
     * ``used_default`` is ``False`` and ``vocabulary`` is the loaded config when a
-      valid file is present (Req 10.1).
+      valid ontology file is present **and** a valid adoption record exists
+      (Req 3.1).
     * ``used_default`` is ``True`` and ``vocabulary`` is the ``ontology-engine``
-      default profile when no config file is found (Req 10.3); the caller surfaces
-      a ``dhx init`` hint on this flag.
+      default profile when the ontology file is absent, or when no adoption
+      record is present (Req 3.2, 10.3); the caller surfaces a not-adopted /
+      ``dhx init`` hint on this flag.
 
     Raises :class:`OntologyConfigError` when a *present* file fails to load
     against the ``ontology-engine`` loader (Req 10.4). A missing file is not an
@@ -88,5 +91,11 @@ def load_project_vocabulary(project_dir: str) -> tuple[Vocabulary, bool]:
         raise OntologyConfigError(
             f"invalid ontology config '{config_path}': {exc}"
         ) from exc
+
+    # No adoption record: the project has not adopted a blueprint. Keep the
+    # shipped default profile and signal the CLI to print the not-adopted hint
+    # (Req 3.2). Invalid ontology above still fails even without adoption.
+    if load_adoption(project_dir) is None:
+        return default_profile(), True
 
     return vocabulary, False

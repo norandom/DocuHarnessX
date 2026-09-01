@@ -38,7 +38,7 @@
   - _Boundary: OntologySetup_
   - _Depends: 1.1, 1.2_
 
-- [ ] 2.2 Load adopted vocabulary on run; hint when missing
+- [x] 2.2 Load adopted vocabulary on run; hint when missing
   - If `adoption.yaml` is valid, load `.docuharnessx/ontology.yaml` as today.
   - If ontology is absent, keep default_profile and print that the project has not adopted a blueprint.
   - Invalid ontology terms still fail with the named term (existing loader).

@@ -472,9 +472,9 @@ def prepare_run(
     if used_default:
         hint_stream = sys.stdout if stream is None else stream
         print(
-            "No "
-            f"{ONTOLOGY_CONFIG_RELPATH} found; using the default ontology profile. "
-            "Run 'dhx init' to customise roles/intents/subjects for this project.",
+            "This project has not adopted a blueprint; using the default ontology "
+            f"profile. Run 'dhx init' to adopt the blueprint "
+            f"(writes {ONTOLOGY_CONFIG_RELPATH}).",
             file=hint_stream,
         )
 
