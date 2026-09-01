@@ -67,7 +67,7 @@
   - _Boundary: SetupInterview_
   - _Depends: 2.1_
 
-- [ ] 2.5 (P) Setup harness produces ontology proposals
+- [x] 2.5 (P) Setup harness produces ontology proposals
   - Build a HarnessX setup harness whose writes are jailed to `.docuharnessx/` (ontology, adoption, journals).
   - It starts from the shipped blueprint, may read the repo, and **returns** proposed roles, intents, and subject prefixes. It does not commit those files until the interview accepts or edits them.
   - A scripted attempt to write outside `.docuharnessx/` is rejected. Invalid vocabulary is not committed.
