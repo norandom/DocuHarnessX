@@ -55,7 +55,7 @@
   - _Boundary: CLI_
   - _Depends: 2.1_
 
-- [ ] 2.4 Interactive credentials with DeepSeek Enter defaults
+- [x] 2.4 Interactive credentials with DeepSeek Enter defaults
   - Default `dhx init` on a terminal asks for API key, base URL, and model **before** the setup harness runs.
   - Base-URL prompt shows `https://api.deepseek.com`; empty answer uses it. Model prompt shows the shipped DeepSeek default id; empty answer uses it.
   - Existing key (env or project `.env`) is shown as `***`; empty answer or the literal `***` keeps it; never print the raw secret.

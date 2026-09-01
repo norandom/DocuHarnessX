@@ -32,6 +32,33 @@ def test_load_env_files_reads_dotenv_without_override(
     assert os.environ["OPENAI_DEFAULT_MAIN_MODEL"] == "deepseek-v4-flash"
 
 
+def test_prepare_run_loads_target_project_env(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from harnessx.core.model_config import ModelConfig
+
+    from _fakes import FakeProvider
+
+    project = tmp_path / "repo"
+    project.mkdir()
+    (project / ".env").write_text(
+        "OPENAI_API_BASE=https://api.deepseek.com\n"
+        "OPENAI_DEFAULT_MAIN_MODEL=deepseek-v4-flash\n",
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("OPENAI_API_BASE", raising=False)
+    monkeypatch.delenv("OPENAI_DEFAULT_MAIN_MODEL", raising=False)
+
+    args = cli.build_parser().parse_args(
+        ["run", str(project), "--out", str(tmp_path / "out")]
+    )
+    cli.prepare_run(args, model_config=ModelConfig(main=FakeProvider()))
+
+    assert os.environ["OPENAI_API_BASE"] == "https://api.deepseek.com"
+    assert os.environ["OPENAI_DEFAULT_MAIN_MODEL"] == "deepseek-v4-flash"
+
+
 def test_env_example_documents_deepseek_placeholders() -> None:
     example = Path(__file__).resolve().parents[1] / ".env.example"
     text = example.read_text(encoding="utf-8")

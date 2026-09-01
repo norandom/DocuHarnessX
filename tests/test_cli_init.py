@@ -162,16 +162,22 @@ def test_init_without_default_or_answers_exits_nonzero_gracefully(tmp_path, caps
 # --------------------------------------------------------------------------- #
 
 
-def test_init_interactive_gathers_roles_intents_subjects(tmp_path, capsys) -> None:
+def test_init_interactive_gathers_roles_intents_subjects(
+    tmp_path, capsys, monkeypatch
+) -> None:
     # Req 9.2: run interactively (an injected line-reader scripts the answers), so
     # `dhx init` asks which roles exist, what the intents are, and which
     # tags/subjects apply, assembles them into a Vocabulary via the ontology-engine
     # API, and writes a loadable .docuharnessx/ontology.yaml.
     project = tmp_path / "proj"
     project.mkdir()
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
 
     answers = iter(
         [
+            "",                      # API key (none present → no-model)
+            "",                      # base URL → DeepSeek default
+            "",                      # model → DeepSeek default
             "developer: Developer",  # role 1
             "maintainer",            # role 2 (id doubles as label)
             "",                      # end roles
@@ -201,6 +207,12 @@ def test_init_interactive_gathers_roles_intents_subjects(tmp_path, capsys) -> No
     assert list(vocab.subject_prefixes) == ["component:"]
     # An interactive build is NOT the default profile.
     assert vocab != default_profile()
+    env_path = project / ".env"
+    assert env_path.is_file()
+    env_text = env_path.read_text(encoding="utf-8")
+    assert "OPENAI_API_BASE=https://api.deepseek.com" in env_text
+    assert "OPENAI_DEFAULT_MAIN_MODEL=deepseek-v4-flash" in env_text
+    assert "OPENAI_API_KEY=" not in env_text
 
 
 def test_init_interactive_does_not_overwrite_without_force(tmp_path, capsys) -> None:

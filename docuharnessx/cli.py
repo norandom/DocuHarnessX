@@ -458,6 +458,9 @@ def prepare_run(
     """
     # 1. Validate the target FIRST — before any ontology/model work (Req 4.7).
     target_repo = _validate_target_repo(args.target_repo)
+    from docuharnessx.setup_interview import load_project_env
+
+    load_project_env(target_repo)
 
     # 2. Resolve the output directory (documented default when --out is omitted).
     out_dir = (
@@ -893,6 +896,16 @@ def _init_command(args: argparse.Namespace, *, input_fn: "Any" = None) -> int:
         )
         return EXIT_INIT_FAILED
 
+    ontology_path = os.path.join(project_dir, ONTOLOGY_CONFIG_RELPATH)
+    if os.path.exists(ontology_path) and not args.force:
+        print(
+            f"dhx init: ontology config already exists: '{ontology_path}' "
+            "(project already has an adopted blueprint; "
+            "pass --force to overwrite).",
+            file=sys.stderr,
+        )
+        return EXIT_INIT_FAILED
+
     answers: Any = None
     if not args.default:
         # Interactive when an input reader is injected (tests) or stdin is a TTY.
@@ -908,6 +921,12 @@ def _init_command(args: argparse.Namespace, *, input_fn: "Any" = None) -> int:
             )
             return EXIT_INIT_FAILED
         reader = input_fn if input_fn is not None else input
+        from docuharnessx.setup_interview import prompt_credentials, write_project_env
+
+        creds = prompt_credentials(
+            project_dir, input_fn=reader, out=sys.stdout, environ=os.environ
+        )
+        write_project_env(project_dir, creds)
         answers = _gather_init_answers(reader, sys.stdout)
 
     try:
