@@ -122,7 +122,7 @@
   - _Boundary: Status_
   - _Depends: 1.2, 1.3_
 
-- [ ] 4.2 Declare sufficient and stale after page changes
+- [x] 4.2 Declare sufficient and stale after page changes
   - `dhx sufficient` / `dhx sufficient --not` set flags and timestamp.
   - Integration: any successful `store.put` after a true declaration calls `mark_stale` so `sufficient_stale=True`.
   - Observable completion: declare sufficient → status shows sufficient; put a page → status shows stale until declared again.
@@ -131,7 +131,7 @@
   - _Depends: 4.1, 1.3_
 
 - [ ] 5. Wire interactive refine to living pages
-- [ ] 5.1 Bind MCP session to the living page store
+- [x] 5.1 Bind MCP session to the living page store
   - `resolve_session` opens `LivingPageStore` on the target project; do not use `<out>/segments` as source of truth.
   - List/get/validate read living pages; no-model still allows those three.
   - Keep old MCP tool names as aliases that bind to living pages. Overview tools (`draft_overview` / `refine_overview` / `get_overview`) fail closed.
@@ -140,7 +140,7 @@
   - _Boundary: RefineSession_
   - _Depends: 1.3_
 
-- [ ] 5.2 One refine cycle with guidance
+- [x] 5.2 One refine cycle with guidance
   - Reuse the explore-first writer + `validate_page_body`. Map a living `Page` to writer inputs. Add `guidance` on the question-task path if missing.
   - Do not call `AgenticProseRunner`, the structure gate, or outline fallback.
   - Fail → previous page unchanged; pass → `put` + mark sufficiency stale.
@@ -151,14 +151,14 @@
   - _Boundary: RefineHandlers_
   - _Depends: 5.1_
 
-- [ ] 5.3 Reassemble from the living store
+- [x] 5.3 Reassemble from the living store
   - Rebuild the question-organised site from `store.list()`; optional existing deploy modes when the operator asked to publish.
   - Observable completion: two living pages → home lists both titles; emit-ci-workflow still offered only when accepted ≥ 1.
   - _Requirements: 6.6, 9.1, 9.2_
   - _Boundary: RefineHandlers_
   - _Depends: 5.1_
 
-- [ ] 5.4 Multi-step refine session
+- [x] 5.4 Multi-step refine session
   - One session can run several cycles on the same page; each cycle uses the latest guidance.
   - Stop without accept leaves the living page unchanged. Record `RefineSessionStats` (cycles, accepted, steps) in the journal/report.
   - Observable completion: first cycle rejects, second accepts → store updates only after cycle 2 and stats.cycles == 2; abort after a reject → original bytes.
@@ -167,14 +167,14 @@
   - _Depends: 5.2_
 
 - [ ] 6. Guardrails and docs
-- [ ] 6.1 Guardrails: no role-intent pages, no model RL
+- [x] 6.1 Guardrails: no role-intent pages, no model RL
   - Page ids remain `{kind}:{slug}`.
   - `docuharnessx` must not import `harnessx.rl`. `harnessx.meta_harness` is allowed only from the evolve module.
   - Observable completion: a unit test fails if `harnessx.rl` is imported; existing question-id tests still reject role-intent ids.
   - _Requirements: 10.5, 11.1, 11.4_
   - _Boundary: Package_
 
-- [ ] 6.2 README adoption paragraph
+- [x] 6.2 README adoption paragraph
   - After install, one short flow: `dhx init` interview (credentials with DeepSeek Enter defaults, then ontology proposals) → adjust ontology if needed → `dhx run` / multi-step `dhx mcp` / `dhx evolve` / `dhx status` until sufficient → link to the GitHub Page.
   - Observable completion: README contains those steps, mentions `***` keep-existing for an API key, and still documents uvx release vs HEAD.
   - _Requirements: 1.5, 1.8, 3.2, 8.1, 12.2, 12.5_
@@ -182,7 +182,7 @@
   - _Depends: 2.1, 2.4, 4.1_
 
 - [ ] 7. Evolve the harness to reduce refine steps
-- [ ] 7.1 Journal refine sessions with cycle counts
+- [x] 7.1 Journal refine sessions with cycle counts
   - Persist under `<project>/.docuharnessx/journals/` (cycle count, gate accept/reject, task kind/page id). Do not put full page bodies in the operator status report.
   - Do not put secrets in journals. Journals remain eligible for version control (ignore rules already set in 1.4).
   - Observable completion: after a two-cycle accept, a journal file under `.docuharnessx/journals/` contains cycles=2 and accepted=true; `git check-ignore` on that file exits 1 (not ignored).
@@ -190,7 +190,7 @@
   - _Boundary: RefineSession_
   - _Depends: 5.4, 1.4_
 
-- [ ] 7.2 Evolution pass with comparison gate
+- [x] 7.2 Evolution pass with comparison gate
   - `dhx evolve` loads traces from the project journals path, runs `MetaAgent.evolve` on the current writer/setup config, compares cycles-to-accept, rejects candidates that drop the substance gate or fail to improve.
   - On accept, write a snapshot under `.docuharnessx/harnesses/` and point `AdoptionRecord.harness_snapshot` at it; do not rewrite living pages.
   - Insufficient traces or failure: keep current harness and report no evolution.

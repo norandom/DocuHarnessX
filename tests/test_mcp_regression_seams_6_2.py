@@ -185,6 +185,8 @@ def test_allowed_writer_files_are_the_only_composition_changes() -> None:
     assert composition_changes <= {
         "docuharnessx/composition/agent.py",
         "docuharnessx/composition/task_prompt.py",
+        "docuharnessx/composition/explore_writer.py",
+        "docuharnessx/composition/question_task.py",
     }, f"unexpected composition changes: {sorted(composition_changes)}"
 
 

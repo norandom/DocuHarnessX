@@ -71,6 +71,7 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
 
 __all__ = [
     "list_segments",
+    "list_pages",
     "get_segment",
     "validate_segment",
     "rewrite_segment",
@@ -195,21 +196,50 @@ def workspace_summary(session: "RefineSession") -> dict[str, Any]:
     }
 
 
+def _living_pages(session: "RefineSession"):
+    return getattr(session, "pages", None)
+
+
 def list_segments(session: "RefineSession") -> list[dict[str, Any]]:
-    """Enumerate the stored segments in by-id order with their targeting axes (Req 4.1).
-
-    Returns one mapping per stored segment — ``id`` / ``title`` / ``roles`` / ``intent`` /
-    ``subjects`` — in the store's deterministic **by-id** order (the store is the single
-    authority for ordering; this handler does not re-sort). The full body is **not** included
-    (that is :func:`get_segment`'s job), keeping the listing compact.
-
-    Reads only ``session.store`` — the on-disk source of truth — and consults **no model**, so
-    it is fully usable credential-free (Req 4.4, 4.5).
-    """
+    """Enumerate living pages, or stored segments when no living store is bound."""
+    store = _living_pages(session)
+    if store is not None:
+        return [
+            {
+                "id": page.id,
+                "title": page.title,
+                "subjects": list(page.subjects),
+                "summary": page.summary,
+                "roles": [],
+                "intent": "",
+            }
+            for page in store.list()
+        ]
     return [_axes(segment) for segment in session.store.list_segments()]
 
 
+list_pages = list_segments
+
+
 def get_segment(session: "RefineSession", segment_id: str) -> dict[str, Any]:
+    store = _living_pages(session)
+    if store is not None:
+        page = store.get(segment_id)
+        if page is None:
+            return _missing_segment_error(segment_id)
+        return {
+            "id": page.id,
+            "title": page.title,
+            "summary": page.summary,
+            "body": page.body,
+            "subjects": list(page.subjects),
+            "roles": [],
+            "intent": "",
+        }
+    return _get_segment_legacy(session, segment_id)
+
+
+def _get_segment_legacy(session: "RefineSession", segment_id: str) -> dict[str, Any]:
     """Return the full stored segment for ``segment_id`` (axes + summary + body) (Req 4.2).
 
     On a present id, returns the segment's ``id`` / ``title`` / ``roles`` / ``intent`` /
@@ -227,6 +257,40 @@ def get_segment(session: "RefineSession", segment_id: str) -> dict[str, Any]:
 
 
 def validate_segment(session: "RefineSession", segment_id: str) -> dict[str, Any]:
+    store = _living_pages(session)
+    if store is not None:
+        page = store.get(segment_id)
+        if page is None:
+            return _missing_segment_error(segment_id)
+        from docuharnessx.composition.substance_gate import validate_page_body
+        from docuharnessx.planning.question_model import Question, QuestionKind
+
+        kind_raw, _, slug = page.id.partition(":")
+        try:
+            kind = QuestionKind(kind_raw)
+        except ValueError:
+            kind = QuestionKind.STARTUP
+        question = Question(
+            id=page.id,
+            kind=kind,
+            title=page.title,
+            subject_name=page.subjects[0] if page.subjects else slug or page.id,
+            evidence_paths=page.cited_files,
+        )
+        verdict = validate_page_body(
+            page.body, repo_path=session.target_repo, question=question
+        )
+        return {
+            "id": page.id,
+            "accepted": verdict.accepted,
+            "cited_files": verdict.cited_files,
+            "reason": verdict.reason,
+            "mermaid_blocks": 0,
+        }
+    return _validate_segment_legacy(session, segment_id)
+
+
+def _validate_segment_legacy(session: "RefineSession", segment_id: str) -> dict[str, Any]:
     """Run the deterministic structure gate over a stored segment's body (Req 6.1).
 
     On a present id, runs :func:`~docuharnessx.composition.validate_agent_body` over the
@@ -290,6 +354,122 @@ def _replace_segment_in_place(session: "RefineSession", segment: Segment) -> Non
     path.write_text(serialize_segment(segment), encoding="utf-8")
 
 
+def _page_to_question(page: Any) -> Any:
+    from docuharnessx.planning.question_model import Question, QuestionKind
+
+    kind_raw, _, slug = str(page.id).partition(":")
+    try:
+        kind = QuestionKind(kind_raw)
+    except ValueError:
+        kind = QuestionKind.STARTUP
+    return Question(
+        id=page.id,
+        kind=kind,
+        title=page.title,
+        subject_name=page.subjects[0] if page.subjects else slug or page.id,
+        evidence_paths=page.cited_files,
+    )
+
+
+def _write_refine_journal(
+    session: "RefineSession", *, page_id: str, accepted: bool, cycles: int
+) -> None:
+    import json
+    from datetime import datetime, timezone
+
+    journal_dir = os.path.join(session.target_repo, ".docuharnessx", "journals")
+    os.makedirs(journal_dir, exist_ok=True)
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    path = os.path.join(journal_dir, f"refine-{stamp}.json")
+    payload = {
+        "kind": "refine",
+        "page_id": page_id,
+        "accepted": accepted,
+        "cycles": cycles,
+        "written_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=2)
+        handle.write("\n")
+
+
+def _rewrite_living_page(
+    session: "RefineSession", page_id: str, guidance: str = ""
+) -> dict[str, Any]:
+    store = _living_pages(session)
+    assert store is not None
+    page = store.get(page_id)
+    if page is None:
+        return _missing_segment_error(page_id)
+    model = session.model()
+    if model is None:
+        return _no_model_result()
+    session.cycles += 1
+    from docuharnessx.composition.explore_writer import write_questions
+    from docuharnessx.pages.model import Page
+
+    question = _page_to_question(page)
+    new_pages, _omissions = write_questions(
+        (question,),
+        repo_path=session.target_repo,
+        model=model,
+        guidance=guidance,
+    )
+    if not new_pages:
+        _write_refine_journal(
+            session, page_id=page_id, accepted=False, cycles=session.cycles
+        )
+        session.last_stats = {
+            "page_id": page_id,
+            "cycles": session.cycles,
+            "accepted": False,
+        }
+        return {
+            "accepted": False,
+            "id": page_id,
+            "cycles": session.cycles,
+            "guidance_echoed": False,
+        }
+    new_page = new_pages[0]
+    if guidance.strip():
+        heading = f"# {guidance.strip()}"
+        if heading in new_page.body.splitlines()[:5]:
+            _write_refine_journal(
+                session, page_id=page_id, accepted=False, cycles=session.cycles
+            )
+            return {
+                "accepted": False,
+                "id": page_id,
+                "cycles": session.cycles,
+                "guidance_echoed": True,
+            }
+    store.put(
+        Page(
+            id=page.id,
+            title=new_page.title or page.title,
+            summary=new_page.summary,
+            body=new_page.body,
+            subjects=new_page.subjects or page.subjects,
+            related=page.related,
+            cited_files=new_page.cited_files,
+        )
+    )
+    _write_refine_journal(
+        session, page_id=page_id, accepted=True, cycles=session.cycles
+    )
+    session.last_stats = {
+        "page_id": page_id,
+        "cycles": session.cycles,
+        "accepted": True,
+    }
+    return {
+        "accepted": True,
+        "id": page_id,
+        "cycles": session.cycles,
+        "guidance_echoed": False,
+    }
+
+
 # --------------------------------------------------------------------------- #
 # Re-grounded segment rewrite (capability A core; anti-slop)                  #
 # --------------------------------------------------------------------------- #
@@ -327,6 +507,10 @@ async def rewrite_segment(
     Returns a JSON-serialisable structured result; it never raises out of itself for an
     expected domain condition (the runner absorbs every agentic failure to ``None``).
     """
+    if _living_pages(session) is not None:
+        return await asyncio.to_thread(
+            _rewrite_living_page, session, segment_id, guidance
+        )
     segment = _find_segment(session, segment_id)
     if segment is None:
         return _missing_segment_error(segment_id)
@@ -512,6 +696,12 @@ async def draft_overview(session: "RefineSession") -> dict[str, Any]:
     bound returns the explicit :func:`_no_model_result` (Req 7.1, 7.3, 7.4, 7.6, 7.7). Never
     free-writes — the body comes only from the reused writer + gate (Req 9.1, 9.2).
     """
+    if _living_pages(session) is not None:
+        return {
+            "error": True,
+            "code": "unsupported",
+            "message": "overview tools fail closed on the living page store",
+        }
     return await _run_overview(session, guidance="")
 
 
@@ -528,6 +718,12 @@ async def refine_overview(
     in place, a rejected/failed run persists nothing and leaves any prior overview unchanged
     (Req 7.6), and a no-model session returns the explicit :func:`_no_model_result` (Req 7.7).
     """
+    if _living_pages(session) is not None:
+        return {
+            "error": True,
+            "code": "unsupported",
+            "message": "overview tools fail closed on the living page store",
+        }
     return await _run_overview(session, guidance=guidance)
 
 
@@ -540,6 +736,13 @@ def get_overview(session: "RefineSession") -> dict[str, Any]:
     ``exists=False`` result naming that none exists, rather than an error envelope. Consults
     **no model** and performs no network access (model-free surface; Req 7.5).
     """
+    if _living_pages(session) is not None:
+        return {
+            "error": True,
+            "code": "unsupported",
+            "exists": False,
+            "message": "overview tools fail closed on the living page store",
+        }
     segment = load_overview(_overview_store_dir(session), session.vocab)
     if segment is None:
         return {
@@ -668,6 +871,34 @@ def _overview_accepted_entry(
 
 
 def reassemble_site(session: "RefineSession") -> dict[str, Any]:
+    store = _living_pages(session)
+    if store is not None:
+        from docuharnessx.assembler.identity import (
+            read_origin_remote,
+            resolve_site_identity,
+        )
+        from docuharnessx.assembler.question_site import assemble_question_site
+
+        pages = store.list()
+        if not pages:
+            return {
+                "assembled": False,
+                "page_count": 0,
+                "message": "no living pages to assemble",
+            }
+        identity = resolve_site_identity(
+            session.target_repo, read_origin_remote(session.target_repo), {}
+        )
+        assemble_question_site(pages, identity, session.out_dir)
+        return {
+            "assembled": True,
+            "page_count": len(pages),
+            "out": session.out_dir,
+        }
+    return _reassemble_site_legacy(session)
+
+
+def _reassemble_site_legacy(session: "RefineSession") -> dict[str, Any]:
     """Rebuild the themed Material site from the live store + overview, model-free (Req 8.1-8.6).
 
     Builds a :class:`~docuharnessx.review.model.ReviewReport` whose ``accepted`` set is the

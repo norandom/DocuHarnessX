@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 from pathlib import Path
 
 from harnessx.core.model_config import ModelConfig
@@ -135,8 +136,10 @@ def test_cli_sample_without_model_writes_report_and_zero_pages(
 
     # No model_config injection and no provider env: writing is skipped, not
     # substituted with outline pages. Roles are not supplied (Req 1.4, 10.3).
+    repo = tmp_path / "repo"
+    shutil.copytree(_FIXTURE_REPO, repo)
     code = cli.main(
-        ["run", str(_FIXTURE_REPO), "--out", str(out), "--deploy-mode", "build-only"]
+        ["run", str(repo), "--out", str(out), "--deploy-mode", "build-only"]
     )
 
     assert code == 0, capsys.readouterr()
@@ -185,10 +188,12 @@ def test_cli_inspecting_fake_produces_grounded_pages_without_role_landings(
     out = tmp_path / "out"
     model_config = ModelConfig(main=ScriptedAgentProvider(body=_GROUNDED_BODY))
 
+    repo = tmp_path / "repo"
+    shutil.copytree(_FIXTURE_REPO, repo)
     code = cli.main(
         [
             "run",
-            str(_FIXTURE_REPO),
+            str(repo),
             "--out",
             str(out),
             "--deploy-mode",

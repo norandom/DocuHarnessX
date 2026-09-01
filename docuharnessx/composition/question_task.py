@@ -39,6 +39,7 @@ def build_question_task(
     max_steps: int = WRITER_MAX_STEPS,
     max_cost_usd: float = WRITER_MAX_COST_USD,
     token_budget: int = WRITER_TOKEN_BUDGET,
+    guidance: str = "",
 ) -> Any:
     """Build the bounded explore-first :class:`BaseTask` for one question.
 
@@ -58,7 +59,9 @@ def build_question_task(
         token_budget: ``BaseTask.token_budget`` cap; defaults to
             :data:`WRITER_TOKEN_BUDGET`.
     """
-    description = _render_description(question, repo_path=repo_path)
+    description = _render_description(
+        question, repo_path=repo_path, guidance=guidance
+    )
     return _make_task(
         description,
         max_steps=max_steps,
@@ -112,7 +115,9 @@ class _FallbackTask:
         self.max_cost_usd = max_cost_usd
 
 
-def _render_description(question: Question, *, repo_path: str) -> str:
+def _render_description(
+    question: Question, *, repo_path: str, guidance: str = ""
+) -> str:
     """Render the explore-first task from the question and evidence only."""
     lines: list[str] = [
         "You are answering one software question about a repository by reading "
@@ -152,4 +157,12 @@ def _render_description(question: Question, *, repo_path: str) -> str:
             "a tool call and do not promise to write it later.",
         ]
     )
+    if guidance.strip():
+        lines.extend(
+            [
+                "",
+                "Operator guidance (apply it; do not quote it as a heading):",
+                guidance.strip(),
+            ]
+        )
     return "\n".join(lines)

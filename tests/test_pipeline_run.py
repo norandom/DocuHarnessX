@@ -16,6 +16,7 @@ from __future__ import annotations
 import ast
 import inspect
 import json
+import shutil
 from pathlib import Path
 
 import pytest
@@ -59,8 +60,13 @@ def _run(
     repo_path: Path | str | None = None,
     deploy_mode: str = "build-only",
 ) -> RunOutcome:
+    if repo_path is None:
+        repo = tmp_path / "repo"
+        if not repo.exists():
+            shutil.copytree(_FIXTURE_REPO, repo)
+        repo_path = repo
     return run_pipeline(
-        repo_path=str(repo_path or _FIXTURE_REPO),
+        repo_path=str(repo_path),
         out_dir=str(tmp_path),
         model=model,
         deploy_mode=deploy_mode,

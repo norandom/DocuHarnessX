@@ -17,6 +17,7 @@ Make-or-break suite for explore-first-simplification Req 8.5 / 11.1 / 11.2 / 11.
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 
 from harnessx.core.model_config import ModelConfig
@@ -51,6 +52,12 @@ _FALLBACK_SLOGANS = (
     "smallest action",
     "fastest path for",
 )
+
+
+def _copied_repo(tmp_path: Path) -> Path:
+    dest = tmp_path / "repo"
+    shutil.copytree(_FIXTURE_REPO, dest)
+    return dest
 
 
 def _home_path(out_dir: Path) -> Path:
@@ -101,13 +108,14 @@ def test_inspecting_writer_accepts_grounded_sample_page(tmp_path: Path) -> None:
     for name in _SAMPLE_FILES:
         assert (_FIXTURE_REPO / name).is_file()
 
-    expected = plan_questions(analyze(scan(str(_FIXTURE_REPO))))
+    repo = _copied_repo(tmp_path)
+    expected = plan_questions(analyze(scan(str(repo))))
     assert expected.questions
 
     provider = ScriptedAgentProvider(body=_GROUNDED_BODY)
     outcome = run_pipeline(
-        repo_path=str(_FIXTURE_REPO),
-        out_dir=str(tmp_path),
+        repo_path=str(repo),
+        out_dir=str(tmp_path / "out"),
         model=provider,
         deploy_mode="build-only",
     )
@@ -128,15 +136,15 @@ def test_inspecting_writer_accepts_grounded_sample_page(tmp_path: Path) -> None:
     for name in real_files:
         assert (_FIXTURE_REPO / name).is_file()
 
-    home = _home_path(tmp_path)
+    home = _home_path(tmp_path / "out")
     assert home.is_file()
     home_text = home.read_text(encoding="utf-8")
     for page in outcome.pages:
         assert page.title in home_text
-    assert _page_files(tmp_path)
+    assert _page_files(tmp_path / "out")
 
-    json_text = (tmp_path / "report.json").read_text(encoding="utf-8")
-    markdown = (tmp_path / "report.md").read_text(encoding="utf-8")
+    json_text = (tmp_path / "out" / "report.json").read_text(encoding="utf-8")
+    markdown = (tmp_path / "out" / "report.md").read_text(encoding="utf-8")
     payload = json.loads(json_text)
     assert payload["planned"] == payload["accepted"] + payload["omitted"]
     assert "body" not in json.dumps(payload)
@@ -144,7 +152,7 @@ def test_inspecting_writer_accepts_grounded_sample_page(tmp_path: Path) -> None:
         assert page.body not in json_text
         assert page.body not in markdown
 
-    _assert_no_fallback_slogans(tmp_path)
+    _assert_no_fallback_slogans(tmp_path / "out")
 
 
 # --------------------------------------------------------------------------- #
@@ -155,9 +163,10 @@ def test_inspecting_writer_accepts_grounded_sample_page(tmp_path: Path) -> None:
 def test_non_inspecting_writer_omits_all_and_writes_no_slogans(
     tmp_path: Path,
 ) -> None:
+    repo = _copied_repo(tmp_path)
     outcome = run_pipeline(
-        repo_path=str(_FIXTURE_REPO),
-        out_dir=str(tmp_path),
+        repo_path=str(repo),
+        out_dir=str(tmp_path / "out"),
         model=FakeProvider(content=_OUTLINE_BODY),
         deploy_mode="build-only",
     )
@@ -174,12 +183,13 @@ def test_non_inspecting_writer_omits_all_and_writes_no_slogans(
         for omission in report.omissions
     )
 
-    assert (tmp_path / "report.json").is_file()
-    assert (tmp_path / "report.md").is_file()
-    assert _page_files(tmp_path) == []
-    assert not (tmp_path / "site").exists()
-    assert _OUTLINE_BODY not in _output_text(tmp_path)
-    _assert_no_fallback_slogans(tmp_path)
+    out = tmp_path / "out"
+    assert (out / "report.json").is_file()
+    assert (out / "report.md").is_file()
+    assert _page_files(out) == []
+    assert not (out / "site").exists()
+    assert _OUTLINE_BODY not in _output_text(out)
+    _assert_no_fallback_slogans(out)
 
 
 # --------------------------------------------------------------------------- #
@@ -207,10 +217,11 @@ def test_cli_publish_after_accepts_invokes_build_only(tmp_path: Path) -> None:
     out = tmp_path / "out"
     model_config = ModelConfig(main=ScriptedAgentProvider(body=_GROUNDED_BODY))
 
+    repo = _copied_repo(tmp_path)
     code = cli.main(
         [
             "run",
-            str(_FIXTURE_REPO),
+            str(repo),
             "--out",
             str(out),
             "--deploy-mode",
@@ -243,10 +254,11 @@ def test_cli_non_inspecting_writer_is_honest_empty(tmp_path: Path) -> None:
     out = tmp_path / "out"
     model_config = ModelConfig(main=FakeProvider(content=_OUTLINE_BODY))
 
+    repo = _copied_repo(tmp_path)
     code = cli.main(
         [
             "run",
-            str(_FIXTURE_REPO),
+            str(repo),
             "--out",
             str(out),
             "--deploy-mode",

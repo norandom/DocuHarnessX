@@ -42,6 +42,7 @@ from docuharnessx.errors import ModelResolutionError
 from docuharnessx.model_resolver import resolve_model
 from docuharnessx.ontology import FilesystemSegmentStore
 from docuharnessx.ontology_loader import load_project_vocabulary
+from docuharnessx.pages.store import FilesystemLivingPageStore, LivingPageStore
 
 # The CLI ``run`` path owns the target-validation semantics (existing directory -> absolute
 # path, else ``TargetRepoError``). The launcher reuses that exact contract before launching
@@ -82,6 +83,9 @@ class RefineSession:
     identity: "SiteIdentity"
     analysis: "RepoAnalysis | None" = None
     min_citations: int = field(default=MIN_CITED_FILES)
+    pages: LivingPageStore | None = None
+    cycles: int = 0
+    last_stats: dict[str, Any] | None = None
 
     def model(self) -> Any | None:
         """The bound agentic model — ``model_config.main`` — or ``None`` when no model.
@@ -142,6 +146,7 @@ def resolve_session(
     # 4. Provision the FilesystemSegmentStore rooted at <out>/segments — the single on-disk
     #    source of truth the batch run produced and that refine reads/writes (Req 2.3, 4.5).
     store = FilesystemSegmentStore(os.path.join(resolved_out, "segments"), vocab)
+    pages = FilesystemLivingPageStore(target)
 
     # 5. Resolve the per-target site identity from the target's origin remote — never
     #    DocuHarnessX's own identity (Req 2.4). The remote read is read-only and degrades to
@@ -174,4 +179,5 @@ def resolve_session(
         model_config=resolved_model,
         identity=identity,
         analysis=analysis,
+        pages=pages,
     )

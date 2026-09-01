@@ -33,6 +33,7 @@ def write_questions(
     *,
     repo_path: str,
     model: object | None,
+    guidance: str = "",
 ) -> tuple[tuple[Page, ...], tuple[Omission, ...]]:
     """Write one page per question or omit; never invent a substitute body.
 
@@ -59,7 +60,9 @@ def write_questions(
     pages: list[Page] = []
     omissions: list[Omission] = []
     for question in questions:
-        page = _write_one(question, repo_path=repo_path, model=model)
+        page = _write_one(
+            question, repo_path=repo_path, model=model, guidance=guidance
+        )
         if isinstance(page, Page):
             pages.append(page)
         else:
@@ -72,6 +75,7 @@ def _write_one(
     *,
     repo_path: str,
     model: object,
+    guidance: str = "",
 ) -> Page | Omission:
     """Run one bounded writer; return an accepted page or a closed-set omission."""
     try:
@@ -90,7 +94,7 @@ def _write_one(
             reason=OmissionReason.INSPECTION_IMPOSSIBLE,
         )
 
-    task = build_question_task(question, repo_path=repo_path)
+    task = build_question_task(question, repo_path=repo_path, guidance=guidance)
     try:
         body, _exit_reason, steps, _cost_usd, _tokens = _run_bounded(
             model, config, task
