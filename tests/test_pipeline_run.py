@@ -113,7 +113,9 @@ def _assert_honest_empty(out_dir: Path, report: RunReport) -> None:
 
 def test_run_pipeline_is_keyword_only() -> None:
     parameters = inspect.signature(run_pipeline).parameters
-    assert list(parameters) == ["repo_path", "out_dir", "model", "deploy_mode"]
+    assert list(parameters)[:4] == ["repo_path", "out_dir", "model", "deploy_mode"]
+    assert "regenerate_all" in parameters
+    assert "regenerate_ids" in parameters
     for parameter in parameters.values():
         assert parameter.kind is inspect.Parameter.KEYWORD_ONLY
 

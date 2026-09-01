@@ -243,6 +243,19 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     run.add_argument(
+        "--regenerate",
+        action="store_true",
+        help="Rewrite every planned living page through the writer and gate.",
+    )
+    run.add_argument(
+        "--regenerate-id",
+        dest="regenerate_ids",
+        action="append",
+        default=None,
+        metavar="ID",
+        help="Rewrite one planned living page id (repeatable).",
+    )
+    run.add_argument(
         "-v",
         "--verbose",
         action="store_true",
@@ -356,6 +369,8 @@ class PreparedRun:
     target_repo: str
     out_dir: str
     model: object | None
+    regenerate_all: bool = False
+    regenerate_ids: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -525,6 +540,8 @@ def prepare_run(
         target_repo=target_repo,
         out_dir=out_dir,
         model=model,
+        regenerate_all=bool(getattr(args, "regenerate", False)),
+        regenerate_ids=tuple(getattr(args, "regenerate_ids", None) or ()),
     )
 
 
@@ -614,6 +631,8 @@ def orchestrate_run(
         out_dir=prepared.out_dir,
         model=prepared.model,
         deploy_mode=prepared.config.deploy_mode,
+        regenerate_all=prepared.regenerate_all,
+        regenerate_ids=prepared.regenerate_ids,
     )
     try:
         _publish_if_accepted(

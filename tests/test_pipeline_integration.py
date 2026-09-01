@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import logging
+import shutil
 from pathlib import Path
 
 import pytest
@@ -53,6 +54,12 @@ _ROLE_INDEX_PHRASES = (
 )
 
 
+def _copied_repo(tmp_path: Path) -> Path:
+    dest = tmp_path / "repo"
+    shutil.copytree(_FIXTURE_REPO, dest)
+    return dest
+
+
 def _home_path(out_dir: Path) -> Path:
     return out_dir / "site" / "docs" / HOME_PAGE_PATH
 
@@ -72,13 +79,14 @@ def _report_texts(out_dir: Path) -> tuple[str, str]:
 def test_inspecting_scripted_writer_accepts_pages_and_assembles_home(
     tmp_path: Path,
 ) -> None:
-    expected = plan_questions(analyze(scan(str(_FIXTURE_REPO))))
+    repo = _copied_repo(tmp_path)
+    expected = plan_questions(analyze(scan(str(repo))))
     assert expected.questions
 
     provider = ScriptedAgentProvider(body=_GROUNDED_BODY)
     outcome = run_pipeline(
-        repo_path=str(_FIXTURE_REPO),
-        out_dir=str(tmp_path),
+        repo_path=str(repo),
+        out_dir=str(tmp_path / "out"),
         model=provider,
         deploy_mode="build-only",
     )
@@ -95,9 +103,9 @@ def test_inspecting_scripted_writer_accepts_pages_and_assembles_home(
     assert accepted_ids.isdisjoint(omitted_ids)
     assert accepted_ids | omitted_ids == set(report.questions)
 
-    page_files = list((tmp_path / "pages").glob("*.md"))
+    page_files = list((tmp_path / "out" / "pages").glob("*.md"))
     assert page_files
-    home = _home_path(tmp_path)
+    home = _home_path(tmp_path / "out")
     assert home.is_file()
     home_text = home.read_text(encoding="utf-8")
     for page in outcome.pages:
@@ -106,9 +114,9 @@ def test_inspecting_scripted_writer_accepts_pages_and_assembles_home(
     lowered_home = home_text.lower()
     for phrase in _ROLE_INDEX_PHRASES:
         assert phrase not in lowered_home, phrase
-    assert list((tmp_path / "site" / "docs").glob("*/index.md")) == []
+    assert list((tmp_path / "out" / "site" / "docs").glob("*/index.md")) == []
 
-    json_text, markdown = _report_texts(tmp_path)
+    json_text, markdown = _report_texts(tmp_path / "out")
     payload = json.loads(json_text)
     assert payload["planned"] == payload["accepted"] + payload["omitted"]
     assert "body" not in json.dumps(payload)
@@ -122,15 +130,16 @@ def test_inspecting_writer_report_stays_bounded_under_verbose_logging(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     caplog.set_level(logging.DEBUG)
+    repo = _copied_repo(tmp_path)
     provider = ScriptedAgentProvider(body=_GROUNDED_BODY)
     outcome = run_pipeline(
-        repo_path=str(_FIXTURE_REPO),
-        out_dir=str(tmp_path),
+        repo_path=str(repo),
+        out_dir=str(tmp_path / "out"),
         model=provider,
         deploy_mode="build-only",
     )
     assert outcome.report.accepted >= 1
-    json_text, markdown = _report_texts(tmp_path)
+    json_text, markdown = _report_texts(tmp_path / "out")
     payload = json.loads(json_text)
     assert set(payload) == {"planned", "accepted", "omitted", "questions", "omissions"}
     for page in outcome.pages:
@@ -141,9 +150,10 @@ def test_inspecting_writer_report_stays_bounded_under_verbose_logging(
 
 
 def test_non_inspecting_writer_omits_all_and_writes_no_site(tmp_path: Path) -> None:
+    repo = _copied_repo(tmp_path)
     outcome = run_pipeline(
-        repo_path=str(_FIXTURE_REPO),
-        out_dir=str(tmp_path),
+        repo_path=str(repo),
+        out_dir=str(tmp_path / "out"),
         model=FakeProvider(content="Locate the CLI. Run the smallest action."),
         deploy_mode="build-only",
     )
@@ -157,11 +167,12 @@ def test_non_inspecting_writer_omits_all_and_writes_no_site(tmp_path: Path) -> N
         in {OmissionReason.NOT_INSPECTED, OmissionReason.GATE_REJECTED}
         for omission in report.omissions
     )
-    assert not (tmp_path / "site").exists()
-    assert not list((tmp_path / "pages").rglob("*") if (tmp_path / "pages").exists() else [])
+    out = tmp_path / "out"
+    assert not (out / "site").exists()
+    assert not list((out / "pages").rglob("*") if (out / "pages").exists() else [])
     text = "\n".join(
         path.read_text(encoding="utf-8", errors="replace")
-        for path in tmp_path.rglob("*")
+        for path in out.rglob("*")
         if path.is_file()
     ).lower()
     for slogan in _RETIRED_SLOGANS:
@@ -174,10 +185,12 @@ def test_non_inspecting_writer_omits_all_and_writes_no_site(tmp_path: Path) -> N
 
 
 def test_no_model_run_still_zero_pages_and_reason_no_model(tmp_path: Path) -> None:
-    expected = plan_questions(analyze(scan(str(_FIXTURE_REPO))))
+    repo = _copied_repo(tmp_path)
+    expected = plan_questions(analyze(scan(str(repo))))
+    out = tmp_path / "out"
     outcome = run_pipeline(
-        repo_path=str(_FIXTURE_REPO),
-        out_dir=str(tmp_path),
+        repo_path=str(repo),
+        out_dir=str(out),
         model=None,
         deploy_mode="build-only",
     )
@@ -189,8 +202,8 @@ def test_no_model_run_still_zero_pages_and_reason_no_model(tmp_path: Path) -> No
     assert all(
         omission.reason is OmissionReason.NO_MODEL for omission in report.omissions
     )
-    assert (tmp_path / "report.json").is_file()
-    assert (tmp_path / "report.md").is_file()
-    assert not (tmp_path / "site").exists()
-    pages_dir = tmp_path / "pages"
+    assert (out / "report.json").is_file()
+    assert (out / "report.md").is_file()
+    assert not (out / "site").exists()
+    pages_dir = out / "pages"
     assert not pages_dir.exists() or list(pages_dir.rglob("*")) == []

@@ -23,6 +23,7 @@ from docuharnessx.assembler.pages import render_question_page
 from docuharnessx.assembler.question_site import assemble_question_site
 from docuharnessx.composition.explore_writer import write_questions
 from docuharnessx.pages.model import Page
+from docuharnessx.pages.store import FilesystemLivingPageStore
 from docuharnessx.pipeline.report import RunReport, write_run_report
 from docuharnessx.planning.questions import plan_questions
 
@@ -89,6 +90,8 @@ def run_pipeline(
     out_dir: str,
     model: object | None,
     deploy_mode: str,
+    regenerate_all: bool = False,
+    regenerate_ids: tuple[str, ...] = (),
 ) -> RunOutcome:
     """Run analyze → questions → write/gate → assemble/report for one repo.
 
@@ -106,12 +109,31 @@ def run_pipeline(
     inventory = scan(repo_path)
     analysis = analyze(inventory)
     plan = plan_questions(analysis)
-    pages, omissions = write_questions(
-        plan.questions, repo_path=repo_path, model=model
+    store = FilesystemLivingPageStore(repo_path)
+    regenerate = frozenset(regenerate_ids)
+    to_write = tuple(
+        question
+        for question in plan.questions
+        if regenerate_all
+        or question.id in regenerate
+        or not store.has(question.id)
+    )
+    new_pages, omissions = write_questions(
+        to_write, repo_path=repo_path, model=model
+    )
+    for page in new_pages:
+        store.put(page)
+    planned_ids = tuple(question.id for question in plan.questions)
+    planned_set = set(planned_ids)
+    pages = tuple(page for page in store.list() if page.id in planned_set)
+    kept_ids = {page.id for page in pages}
+    omissions = tuple(
+        item for item in omissions if item.question_id not in kept_ids
     )
     _log.info(
-        "pipeline write: planned=%s accepted=%s omitted=%s",
+        "pipeline write: planned=%s write=%s accepted=%s omitted=%s",
         len(plan.questions),
+        len(to_write),
         len(pages),
         len(omissions),
     )
@@ -120,7 +142,7 @@ def run_pipeline(
         planned=len(plan.questions),
         accepted=len(pages),
         omitted=len(omissions),
-        questions=tuple(question.id for question in plan.questions),
+        questions=planned_ids,
         omissions=omissions,
     )
     _persist_accepted_pages(pages, out_dir)

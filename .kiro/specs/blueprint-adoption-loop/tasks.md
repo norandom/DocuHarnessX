@@ -88,7 +88,7 @@
   - _Depends: 2.4, 2.5_
 
 - [ ] 3. Incremental generation against the living store
-- [ ] 3.1 Skip planned questions that already have a living page
+- [x] 3.1 Skip planned questions that already have a living page
   - After `plan_questions`, write only questions where `not store.has(id)` unless regenerate is requested.
   - Assemble from `store.list()` union newly accepted pages.
   - Persist accepted pages with `store.put`.
