@@ -94,7 +94,9 @@ _DESCRIPTION = (
 #: ``dhx init``, ``dhx run`` (and ``dhx mcp``) keep working. ``mcp`` is listed here so
 #: the bare-form normaliser leaves ``dhx mcp <repo>`` intact rather than rewriting it to
 #: ``run mcp <repo>`` (mcp-refine Req 1.3).
-_SUBCOMMANDS: frozenset[str] = frozenset({"run", "init", "mcp"})
+_SUBCOMMANDS: frozenset[str] = frozenset(
+    {"run", "init", "mcp", "status", "sufficient", "evolve"}
+)
 
 _log = logging.getLogger(__name__)
 
@@ -298,6 +300,53 @@ def build_parser() -> argparse.ArgumentParser:
         "--verbose",
         action="store_true",
         help="Show detailed logs (off by default).",
+    )
+
+    status = subparsers.add_parser(
+        "status",
+        help="Show documentation coverage and sufficiency for a project.",
+    )
+    status.add_argument(
+        "project_dir",
+        nargs="?",
+        default=".",
+        metavar="[project-dir]",
+        help="Project directory (default: current directory).",
+    )
+    status.add_argument(
+        "--out",
+        metavar="DIR",
+        help="Run-report directory (default: <project>/.docuharnessx/out).",
+    )
+
+    sufficient = subparsers.add_parser(
+        "sufficient",
+        help="Declare the living document sufficient, or not.",
+    )
+    sufficient.add_argument(
+        "project_dir",
+        nargs="?",
+        default=".",
+        metavar="[project-dir]",
+        help="Project directory (default: current directory).",
+    )
+    sufficient.add_argument(
+        "--not",
+        dest="not_sufficient",
+        action="store_true",
+        help="Declare the document not sufficient.",
+    )
+
+    evolve = subparsers.add_parser(
+        "evolve",
+        help="Evolve the setup/refine harness from project journals.",
+    )
+    evolve.add_argument(
+        "project_dir",
+        nargs="?",
+        default=".",
+        metavar="[project-dir]",
+        help="Project directory (default: current directory).",
     )
 
     # mcp subcommand (mcp-refine task 5.2): launch the stdio refine MCP server rooted
@@ -1037,6 +1086,47 @@ def _init_command(args: argparse.Namespace, *, input_fn: "Any" = None) -> int:
     return EXIT_OK
 
 
+def _status_command(args: argparse.Namespace) -> int:
+    """Print coverage and sufficiency. No model required."""
+    from docuharnessx.status import coverage_status, format_coverage
+
+    if not os.path.isdir(args.project_dir):
+        print(
+            "dhx status: project directory is missing or not a directory: "
+            f"{args.project_dir}",
+            file=sys.stderr,
+        )
+        return EXIT_INIT_FAILED
+    status = coverage_status(args.project_dir, out_dir=getattr(args, "out", None))
+    print(format_coverage(status), end="")
+    return EXIT_OK
+
+
+def _sufficient_command(args: argparse.Namespace) -> int:
+    """Declare the living document sufficient or not."""
+    from docuharnessx.adoption import declare_sufficient
+
+    try:
+        record = declare_sufficient(
+            args.project_dir, sufficient=not args.not_sufficient
+        )
+    except FileNotFoundError as exc:
+        print(f"dhx sufficient: {exc}", file=sys.stderr)
+        return EXIT_INIT_FAILED
+    state = "yes" if record.sufficient else "no"
+    print(f"dhx sufficient: sufficient={state}")
+    return EXIT_OK
+
+
+def _evolve_command(args: argparse.Namespace) -> int:
+    """Evolve the harness from journals (task 7.2)."""
+    from docuharnessx.evolve import evolve_project
+
+    message = evolve_project(args.project_dir)
+    print(message)
+    return EXIT_OK
+
+
 class _DropHarnessSerializationNoise(logging.Filter):
     """Drop the benign ``tool has no recorded __hx_target__`` serialization warning.
 
@@ -1210,6 +1300,12 @@ def main(
             return _init_command(args, input_fn=init_input)
         if args.command == "mcp":
             return _mcp_command(args)
+        if args.command == "status":
+            return _status_command(args)
+        if args.command == "sufficient":
+            return _sufficient_command(args)
+        if args.command == "evolve":
+            return _evolve_command(args)
         # Unknown subcommand (argparse normally guards this); report honestly.
         print(
             f"dhx {args.command}: unknown command.",

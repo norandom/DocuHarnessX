@@ -89,6 +89,9 @@ class FilesystemLivingPageStore:
     def put(self, page: Page) -> None:
         self._root.mkdir(parents=True, exist_ok=True)
         self._path_for(page.id).write_text(_serialize_page(page), encoding="utf-8")
+        from docuharnessx.adoption import mark_stale
+
+        mark_stale(str(self._root.parent.parent))
 
     def _path_for(self, page_id: str) -> Path:
         return self._root / page_filename(page_id)

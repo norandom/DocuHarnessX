@@ -13,7 +13,7 @@ through YAML including ``harness_snapshot=None``. ``adopt_project`` /
 from __future__ import annotations
 
 import os
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from typing import Any, Mapping
 
 import yaml
@@ -21,7 +21,9 @@ import yaml
 __all__ = [
     "ADOPTION_RELPATH",
     "AdoptionRecord",
+    "declare_sufficient",
     "load_adoption",
+    "mark_stale",
     "save_adoption",
 ]
 
@@ -108,3 +110,31 @@ def save_adoption(project_dir: str, record: AdoptionRecord) -> str:
     with open(path, "w", encoding="utf-8") as handle:
         yaml.safe_dump(asdict(record), handle, sort_keys=False, allow_unicode=True)
     return path
+
+
+def declare_sufficient(project_dir: str, *, sufficient: bool) -> AdoptionRecord:
+    """Record an operator sufficiency declaration on the adoption record."""
+    from datetime import datetime, timezone
+
+    record = load_adoption(project_dir)
+    if record is None:
+        raise FileNotFoundError(
+            f"no adoption record at {os.path.join(project_dir, ADOPTION_RELPATH)}"
+        )
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    updated = replace(
+        record,
+        sufficient=sufficient,
+        sufficient_at=now if sufficient else None,
+        sufficient_stale=False,
+    )
+    save_adoption(project_dir, updated)
+    return updated
+
+
+def mark_stale(project_dir: str) -> None:
+    """Mark a true sufficiency declaration stale after living pages change."""
+    record = load_adoption(project_dir)
+    if record is None or not record.sufficient or record.sufficient_stale:
+        return
+    save_adoption(project_dir, replace(record, sufficient_stale=True))

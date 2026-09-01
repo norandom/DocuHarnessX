@@ -97,7 +97,7 @@
   - _Boundary: PipelineRunner_
   - _Depends: 1.3_
 
-- [ ] 3.2 Explicit regenerate
+- [x] 3.2 Explicit regenerate
   - `--regenerate` rewrites all planned ids; `--regenerate-id ID` rewrites one.
   - Regenerated bodies still pass through the substance gate; failure keeps the previous living page.
   - Observable completion: unit/CLI test with a scripted writer: regenerate-id replaces a page only when the fake body is accepted; a rejected fake leaves the old bytes.
@@ -105,7 +105,7 @@
   - _Boundary: PipelineRunner_
   - _Depends: 3.1_
 
-- [ ] 3.3 Empty living store still has no site shell
+- [x] 3.3 Empty living store still has no site shell
   - Zero living pages after a run: no documentation site tree; status/report still written.
   - Observable completion: no-model incremental run on a project with no pages writes a report and no `docs/` role/question site shell.
   - _Requirements: 9.3_
@@ -113,7 +113,7 @@
   - _Depends: 3.1_
 
 - [ ] 4. Status and sufficiency
-- [ ] 4.1 (P) `dhx status`
+- [x] 4.1 (P) `dhx status`
   - Report adopted blueprint version or none; planned ids; living ids; omissions with reasons; missing planned ids; sufficient / not / stale.
   - Omission reasons come from the last persisted `RunReport` under the documented project out path (`<project>/.docuharnessx/out` unless `--out` was used). A planned id with no living page and no omission row is **missing**, not omitted.
   - No model required.
