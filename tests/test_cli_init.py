@@ -178,6 +178,7 @@ def test_init_interactive_gathers_roles_intents_subjects(
             "",                      # API key (none present → no-model)
             "",                      # base URL → DeepSeek default
             "",                      # model → DeepSeek default
+            "edit",                  # reject proposal; enter terms by hand
             "developer: Developer",  # role 1
             "maintainer",            # role 2 (id doubles as label)
             "",                      # end roles
@@ -335,3 +336,73 @@ def test_init_default_does_not_prompt_for_credentials_or_print_secrets(
     assert "API key" not in combined
     assert "api key" not in combined.lower()
     assert "OPENAI_API_KEY" not in combined
+
+
+def test_init_accepts_harness_proposal(tmp_path, capsys, monkeypatch) -> None:
+    from docuharnessx._ontology import load_vocabulary as load_vocab
+
+    project = tmp_path / "proj"
+    project.mkdir()
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+    custom = load_vocab(
+        {
+            "roles": [{"id": "solo", "label": "Solo", "description": "Only"}],
+            "intents": [{"id": "read", "label": "Read", "description": "Read"}],
+            "subjects": ["topic:"],
+        }
+    )
+    monkeypatch.setattr(
+        "docuharnessx.setup_harness.propose_ontology",
+        lambda *a, **k: custom,
+    )
+    monkeypatch.setattr("docuharnessx.cli._resolve_init_model", lambda: object())
+
+    answers = iter(["", "", "", "Y"])  # creds + accept
+
+    def _reader(_prompt: str = "") -> str:
+        return next(answers)
+
+    code = cli.main(["init", str(project)], init_input=_reader)
+    assert code == 0
+    vocab = load_vocabulary(_config_path(str(project)))
+    assert [r.id for r in vocab.roles] == ["solo"]
+    out = capsys.readouterr().out
+    assert "solo" in out.lower() or "Proposed ontology" in out
+    journals = list((project / ".docuharnessx" / "journals").glob("setup-*.json"))
+    assert journals, "setup journal must be written"
+    assert "developer" not in [r.id for r in vocab.roles]
+
+
+def test_init_manage_does_not_touch_living_pages(tmp_path, monkeypatch) -> None:
+    from docuharnessx.pages.model import Page
+    from docuharnessx.pages.store import FilesystemLivingPageStore
+
+    project = tmp_path / "proj"
+    project.mkdir()
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    assert cli.main(["init", str(project), "--default"]) == 0
+    store = FilesystemLivingPageStore(str(project))
+    page = Page(
+        id="how:start",
+        title="How it starts",
+        summary="s",
+        body="body",
+        subjects=("component:",),
+        related=(),
+        cited_files=(),
+    )
+    store.put(page)
+    page_path = next((project / ".docuharnessx" / "pages").glob("*.md"))
+    original = page_path.read_bytes()
+
+    answers = iter(["", "", "", "edit", "solo", "", "read", "", "topic", ""])
+
+    def _reader(_prompt: str = "") -> str:
+        return next(answers)
+
+    code = cli.main(["init", str(project), "--manage"], init_input=_reader)
+    assert code == 0
+    assert page_path.read_bytes() == original
+    vocab = load_vocabulary(_config_path(str(project)))
+    assert [r.id for r in vocab.roles] == ["solo"]

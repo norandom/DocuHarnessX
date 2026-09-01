@@ -99,6 +99,22 @@ def test_empty_key_with_none_present_does_not_write_blank_secret(tmp_path: Path)
     assert f"OPENAI_DEFAULT_MAIN_MODEL={DEEPSEEK_DEFAULT_MODEL_ID}" in text
 
 
+def test_confirm_ontology_proposal_accept_and_edit(tmp_path: Path) -> None:
+    import io
+
+    from docuharnessx._ontology import default_profile
+    from docuharnessx.setup_interview import confirm_ontology_proposal, format_ontology_proposal
+
+    vocab = default_profile()
+    text = format_ontology_proposal(vocab)
+    assert "roles:" in text
+    out = io.StringIO()
+    assert confirm_ontology_proposal(vocab, input_fn=lambda p: "", out=out) is True
+    assert "Proposed ontology" in out.getvalue()
+    out = io.StringIO()
+    assert confirm_ontology_proposal(vocab, input_fn=lambda p: "edit", out=out) is False
+
+
 def test_write_project_env_is_gitignored(tmp_path: Path) -> None:
     from docuharnessx.setup_interview import CredentialAnswers
 

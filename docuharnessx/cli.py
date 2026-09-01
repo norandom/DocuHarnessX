@@ -276,6 +276,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Overwrite an existing ontology file.",
     )
     init.add_argument(
+        "--manage",
+        action="store_true",
+        help="Re-run the ontology interview without touching living pages.",
+    )
+    init.add_argument(
         "-v",
         "--verbose",
         action="store_true",
@@ -834,6 +839,34 @@ def _prompt_subjects(input_fn: "Any", out: Any) -> list[str]:
     return subjects
 
 
+def _vocabulary_to_init_answers(vocab: Any) -> dict[str, Any]:
+    """Turn a proposed :class:`Vocabulary` into ``run_init`` answers."""
+    return {
+        "roles": [
+            {"id": term.id, "label": term.label, "description": term.description}
+            for term in vocab.roles
+        ],
+        "intents": [
+            {"id": term.id, "label": term.label, "description": term.description}
+            for term in vocab.intents
+        ],
+        "subjects": list(vocab.subject_prefixes),
+    }
+
+
+def _resolve_init_model() -> Any:
+    """Return a usable model for the setup harness, or None."""
+    try:
+        from docuharnessx.model_resolver import resolve_model
+
+        resolved = resolve_model(None)
+    except Exception:
+        return None
+    if resolved is None:
+        return None
+    return getattr(resolved, "main", resolved)
+
+
 def _gather_init_answers(input_fn: "Any", out: Any) -> dict[str, Any]:
     """Gather the operator's interactive ``dhx init`` answers (Req 9.2).
 
@@ -897,7 +930,9 @@ def _init_command(args: argparse.Namespace, *, input_fn: "Any" = None) -> int:
         return EXIT_INIT_FAILED
 
     ontology_path = os.path.join(project_dir, ONTOLOGY_CONFIG_RELPATH)
-    if os.path.exists(ontology_path) and not args.force:
+    if os.path.exists(ontology_path) and not args.force and not getattr(
+        args, "manage", False
+    ):
         print(
             f"dhx init: ontology config already exists: '{ontology_path}' "
             "(project already has an adopted blueprint; "
@@ -921,19 +956,36 @@ def _init_command(args: argparse.Namespace, *, input_fn: "Any" = None) -> int:
             )
             return EXIT_INIT_FAILED
         reader = input_fn if input_fn is not None else input
-        from docuharnessx.setup_interview import prompt_credentials, write_project_env
+        from docuharnessx._ontology import default_profile
+        from docuharnessx.setup_harness import propose_ontology
+        from docuharnessx.setup_interview import (
+            confirm_ontology_proposal,
+            prompt_credentials,
+            write_project_env,
+            write_setup_journal,
+        )
 
         creds = prompt_credentials(
             project_dir, input_fn=reader, out=sys.stdout, environ=os.environ
         )
         write_project_env(project_dir, creds)
-        answers = _gather_init_answers(reader, sys.stdout)
+        proposal = default_profile()
+        model = _resolve_init_model()
+        if model is not None:
+            try:
+                proposal = propose_ontology(project_dir, model=model)
+            except Exception:
+                proposal = default_profile()
+        if confirm_ontology_proposal(proposal, input_fn=reader, out=sys.stdout):
+            answers = _vocabulary_to_init_answers(proposal)
+        else:
+            answers = _gather_init_answers(reader, sys.stdout)
 
     try:
         written = run_init(
             args.project_dir,
             use_default=args.default,
-            force=args.force,
+            force=args.force or getattr(args, "manage", False),
             answers=answers,
         )
     except FileExistsError as exc:
@@ -953,6 +1005,16 @@ def _init_command(args: argparse.Namespace, *, input_fn: "Any" = None) -> int:
     print(f"dhx init: blueprint version: {BLUEPRINT_VERSION}")
     if args.default:
         print("dhx init: ontology was not agent-managed")
+    if not args.default:
+        from docuharnessx.setup_interview import write_setup_journal
+        from docuharnessx._ontology import load_vocabulary
+
+        vocab = load_vocabulary(written)
+        write_setup_journal(
+            project_dir,
+            accepted=True,
+            role_ids=tuple(r.id for r in vocab.roles),
+        )
     return EXIT_OK
 
 

@@ -76,7 +76,7 @@
   - _Boundary: SetupHarness_
   - _Depends: 2.1_
 
-- [ ] 2.6 Display proposals, accept or edit, then write
+- [x] 2.6 Display proposals, accept or edit, then write
   - Integration task: wire SetupInterview (2.4) to SetupHarness (2.5) and persist the agreed ontology.
   - After credentials (2.4) and harness proposals (2.5), interactive setup **displays** proposed roles, intents, and subjects and waits for accept or edit before writing.
   - Accept persists the proposal. Edit persists the operator's term if the ontology accepts it (including a subset of proposed terms). Invalid vocabulary is not committed.

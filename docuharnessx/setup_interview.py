@@ -16,9 +16,12 @@ __all__ = [
     "DEEPSEEK_DEFAULT_BASE_URL",
     "DEEPSEEK_DEFAULT_MODEL_ID",
     "CredentialAnswers",
+    "confirm_ontology_proposal",
+    "format_ontology_proposal",
     "load_project_env",
     "prompt_credentials",
     "write_project_env",
+    "write_setup_journal",
 ]
 
 DEEPSEEK_DEFAULT_BASE_URL = "https://api.deepseek.com"
@@ -122,3 +125,52 @@ def load_project_env(project_dir: str) -> None:
     env_path = Path(project_dir) / ".env"
     if env_path.is_file():
         load_dotenv(env_path, override=False)
+
+
+def format_ontology_proposal(vocab: Any) -> str:
+    """Pretty-print proposed roles, intents, and subject prefixes."""
+    roles = ", ".join(f"{r.id} ({r.label})" for r in vocab.roles) or "(none)"
+    intents = ", ".join(f"{i.id} ({i.label})" for i in vocab.intents) or "(none)"
+    subjects = ", ".join(vocab.subject_prefixes) or "(none)"
+    return (
+        "Proposed ontology:\n"
+        f"  roles: {roles}\n"
+        f"  intents: {intents}\n"
+        f"  subjects: {subjects}\n"
+    )
+
+
+def confirm_ontology_proposal(
+    vocab: Any,
+    *,
+    input_fn: Any,
+    out: TextIO,
+) -> bool:
+    """Display ``vocab`` and return True to accept, False to edit."""
+    print(format_ontology_proposal(vocab), file=out, end="")
+    raw = input_fn("Accept these terms? [Y/edit]: ").strip().lower()
+    return raw in ("", "y", "yes")
+
+
+def write_setup_journal(
+    project_dir: str,
+    *,
+    accepted: bool,
+    role_ids: tuple[str, ...],
+) -> str:
+    """Write a setup journal under ``.docuharnessx/journals/``. Returns the path."""
+    import json
+    from datetime import datetime, timezone
+
+    journal_dir = Path(project_dir) / ".docuharnessx" / "journals"
+    journal_dir.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    path = journal_dir / f"setup-{stamp}.json"
+    payload = {
+        "kind": "setup",
+        "accepted": accepted,
+        "roles": list(role_ids),
+        "written_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return str(path)
