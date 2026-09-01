@@ -113,6 +113,33 @@ def test_init_force_overwrites_existing_file(tmp_path) -> None:
 # --------------------------------------------------------------------------- #
 
 
+def test_init_missing_project_dir_exits_nonzero_and_writes_nothing(
+    tmp_path, capsys
+) -> None:
+    missing = tmp_path / "no" / "such" / "dir"
+    assert not missing.exists()
+
+    code = cli.main(["init", str(missing), "--default"])
+
+    assert code != 0
+    combined = capsys.readouterr()
+    message = combined.out + combined.err
+    assert str(missing) in message
+    assert not missing.exists()
+    assert not (missing / ".docuharnessx").exists()
+
+
+def test_init_project_path_that_is_a_file_exits_nonzero(tmp_path, capsys) -> None:
+    target = tmp_path / "not-a-dir"
+    target.write_text("x", encoding="utf-8")
+
+    code = cli.main(["init", str(target), "--default"])
+
+    assert code != 0
+    assert not (target.parent / ".docuharnessx").exists()
+    assert target.is_file()
+
+
 def test_init_without_default_or_answers_exits_nonzero_gracefully(tmp_path, capsys) -> None:
     # Without --default (and with no interactive answer source: non-TTY, no injected
     # reader), there is nothing to build. The CLI must fail gracefully with a

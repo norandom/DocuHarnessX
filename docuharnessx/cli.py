@@ -884,6 +884,15 @@ def _init_command(args: argparse.Namespace, *, input_fn: "Any" = None) -> int:
     from docuharnessx.blueprint import BLUEPRINT_VERSION
     from docuharnessx.ontology_setup import run_init
 
+    project_dir = args.project_dir
+    if not os.path.isdir(project_dir):
+        print(
+            "dhx init: project directory is missing or not a directory: "
+            f"{project_dir}",
+            file=sys.stderr,
+        )
+        return EXIT_INIT_FAILED
+
     answers: Any = None
     if not args.default:
         # Interactive when an input reader is injected (tests) or stdin is a TTY.

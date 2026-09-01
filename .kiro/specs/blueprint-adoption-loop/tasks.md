@@ -48,7 +48,7 @@
   - _Boundary: OntologyLoader_
   - _Depends: 2.1_
 
-- [ ] 2.3 Refuse adopt on a bad target path
+- [x] 2.3 Refuse adopt on a bad target path
   - Missing or non-directory project path: non-zero exit, no files written.
   - Observable completion: `dhx init /no/such/dir` exits non-zero and creates no `.docuharnessx`.
   - _Requirements: 1.3_
