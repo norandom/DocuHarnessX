@@ -15,7 +15,7 @@
   - _Boundary: Adoption_
   - _Depends: 1.1_
 
-- [ ] 1.3 (P) Living page store on the target project
+- [x] 1.3 (P) Living page store on the target project
   - Add `LivingPageStore` protocol + filesystem adapter at `<project>/.docuharnessx/pages/` using existing `page_filename` / question-page frontmatter.
   - Operations: `list`, `get`, `has`, `put`.
   - Observable completion: a unit test puts a sample `Page`, lists it by id, gets equal fields, and `has` is true; missing id returns a documented empty/miss result (no crash).
