@@ -29,5 +29,6 @@ htmlcov/
 /site/
 /_docs_out/
 
-# DocuHarnessX generated per-project ontology config (written by `dhx init`)
-.docuharnessx/
+# Throwaway assemble/report output. Journals, living pages, ontology,
+# adoption record, and harness snapshots stay eligible for version control.
+.docuharnessx/out/

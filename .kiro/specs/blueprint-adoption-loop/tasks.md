@@ -22,7 +22,7 @@
   - _Requirements: 5.1, 5.3_
   - _Boundary: LivingPageStore_
 
-- [ ] 1.4 (P) Track the project documentation store in git
+- [x] 1.4 (P) Track the project documentation store in git
   - Remove the blanket `.docuharnessx/` ignore. Keep `.env` ignored. Ignore only throwaway `.docuharnessx/out/`.
   - Journals, living pages, ontology, adoption record, and harness snapshots remain eligible for version control.
   - Observable completion: `git check-ignore -q .env` exits 0; `git check-ignore -q .docuharnessx/journals/example.jsonl` exits 1; `git check-ignore -q .docuharnessx/out/report.json` exits 0.
