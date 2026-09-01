@@ -7,7 +7,7 @@
   - _Requirements: 1.2, 10.1_
   - _Boundary: Blueprint_
 
-- [ ] 1.2 Define and round-trip the adoption record
+- [x] 1.2 Define and round-trip the adoption record
   - Add `AdoptionRecord` and load/save for `.docuharnessx/adoption.yaml` (blueprint name/version, adopted_at, sufficient, sufficient_at, sufficient_stale, nullable `harness_snapshot`).
   - Do not put these fields in `ontology.yaml`.
   - Observable completion: a unit test writes a record including `harness_snapshot=None`, loads it equal, and a missing file returns `None` rather than raising.
