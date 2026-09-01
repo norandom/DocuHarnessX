@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. Foundation: blueprint identity, adoption record, living page store
+- [x] 1. Foundation: blueprint identity, adoption record, living page store
 - [x] 1.1 (P) Ship the named blueprint version
   - Add `docuharnessx/blueprint.py` with `BLUEPRINT_NAME` and `BLUEPRINT_VERSION` (package-shipped contract, bumped only when the default vocabulary/page contract the operator adopts changes).
   - Observable completion: `import docuharnessx.blueprint` exposes both constants as non-empty strings; a unit test asserts the name is stable (`docuharnessx-default`).
@@ -29,7 +29,7 @@
   - _Requirements: 12.6, 13.2, 13.3_
   - _Boundary: ProjectStore_
 
-- [ ] 2. Adopt and adjust
+- [x] 2. Adopt and adjust
 - [x] 2.1 No-model / `--default` setup still seeds the blueprint
   - `dhx init --default` or init with no model dumps shipped `default_profile`, writes `AdoptionRecord` with `BLUEPRINT_VERSION`, `sufficient=False`.
   - Refuse overwrite without `--force`. Print paths and blueprint version. Do not prompt for credentials or print secrets.
@@ -87,7 +87,7 @@
   - _Boundary: SetupInterview_
   - _Depends: 2.4, 2.5_
 
-- [ ] 3. Incremental generation against the living store
+- [x] 3. Incremental generation against the living store
 - [x] 3.1 Skip planned questions that already have a living page
   - After `plan_questions`, write only questions where `not store.has(id)` unless regenerate is requested.
   - Assemble from `store.list()` union newly accepted pages.
@@ -112,7 +112,7 @@
   - _Boundary: PipelineRunner_
   - _Depends: 3.1_
 
-- [ ] 4. Status and sufficiency
+- [x] 4. Status and sufficiency
 - [x] 4.1 (P) `dhx status`
   - Report adopted blueprint version or none; planned ids; living ids; omissions with reasons; missing planned ids; sufficient / not / stale.
   - Omission reasons come from the last persisted `RunReport` under the documented project out path (`<project>/.docuharnessx/out` unless `--out` was used). A planned id with no living page and no omission row is **missing**, not omitted.
@@ -130,7 +130,7 @@
   - _Boundary: Adoption_
   - _Depends: 4.1, 1.3_
 
-- [ ] 5. Wire interactive refine to living pages
+- [x] 5. Wire interactive refine to living pages
 - [x] 5.1 Bind MCP session to the living page store
   - `resolve_session` opens `LivingPageStore` on the target project; do not use `<out>/segments` as source of truth.
   - List/get/validate read living pages; no-model still allows those three.
@@ -166,7 +166,7 @@
   - _Boundary: RefineSession_
   - _Depends: 5.2_
 
-- [ ] 6. Guardrails and docs
+- [x] 6. Guardrails and docs
 - [x] 6.1 Guardrails: no role-intent pages, no model RL
   - Page ids remain `{kind}:{slug}`.
   - `docuharnessx` must not import `harnessx.rl`. `harnessx.meta_harness` is allowed only from the evolve module.
@@ -181,7 +181,7 @@
   - _Boundary: Docs_
   - _Depends: 2.1, 2.4, 4.1_
 
-- [ ] 7. Evolve the harness to reduce refine steps
+- [x] 7. Evolve the harness to reduce refine steps
 - [x] 7.1 Journal refine sessions with cycle counts
   - Persist under `<project>/.docuharnessx/journals/` (cycle count, gate accept/reject, task kind/page id). Do not put full page bodies in the operator status report.
   - Do not put secrets in journals. Journals remain eligible for version control (ignore rules already set in 1.4).
