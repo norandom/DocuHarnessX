@@ -1,7 +1,7 @@
 # Implementation Plan
 
 - [ ] 1. Foundation: blueprint identity, adoption record, living page store
-- [ ] 1.1 (P) Ship the named blueprint version
+- [x] 1.1 (P) Ship the named blueprint version
   - Add `docuharnessx/blueprint.py` with `BLUEPRINT_NAME` and `BLUEPRINT_VERSION` (package-shipped contract, bumped only when the default vocabulary/page contract the operator adopts changes).
   - Observable completion: `import docuharnessx.blueprint` exposes both constants as non-empty strings; a unit test asserts the name is stable (`docuharnessx-default`).
   - _Requirements: 1.2, 10.1_
