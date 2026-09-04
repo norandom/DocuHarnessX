@@ -9,13 +9,13 @@ Requires [uv](https://docs.astral.sh/uv/) and Python 3.12+.
 ## Release (`uvx`)
 
 ```bash
-uvx --python 3.12 --from git+https://github.com/norandom/DocuHarnessX.git@v2.0.0 dhx --help
+uvx --python 3.12 --from git+https://github.com/norandom/DocuHarnessX.git@v3.0.0 dhx --help
 ```
 
 Install onto `PATH`:
 
 ```bash
-uv tool install --python 3.12 git+https://github.com/norandom/DocuHarnessX.git@v2.0.0
+uv tool install --python 3.12 git+https://github.com/norandom/DocuHarnessX.git@v3.0.0
 dhx --help
 ```
 
@@ -71,7 +71,7 @@ From a release tag:
 # .pre-commit-config.yaml — or: dhx install-hooks --pre-commit
 repos:
   - repo: https://github.com/norandom/DocuHarnessX
-    rev: v2.0.0
+    rev: v3.0.0
     hooks:
       - id: dhx
 ```
@@ -98,7 +98,7 @@ GitHub Settings → Secrets and variables → Actions:
 
 If the variables are unset, CI defaults to DeepSeek. Do not put the API key in Variables — it is not masked.
 
-The reusable workflow is `norandom/DocuHarnessX/.github/workflows/adopt.yml@v2.0.0`. This repository dogfoods it via `.github/workflows/dhx.yml` (same-commit checkout). On each source push it runs incremental `dhx ci` and commits MkDocs / living pages with a `[dhx]` message. GitHub Pages still builds from `docs.yml`.
+The reusable workflow is `norandom/DocuHarnessX/.github/workflows/adopt.yml@v3.0.0`. This repository dogfoods it via `.github/workflows/dhx.yml` (same-commit checkout). On each source push it runs incremental `dhx ci` and commits MkDocs / living pages with a `[dhx]` message. GitHub Pages still builds from `docs.yml`.
 
 ### Evolution when agents commit code
 

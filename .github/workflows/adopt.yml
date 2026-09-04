@@ -3,7 +3,7 @@
 # Or copy:
 #   jobs:
 #     adopt:
-#       uses: norandom/DocuHarnessX/.github/workflows/adopt.yml@v2.0.0
+#       uses: norandom/DocuHarnessX/.github/workflows/adopt.yml@v3.0.0
 #       secrets:
 #         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 #       with:
@@ -32,7 +32,7 @@ on:
       dhx_ref:
         description: DocuHarnessX git ref for uvx when source=git
         type: string
-        default: v2.0.0
+        default: v3.0.0
       source:
         description: git (uvx from GitHub at dhx_ref) or checkout (this working tree)
         type: string

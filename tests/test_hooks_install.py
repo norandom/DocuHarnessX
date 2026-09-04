@@ -27,7 +27,7 @@ def test_install_pre_commit_config(tmp_path: Path) -> None:
     text = path.read_text(encoding="utf-8")
     assert HOOK_ID in text
     assert "github.com/norandom/DocuHarnessX" in text
-    assert "rev: v2.0.0" in text
+    assert "rev: v3.0.0" in text
     # Second install without force is a no-op when already present.
     assert install_pre_commit_config(str(tmp_path)) == str(path)
 
@@ -52,7 +52,7 @@ def test_install_ci_workflow(tmp_path: Path) -> None:
     path = Path(install_ci_workflow(str(tmp_path), evolve="pr"))
     assert path.as_posix().endswith(CONSUMER_WORKFLOW_RELPATH)
     text = path.read_text(encoding="utf-8")
-    assert "norandom/DocuHarnessX/.github/workflows/adopt.yml@v2.0.0" in text
+    assert "norandom/DocuHarnessX/.github/workflows/adopt.yml@v3.0.0" in text
     assert "evolve: pr" in text
     assert "secrets.OPENAI_API_KEY" in text
     assert "vars.OPENAI_API_BASE" in text

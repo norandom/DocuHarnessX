@@ -1,5 +1,5 @@
 # Dogfood the reusable adopt workflow on this repository.
-# Consumers should run `dhx install-ci` (pins norandom/DocuHarnessX@v2.0.0).
+# Consumers should run `dhx install-ci` (pins norandom/DocuHarnessX@v3.0.0).
 # This file uses the workflow in the same commit and installs dhx from checkout.
 name: DocuHarnessX
 on:
