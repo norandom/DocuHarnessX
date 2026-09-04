@@ -78,10 +78,19 @@ pre-commit install
 
 ```bash
 dhx install-ci                   # writes .github/workflows/dhx.yml
-# store OPENAI_API_KEY (and optional OPENAI_API_BASE) as Actions secrets
 ```
 
-The reusable workflow is `norandom/DocuHarnessX/.github/workflows/adopt.yml@v2.0.0`. On each source push it runs incremental `dhx ci` and commits MkDocs / living pages with a `[dhx]` message. GitHub Pages still builds from `docs.yml`.
+GitHub Settings → Secrets and variables → Actions:
+
+| Name | Where | Example |
+|---|---|---|
+| `OPENAI_API_KEY` | **Secret** (not a variable) | DeepSeek key |
+| `OPENAI_API_BASE` | Variable | `https://api.deepseek.com` |
+| `OPENAI_DEFAULT_MAIN_MODEL` | Variable | `deepseek-v4-flash` |
+
+If the variables are unset, CI defaults to DeepSeek. Do not put the API key in Variables — it is not masked.
+
+The reusable workflow is `norandom/DocuHarnessX/.github/workflows/adopt.yml@v2.0.0`. This repository dogfoods it via `.github/workflows/dhx.yml` (same-commit checkout). On each source push it runs incremental `dhx ci` and commits MkDocs / living pages with a `[dhx]` message. GitHub Pages still builds from `docs.yml`.
 
 ### Evolution when agents commit code
 

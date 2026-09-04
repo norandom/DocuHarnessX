@@ -34,11 +34,11 @@ jobs:
     uses: norandom/DocuHarnessX/.github/workflows/adopt.yml@{pin}
     secrets:
       OPENAI_API_KEY: ${{{{ secrets.OPENAI_API_KEY }}}}
-      OPENAI_API_BASE: ${{{{ secrets.OPENAI_API_BASE }}}}
-      OPENAI_DEFAULT_MAIN_MODEL: ${{{{ secrets.OPENAI_DEFAULT_MAIN_MODEL }}}}
     with:
       evolve: {evolve_mode}
       dhx_ref: {pin}
+      openai_api_base: ${{{{ vars.OPENAI_API_BASE || 'https://api.deepseek.com' }}}}
+      openai_default_main_model: ${{{{ vars.OPENAI_DEFAULT_MAIN_MODEL || 'deepseek-v4-flash' }}}}
 """
 
 

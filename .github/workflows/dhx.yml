@@ -1,0 +1,21 @@
+# Dogfood the reusable adopt workflow on this repository.
+# Consumers should run `dhx install-ci` (pins norandom/DocuHarnessX@v2.0.0).
+# This file uses the workflow in the same commit and installs dhx from checkout.
+name: DocuHarnessX
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  adopt:
+    uses: ./.github/workflows/adopt.yml
+    secrets:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    with:
+      evolve: pr
+      source: checkout
+      openai_api_base: ${{ vars.OPENAI_API_BASE || 'https://api.deepseek.com' }}
+      openai_default_main_model: ${{ vars.OPENAI_DEFAULT_MAIN_MODEL || 'deepseek-v4-flash' }}

@@ -53,12 +53,29 @@ def test_install_ci_workflow(tmp_path: Path) -> None:
     text = path.read_text(encoding="utf-8")
     assert "norandom/DocuHarnessX/.github/workflows/adopt.yml@v2.0.0" in text
     assert "evolve: pr" in text
+    assert "secrets.OPENAI_API_KEY" in text
+    assert "vars.OPENAI_API_BASE" in text
+    assert "vars.OPENAI_DEFAULT_MAIN_MODEL" in text
+    assert "secrets.OPENAI_API_BASE" not in text
+    assert "secrets.OPENAI_DEFAULT_MAIN_MODEL" not in text
     try:
         install_ci_workflow(str(tmp_path))
     except FileExistsError:
         pass
     else:
         raise AssertionError("expected FileExistsError")
+
+
+def test_this_repo_dogfoods_adopt_from_checkout() -> None:
+    text = (
+        Path(__file__).resolve().parents[1] / ".github" / "workflows" / "dhx.yml"
+    ).read_text(encoding="utf-8")
+    assert "uses: ./.github/workflows/adopt.yml" in text
+    assert "source: checkout" in text
+    assert "secrets.OPENAI_API_KEY" in text
+    assert "vars.OPENAI_API_BASE" in text
+    assert "vars.OPENAI_DEFAULT_MAIN_MODEL" in text
+    assert "secrets.OPENAI_API_BASE" not in text
 
 
 def test_hook_runner_skips_without_key_and_does_not_generate(tmp_path: Path) -> None:

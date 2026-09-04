@@ -4,6 +4,16 @@
 #   jobs:
 #     adopt:
 #       uses: norandom/DocuHarnessX/.github/workflows/adopt.yml@v2.0.0
+#       secrets:
+#         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+#       with:
+#         openai_api_base: ${{ vars.OPENAI_API_BASE }}
+#         openai_default_main_model: ${{ vars.OPENAI_DEFAULT_MAIN_MODEL }}
+#
+# Credentials:
+# - OPENAI_API_KEY is a repository *secret* (never a variable).
+# - Base URL and model are inputs, typically from repository *variables*.
+#   Unset/empty inputs default to DeepSeek.
 #
 # Evolution design (agents that commit code):
 # - Generation and evolve are separate jobs.
@@ -20,15 +30,23 @@ on:
         type: string
         default: pr
       dhx_ref:
-        description: DocuHarnessX git ref for uvx
+        description: DocuHarnessX git ref for uvx when source=git
         type: string
         default: v2.0.0
+      source:
+        description: git (uvx from GitHub at dhx_ref) or checkout (this working tree)
+        type: string
+        default: git
+      openai_api_base:
+        description: OpenAI-compatible base URL (repo variable; not a secret)
+        type: string
+        default: https://api.deepseek.com
+      openai_default_main_model:
+        description: Model id (repo variable; not a secret)
+        type: string
+        default: deepseek-v4-flash
     secrets:
       OPENAI_API_KEY:
-        required: false
-      OPENAI_API_BASE:
-        required: false
-      OPENAI_DEFAULT_MAIN_MODEL:
         required: false
 
 jobs:
@@ -47,12 +65,17 @@ jobs:
       - name: Incremental living docs
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
-          OPENAI_DEFAULT_MAIN_MODEL: ${{ secrets.OPENAI_DEFAULT_MAIN_MODEL }}
-        run: >
-          uvx --python 3.12
-          --from "git+https://github.com/norandom/DocuHarnessX.git@${{ inputs.dhx_ref }}"
-          dhx ci .
+          OPENAI_API_BASE: ${{ inputs.openai_api_base != '' && inputs.openai_api_base || 'https://api.deepseek.com' }}
+          OPENAI_DEFAULT_MAIN_MODEL: ${{ inputs.openai_default_main_model != '' && inputs.openai_default_main_model || 'deepseek-v4-flash' }}
+          DHX_SOURCE: ${{ inputs.source }}
+          DHX_REF: ${{ inputs.dhx_ref }}
+        run: |
+          set -euo pipefail
+          if [ "$DHX_SOURCE" = "checkout" ]; then
+            uvx --python 3.12 --from . dhx ci .
+          else
+            uvx --python 3.12 --from "git+https://github.com/norandom/DocuHarnessX.git@${DHX_REF}" dhx ci .
+          fi
       - name: Commit MkDocs if needed
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
@@ -91,12 +114,17 @@ jobs:
         if: steps.journals.outputs.changed == 'true'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
-          OPENAI_DEFAULT_MAIN_MODEL: ${{ secrets.OPENAI_DEFAULT_MAIN_MODEL }}
-        run: >
-          uvx --python 3.12
-          --from "git+https://github.com/norandom/DocuHarnessX.git@${{ inputs.dhx_ref }}"
-          dhx evolve .
+          OPENAI_API_BASE: ${{ inputs.openai_api_base != '' && inputs.openai_api_base || 'https://api.deepseek.com' }}
+          OPENAI_DEFAULT_MAIN_MODEL: ${{ inputs.openai_default_main_model != '' && inputs.openai_default_main_model || 'deepseek-v4-flash' }}
+          DHX_SOURCE: ${{ inputs.source }}
+          DHX_REF: ${{ inputs.dhx_ref }}
+        run: |
+          set -euo pipefail
+          if [ "$DHX_SOURCE" = "checkout" ]; then
+            uvx --python 3.12 --from . dhx evolve .
+          else
+            uvx --python 3.12 --from "git+https://github.com/norandom/DocuHarnessX.git@${DHX_REF}" dhx evolve .
+          fi
       - name: Open evolve PR
         if: steps.journals.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6

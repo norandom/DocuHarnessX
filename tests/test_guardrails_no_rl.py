@@ -53,7 +53,11 @@ def test_readme_documents_adoption_interview() -> None:
         "***",
         "install-hooks",
         "install-ci",
+        "OPENAI_API_KEY",
+        "Secret",
+        "Variable",
     ):
         assert token in text, token
     assert "uvx" in text
     assert "v2.0.0" in text
+    assert "not a variable" in text.lower() or "not a variable" in text
