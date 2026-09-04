@@ -26,6 +26,9 @@ on:
   push:
     branches: [{default_branch}]
   workflow_dispatch: {{}}
+concurrency:
+  group: dhx-${{{{ github.workflow }}}}-${{{{ github.ref }}}}
+  cancel-in-progress: true
 permissions:
   contents: write
   pull-requests: write

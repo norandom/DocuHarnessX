@@ -59,6 +59,7 @@ def test_install_ci_workflow(tmp_path: Path) -> None:
     assert "vars.OPENAI_DEFAULT_MAIN_MODEL" in text
     assert "secrets.OPENAI_API_BASE" not in text
     assert "secrets.OPENAI_DEFAULT_MAIN_MODEL" not in text
+    assert "cancel-in-progress: true" in text
     try:
         install_ci_workflow(str(tmp_path))
     except FileExistsError:
@@ -102,6 +103,17 @@ def test_this_repo_dogfoods_adopt_from_checkout() -> None:
     assert "vars.OPENAI_API_BASE" in text
     assert "vars.OPENAI_DEFAULT_MAIN_MODEL" in text
     assert "secrets.OPENAI_API_BASE" not in text
+    assert "cancel-in-progress: true" in text
+
+
+def test_adopt_workflow_git_adds_only_existing_paths() -> None:
+    text = (
+        Path(__file__).resolve().parents[1] / ".github" / "workflows" / "adopt.yml"
+    ).read_text(encoding="utf-8")
+    assert "git-auto-commit-action" not in text
+    assert '[ -e "$p" ]' in text
+    assert "git add -- \"$p\"" in text
+    assert "file_pattern:" not in text
 
 
 def test_hook_runner_skips_without_key_and_does_not_generate(tmp_path: Path) -> None:

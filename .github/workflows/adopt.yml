@@ -53,6 +53,7 @@ jobs:
   docs:
     if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[dhx]') }}
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     permissions:
       contents: write
     steps:
@@ -77,10 +78,24 @@ jobs:
             uvx --python 3.12 --from "git+https://github.com/norandom/DocuHarnessX.git@${DHX_REF}" dhx ci .
           fi
       - name: Commit MkDocs if needed
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "[dhx] update living docs and MkDocs"
-          file_pattern: docs mkdocs.yml .docuharnessx/pages .docuharnessx/adoption.yaml .docuharnessx/ontology.yaml .github/workflows/docs.yml
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # git add fails if a pathspec is missing (adoption.yaml / pages
+          # are created by init/run, not always present on first CI).
+          for p in docs mkdocs.yml .docuharnessx .github/workflows/docs.yml; do
+            if [ -e "$p" ]; then
+              git add -- "$p"
+            fi
+          done
+          if git diff --cached --quiet; then
+            echo "dhx ci: no doc changes to commit"
+            exit 0
+          fi
+          git commit -m "[dhx] update living docs and MkDocs"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
 
   evolve:
     needs: docs
