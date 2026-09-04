@@ -46,6 +46,7 @@ import argparse
 import asyncio
 import logging
 import os
+import subprocess
 import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -95,7 +96,18 @@ _DESCRIPTION = (
 #: the bare-form normaliser leaves ``dhx mcp <repo>`` intact rather than rewriting it to
 #: ``run mcp <repo>`` (mcp-refine Req 1.3).
 _SUBCOMMANDS: frozenset[str] = frozenset(
-    {"run", "init", "mcp", "status", "sufficient", "evolve"}
+    {
+        "run",
+        "init",
+        "mcp",
+        "status",
+        "sufficient",
+        "evolve",
+        "hook",
+        "ci",
+        "install-hooks",
+        "install-ci",
+    }
 )
 
 _log = logging.getLogger(__name__)
@@ -347,6 +359,81 @@ def build_parser() -> argparse.ArgumentParser:
         default=".",
         metavar="[project-dir]",
         help="Project directory (default: current directory).",
+    )
+
+    hook = subparsers.add_parser(
+        "hook",
+        help="Pre-commit entry: incremental docs if source changed and a key is set.",
+    )
+    hook.add_argument(
+        "project_dir",
+        nargs="?",
+        default=".",
+        metavar="[project-dir]",
+        help="Project directory (default: current directory).",
+    )
+
+    ci_cmd = subparsers.add_parser(
+        "ci",
+        help="CI entry: incremental living docs and MkDocs assemble (no evolve commit).",
+    )
+    ci_cmd.add_argument(
+        "project_dir",
+        nargs="?",
+        default=".",
+        metavar="[project-dir]",
+        help="Project directory (default: current directory).",
+    )
+
+    install_hooks = subparsers.add_parser(
+        "install-hooks",
+        help="Install a git pre-commit hook and/or .pre-commit-config.yaml.",
+    )
+    install_hooks.add_argument(
+        "project_dir",
+        nargs="?",
+        default=".",
+        metavar="[project-dir]",
+        help="Project directory (default: current directory).",
+    )
+    install_hooks.add_argument(
+        "--git",
+        action="store_true",
+        help="Write .git/hooks/pre-commit (uvx fallback).",
+    )
+    install_hooks.add_argument(
+        "--pre-commit",
+        dest="pre_commit",
+        action="store_true",
+        help="Write .pre-commit-config.yaml pinning this GitHub repo.",
+    )
+    install_hooks.add_argument(
+        "--force",
+        action="store_true",
+        help="Overwrite an existing hook or config.",
+    )
+
+    install_ci = subparsers.add_parser(
+        "install-ci",
+        help="Write .github/workflows/dhx.yml calling the reusable GitHub workflow.",
+    )
+    install_ci.add_argument(
+        "project_dir",
+        nargs="?",
+        default=".",
+        metavar="[project-dir]",
+        help="Project directory (default: current directory).",
+    )
+    install_ci.add_argument(
+        "--evolve",
+        choices=("off", "pr"),
+        default="pr",
+        help="CI evolve mode: off, or open a dhx/evolve PR (default).",
+    )
+    install_ci.add_argument(
+        "--force",
+        action="store_true",
+        help="Overwrite an existing dhx.yml.",
     )
 
     # mcp subcommand (mcp-refine task 5.2): launch the stdio refine MCP server rooted
@@ -1127,6 +1214,116 @@ def _evolve_command(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def _staged_paths(project_dir: str) -> list[str]:
+    """Return git index paths, or an empty list when git is unavailable."""
+    try:
+        completed = subprocess.run(
+            ["git", "diff", "--cached", "--name-only", "-z"],
+            cwd=project_dir,
+            check=False,
+            capture_output=True,
+        )
+    except OSError:
+        return []
+    if completed.returncode != 0 or not completed.stdout:
+        return []
+    return [item.decode("utf-8") for item in completed.stdout.split(b"\0") if item]
+
+
+def _generate_docs(project_dir: str, model_config: "ModelConfig | None") -> None:
+    """Incremental run + MkDocs emit into the project tree."""
+    ns = argparse.Namespace(
+        command="run",
+        target_repo=project_dir,
+        out=None,
+        config=None,
+        roles=None,
+        deploy_mode="emit-ci-workflow",
+        regenerate=False,
+        regenerate_ids=None,
+        verbose=False,
+    )
+    prepared = prepare_run(ns, model_config=model_config)
+    orchestrate_run(prepared)
+
+
+def _hook_command(
+    args: argparse.Namespace, *, model_config: "ModelConfig | None"
+) -> int:
+    """Fail-open pre-commit: skip without a key; stage docs when generation runs."""
+    from docuharnessx.hooks import run_precommit_hook
+
+    result = run_precommit_hook(
+        args.project_dir,
+        staged_paths=_staged_paths(args.project_dir),
+        generate=lambda project: _generate_docs(project, model_config),
+    )
+    print(f"dhx hook: {result.reason}")
+    return EXIT_OK
+
+
+def _ci_command(
+    args: argparse.Namespace, *, model_config: "ModelConfig | None"
+) -> int:
+    """CI generate step. Never evolves in-place (evolve is a separate PR job)."""
+    from docuharnessx.ci_policy import has_model_credentials, is_bot_commit
+
+    message = os.environ.get("DHX_COMMIT_MESSAGE") or os.environ.get(
+        "GITHUB_EVENT_HEAD_COMMIT_MESSAGE", ""
+    )
+    actor = os.environ.get("DHX_ACTOR") or os.environ.get("GITHUB_ACTOR", "")
+    if is_bot_commit(message, actor):
+        print("dhx ci: skip: bot or [dhx] commit")
+        return EXIT_OK
+    if model_config is None and not has_model_credentials(os.environ):
+        print("dhx ci: skip: no API key")
+        return EXIT_OK
+    _generate_docs(args.project_dir, model_config)
+    print("dhx ci: incremental docs assembled")
+    return EXIT_OK
+
+
+def _install_hooks_command(args: argparse.Namespace) -> int:
+    from docuharnessx.hooks import install_git_hook, install_pre_commit_config
+
+    want_git = args.git or not args.pre_commit
+    want_pre = args.pre_commit or not args.git
+    # Default: both. `--git` alone writes only the git hook; `--pre-commit` alone
+    # writes only the pre-commit config.
+    if args.git and not args.pre_commit:
+        want_pre = False
+    if args.pre_commit and not args.git:
+        want_git = False
+    written: list[str] = []
+    try:
+        if want_pre:
+            written.append(
+                install_pre_commit_config(args.project_dir, force=args.force)
+            )
+        if want_git:
+            written.append(install_git_hook(args.project_dir, force=args.force))
+    except (FileExistsError, FileNotFoundError) as exc:
+        print(f"dhx install-hooks: {exc}", file=sys.stderr)
+        return EXIT_INIT_FAILED
+    for path in written:
+        print(f"dhx install-hooks: wrote {path}")
+    return EXIT_OK
+
+
+def _install_ci_command(args: argparse.Namespace) -> int:
+    from docuharnessx.ci_install import install_ci_workflow
+
+    try:
+        path = install_ci_workflow(
+            args.project_dir, evolve=args.evolve, force=args.force
+        )
+    except FileExistsError as exc:
+        print(f"dhx install-ci: {exc}", file=sys.stderr)
+        return EXIT_INIT_FAILED
+    print(f"dhx install-ci: wrote {path}")
+    return EXIT_OK
+
+
 class _DropHarnessSerializationNoise(logging.Filter):
     """Drop the benign ``tool has no recorded __hx_target__`` serialization warning.
 
@@ -1284,6 +1481,11 @@ def main(
         parser.print_help()
         return 2
 
+    if args.command == "install-hooks":
+        return _install_hooks_command(args)
+    if args.command == "install-ci":
+        return _install_ci_command(args)
+
     # A real command was requested — ensure the runtime dependency is present
     # and fail with an explicit, dependency-naming message if not (Req 1.4).
     _require_harnessx()
@@ -1306,6 +1508,10 @@ def main(
             return _sufficient_command(args)
         if args.command == "evolve":
             return _evolve_command(args)
+        if args.command == "hook":
+            return _hook_command(args, model_config=model_config)
+        if args.command == "ci":
+            return _ci_command(args, model_config=model_config)
         # Unknown subcommand (argparse normally guards this); report honestly.
         print(
             f"dhx {args.command}: unknown command.",

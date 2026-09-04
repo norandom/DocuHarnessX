@@ -44,7 +44,16 @@ def test_docuharnessx_does_not_import_harnessx_rl() -> None:
 
 def test_readme_documents_adoption_interview() -> None:
     text = _README.read_text(encoding="utf-8")
-    for token in ("dhx init", "dhx run", "dhx mcp", "dhx evolve", "dhx status", "***"):
+    for token in (
+        "dhx init",
+        "dhx run",
+        "dhx mcp",
+        "dhx evolve",
+        "dhx status",
+        "***",
+        "install-hooks",
+        "install-ci",
+    ):
         assert token in text, token
     assert "uvx" in text
     assert "v2.0.0" in text

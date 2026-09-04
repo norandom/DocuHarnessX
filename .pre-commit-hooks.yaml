@@ -1,0 +1,9 @@
+- id: dhx
+  name: DocuHarnessX
+  description: Incremental living docs and MkDocs assemble when source changes
+  entry: dhx hook
+  language: python
+  language_version: python3.12
+  pass_filenames: false
+  always_run: false
+  types_or: [python, go, rust, javascript, c, c++, java]
