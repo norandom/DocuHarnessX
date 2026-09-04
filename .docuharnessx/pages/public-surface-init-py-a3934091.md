@@ -7,87 +7,20 @@ summary: The package keeps the root `__init__.py` deliberately thin and pushes t
   real public surface down into subpackage `__init__.py` modules, which act as single
   namespaces whose `__all__` is treated as an authoritative, test-policed contract.
 related: []
+cited_files:
+- docuharnessx/__init__.py
+- tests/test_package_scaffold.py
+- docuharnessx/mcp/__init__.py
+- docuharnessx/analysis/__init__.py
+- docuharnessx/ontology/__init__.py
+- docuharnessx/planning/__init__.py
+- docuharnessx/stages/base.py
+- docuharnessx/_ontology.py
+- tests/test_planning_package_surface.py
+- tests/test_mcp_launcher.py
+- tests/test_analysis_detectors_components_surface.py
+- tests/_fakes.py
 ---
-# How is the public surface used or extended?
-
-```mermaid
-flowchart TB
-  n0["How is the public surface used or exten…"]
-  n1["__init__.py"]
-  n2["test_package_scaffold.py"]
-  n3["__init__.py"]
-  n4["__init__.py"]
-  n5["__init__.py"]
-  n6["__init__.py"]
-  n7["base.py"]
-  n8["_ontology.py"]
-  n0 --> n1
-  n0 --> n2
-  n0 --> n3
-  n0 --> n4
-  n0 --> n5
-  n0 --> n6
-  n0 --> n7
-  n0 --> n8
-```
-
-```mermaid
-flowchart TB
-  n0["How is the public surface used or exten…"]
-  n1["__version__"]
-  n2["AnalysisError"]
-  n3["AnalyzeError"]
-  n4["Artifact"]
-  n5["BuildFile"]
-  n6["CIWorkflow"]
-  n7["Component"]
-  n8["DEFAULT_EXCLUDED_DIRS"]
-  n0 --> n1
-  n0 --> n2
-  n0 --> n3
-  n0 --> n4
-  n0 --> n5
-  n0 --> n6
-  n0 --> n7
-  n0 --> n8
-```
-
-```mermaid
-flowchart TB
-  page["How is the public surface used or exten…"]
-  subgraph d0["docuharnessx"]
-    e0["__init__.py"]
-    e1["_ontology.py"]
-  end
-  subgraph d1["tests"]
-    e2["test_package_scaffold.py"]
-  end
-  subgraph d2["docuharnessx/mcp"]
-    e3["__init__.py"]
-  end
-  subgraph d3["docuharnessx/analysis"]
-    e4["__init__.py"]
-  end
-  subgraph d4["docuharnessx/ontology"]
-    e5["__init__.py"]
-  end
-  subgraph d5["docuharnessx/planning"]
-    e6["__init__.py"]
-  end
-  subgraph d6["docuharnessx/stages"]
-    e7["base.py"]
-  end
-  page --> e0
-  page --> e1
-  page --> e2
-  page --> e3
-  page --> e4
-  page --> e5
-  page --> e6
-  page --> e7
-```
-
-
 The package keeps the root `__init__.py` deliberately thin and pushes the real public surface down into subpackage `__init__.py` modules, which act as single namespaces whose `__all__` is treated as an authoritative, test-policed contract.
 
 ## The root exposes one symbol and nothing else

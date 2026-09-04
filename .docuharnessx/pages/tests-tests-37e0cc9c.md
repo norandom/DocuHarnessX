@@ -11,97 +11,29 @@ summary: All tests for DocuHarnessX live in a single `tests/` directory at the r
   modules plus two support entries — `tests/_fakes.py` and the `tests/fixtures/` directory
   — and one nested subdirectory, `tests/ontology/`, holding 16 more modules.
 related: []
+cited_files:
+- pyproject.toml
+- tests/test_ontology_loader.py
+- tests/test_ontology_setup.py
+- tests/test_deploy_build_e2e_5_3.py
+- tests/ontology/test_package_import.py
+- tests/_fakes.py
+- tests/test_cli_e2e.py
+- tests/test_mcp_session.py
+- tests/test_pipeline_run.py
+- tests/test_fixture_agentic_repo.py
+- tests/ontology/test_errors.py
+- tests/ontology/test_store_conformance.py
+- tests/ontology/test_model.py
+- tests/test_composition_package_surface.py
+- tests/test_mcp_package_surface.py
+- tests/test_pipeline_integration.py
+- tests/test_mcp_refine_loop_e2e.py
+- tests/test_analysis_reference_repo.py
+- tests/test_written_segments_seam.py
+- docuharnessx/cli.py
+- tests/test_guardrails_no_rl.py
 ---
-# How are tests organized?
-
-```mermaid
-flowchart TB
-  n0["How are tests organized?"]
-  n1["pyproject.toml"]
-  n2["test_ontology_loader.py"]
-  n3["test_ontology_setup.py"]
-  n4["test_deploy_build_e2e_5_3.py"]
-  n5["test_package_import.py"]
-  n6["_fakes.py"]
-  n7["test_cli_e2e.py"]
-  n8["test_mcp_session.py"]
-  n0 --> n1
-  n0 --> n2
-  n0 --> n3
-  n0 --> n4
-  n0 --> n5
-  n0 --> n6
-  n0 --> n7
-  n0 --> n8
-```
-
-```mermaid
-flowchart TB
-  n0["How are tests organized?"]
-  n1["tests"]
-  n2["tests/ontology/test_errors.py"]
-  n3["tests/ontology/test_hardening.py"]
-  n4["tests/ontology/test_model.py"]
-  n5["tests/ontology/test_normalize_prefix.py"]
-  n6["tests/ontology/test_package_import.py"]
-  n7["tests/ontology/test_public_api.py"]
-  n8["tests/ontology/test_schema.py"]
-  n9["pytest"]
-  n10["pyproject.toml"]
-  n11["test_ontology_loader.py"]
-  n12["test_ontology_setup.py"]
-  n13["test_deploy_build_e2e_5_3.py"]
-  n14["test_package_import.py"]
-  n15["_fakes.py"]
-  n16["test_cli_e2e.py"]
-  n17["test_mcp_session.py"]
-  n0 --> n1
-  n0 --> n2
-  n0 --> n3
-  n0 --> n4
-  n0 --> n5
-  n0 --> n6
-  n0 --> n7
-  n0 --> n8
-  n0 --> n9
-  n0 --> n10
-  n0 --> n11
-  n0 --> n12
-  n0 --> n13
-  n0 --> n14
-  n0 --> n15
-  n0 --> n16
-  n0 --> n17
-```
-
-```mermaid
-flowchart TB
-  page["How are tests organized?"]
-  subgraph d0["repo root"]
-    e0["pyproject.toml"]
-  end
-  subgraph d1["tests"]
-    e1["test_ontology_loader.py"]
-    e2["test_ontology_setup.py"]
-    e3["test_deploy_build_e2e_5_3.py"]
-    e4["_fakes.py"]
-    e5["test_cli_e2e.py"]
-    e6["test_mcp_session.py"]
-  end
-  subgraph d2["tests/ontology"]
-    e7["test_package_import.py"]
-  end
-  page --> e0
-  page --> e1
-  page --> e2
-  page --> e3
-  page --> e4
-  page --> e5
-  page --> e6
-  page --> e7
-```
-
-
 # How are tests organized?
 
 All tests for DocuHarnessX live in a single `tests/` directory at the repository root. The only pytest configuration in the project is `pyproject.toml:46-47`, which sets `testpaths = ["tests"]`, and the dev extra declares the sole test dependency `pytest>=8.0` (`pyproject.toml:28-29`). There is no `conftest.py` anywhere in the tree, and `tests/` has no `__init__.py`; the top level contains 127 `test_*.py` modules plus two support entries — `tests/_fakes.py` and the `tests/fixtures/` directory — and one nested subdirectory, `tests/ontology/`, holding 16 more modules.

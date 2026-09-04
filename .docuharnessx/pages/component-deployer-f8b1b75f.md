@@ -11,84 +11,16 @@ summary: '`docuharnessx/deployer` is the **pure, model-free MkDocs deploy core**
   workflow rendering, target-tree writing, build validation, and the isolated `gh-deploy`
   push — lives (`docuharnessx/stages/deploy.py:5`).'
 related: []
+cited_files:
+- docuharnessx/deployer/__init__.py
+- docuharnessx/stages/deploy.py
+- docuharnessx/deployer/deploy.py
+- docuharnessx/deployer/model.py
+- docuharnessx/deployer/mode.py
+- docuharnessx/deployer/workflow.py
+- docuharnessx/deployer/tree.py
+- docuharnessx/deployer/commands.py
 ---
-# What does deployer do?
-
-```mermaid
-flowchart TB
-  n0["What does deployer do?"]
-  n1["__init__.py"]
-  n2["deploy.py"]
-  n3["deploy.py"]
-  n4["model.py"]
-  n5["mode.py"]
-  n6["workflow.py"]
-  n7["tree.py"]
-  n8["commands.py"]
-  n0 --> n1
-  n0 --> n2
-  n0 --> n3
-  n0 --> n4
-  n0 --> n5
-  n0 --> n6
-  n0 --> n7
-  n0 --> n8
-```
-
-```mermaid
-flowchart TB
-  n0["What does deployer do?"]
-  n1["deployer"]
-  n2["__init__.py"]
-  n3["commands.py"]
-  n4["deploy.py"]
-  n5["mode.py"]
-  n6["model.py"]
-  n7["deploy.py"]
-  n8["workflow.py"]
-  n9["tree.py"]
-  n0 --> n1
-  n1 --> n2
-  n1 --> n3
-  n1 --> n4
-  n1 --> n5
-  n1 --> n6
-  n0 --> n2
-  n0 --> n7
-  n0 --> n4
-  n0 --> n6
-  n0 --> n5
-  n0 --> n8
-  n0 --> n9
-  n0 --> n3
-```
-
-```mermaid
-flowchart TB
-  page["What does deployer do?"]
-  subgraph d0["docuharnessx/deployer"]
-    e0["__init__.py"]
-    e1["deploy.py"]
-    e2["model.py"]
-    e3["mode.py"]
-    e4["workflow.py"]
-    e5["tree.py"]
-    e6["commands.py"]
-  end
-  subgraph d1["docuharnessx/stages"]
-    e7["deploy.py"]
-  end
-  page --> e0
-  page --> e1
-  page --> e2
-  page --> e3
-  page --> e4
-  page --> e5
-  page --> e6
-  page --> e7
-```
-
-
 # What `deployer` does
 
 `docuharnessx/deployer` is the **pure, model-free MkDocs deploy core** behind the pipeline's Deploy stage (the "finale" of DocuHarnessX's Ingest → … → Assemble → Deploy run). Its own docstring calls it "the deterministic, harness-free deploy core behind the thin `DeployStage` adapter" (`docuharnessx/deployer/__init__.py:1`), and the adapter describes it as the place where all the real work — mode resolution, workflow rendering, target-tree writing, build validation, and the isolated `gh-deploy` push — lives (`docuharnessx/stages/deploy.py:5`).

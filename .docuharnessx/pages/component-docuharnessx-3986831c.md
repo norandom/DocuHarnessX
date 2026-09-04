@@ -11,52 +11,10 @@ summary: DocuHarnessX is a Python package — version `2.0.0` (`docuharnessx/__i
   accepted ones into an MkDocs site. Its pyproject entry point is the console script
   `dhx = "docuharnessx.cli:main"` (`pyproject.toml:33`).
 related: []
+cited_files:
+- docuharnessx/__init__.py
+- pyproject.toml
 ---
-# What does docuharnessx do?
-
-```mermaid
-flowchart TB
-  n0["What does docuharnessx do?"]
-  n1["__init__.py"]
-  n2["pyproject.toml"]
-  n0 --> n1
-  n0 --> n2
-```
-
-```mermaid
-flowchart TB
-  n0["What does docuharnessx do?"]
-  n1["docuharnessx"]
-  n2["__init__.py"]
-  n3["_ontology.py"]
-  n4["adoption.py"]
-  n5["blueprint.py"]
-  n6["bundle.py"]
-  n7["pyproject.toml"]
-  n0 --> n1
-  n1 --> n2
-  n1 --> n3
-  n1 --> n4
-  n1 --> n5
-  n1 --> n6
-  n0 --> n2
-  n0 --> n7
-```
-
-```mermaid
-flowchart TB
-  page["What does docuharnessx do?"]
-  subgraph d0["docuharnessx"]
-    e0["__init__.py"]
-  end
-  subgraph d1["repo root"]
-    e1["pyproject.toml"]
-  end
-  page --> e0
-  page --> e1
-```
-
-
 # What does DocuHarnessX do?
 
 DocuHarnessX is a Python package — version `2.0.0` (`docuharnessx/__init__.py:5`) — whose own docstring describes it as a tool to "generate grounded developer documentation from a software repository" (`docuharnessx/__init__.py:1`). In practice it is a CLI-driven pipeline that scans a target repo, decides which software questions deserve documentation, runs bounded model agents to write those pages, and assembles the accepted ones into an MkDocs site. Its pyproject entry point is the console script `dhx = "docuharnessx.cli:main"` (`pyproject.toml:33`).

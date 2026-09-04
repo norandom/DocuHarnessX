@@ -14,59 +14,18 @@ summary: '`docuharnessx.assembler` is DocuHarnessX''s **MkDocs site-assembly cor
   `mkdocs.yml`" (`docuharnessx/assembler/__init__.py:1-13`). Everything downstream
   imports from this one public namespace rather than the submodules (`docuharnessx/assembler/__init__.py:15-18`).'
 related: []
+cited_files:
+- docuharnessx/assembler/__init__.py
+- docuharnessx/assembler/identity.py
+- docuharnessx/assembler/writer.py
+- docuharnessx/assembler/pages.py
+- docuharnessx/assembler/roles.py
+- docuharnessx/assembler/home.py
+- docuharnessx/assembler/graphs.py
+- docuharnessx/assembler/mkdocs_config.py
+- docuharnessx/assembler/model.py
+- docuharnessx/assembler/question_site.py
 ---
-# What does assembler do?
-
-```mermaid
-flowchart TB
-  n0["What does assembler do?"]
-  n1["__init__.py"]
-  n2["identity.py"]
-  n3["writer.py"]
-  n4["pages.py"]
-  n5["roles.py"]
-  n6["home.py"]
-  n7["graphs.py"]
-  n8["mkdocs_config.py"]
-  n0 --> n1
-  n0 --> n2
-  n0 --> n3
-  n0 --> n4
-  n0 --> n5
-  n0 --> n6
-  n0 --> n7
-  n0 --> n8
-```
-
-```mermaid
-flowchart TB
-  n0["What does assembler do?"]
-  n1["assembler"]
-  n2["__init__.py"]
-  n3["graphs.py"]
-  n4["home.py"]
-  n5["identity.py"]
-  n6["mkdocs_config.py"]
-  n7["writer.py"]
-  n8["pages.py"]
-  n9["roles.py"]
-  n0 --> n1
-  n1 --> n2
-  n1 --> n3
-  n1 --> n4
-  n1 --> n5
-  n1 --> n6
-  n0 --> n2
-  n0 --> n5
-  n0 --> n7
-  n0 --> n8
-  n0 --> n9
-  n0 --> n4
-  n0 --> n3
-  n0 --> n6
-```
-
-
 # What `docuharnessx.assembler` does
 
 `docuharnessx.assembler` is DocuHarnessX's **MkDocs site-assembly core** — the "pure, model-free" stage that turns quality-gated content into a publishable **Material for MkDocs** source tree. Its own docstring names it the deterministic, harness-free core behind the thin `AssembleStage` adapter: it consumes the accepted ontology `Segment` set from the frozen `ReviewReport`, the loaded project `Vocabulary`, and an optional `RepoAnalysis`, then "emits a Material for MkDocs source tree under the run's output directory: one `docs/*.md` page per accepted segment, per-role landing pages with COBESY-structured intent-ordered agendas, a tags index, and a `mkdocs.yml`" (`docuharnessx/assembler/__init__.py:1-13`). Everything downstream imports from this one public namespace rather than the submodules (`docuharnessx/assembler/__init__.py:15-18`).

@@ -8,60 +8,13 @@ summary: 'The `dhx` program starts in `docuharnessx/cli.py`, whose `main()` is t
   argparse construction → argv normalization → dispatch to a subcommand handler (defaulting
   to `run`).'
 related: []
+cited_files:
+- pyproject.toml
+- docuharnessx/cli.py
+- docuharnessx/ontology_loader.py
+- docuharnessx/config.py
+- docuharnessx/pipeline/run.py
 ---
-# How does this program start?
-
-```mermaid
-flowchart TB
-  n0["How does this program start?"]
-  n1["pyproject.toml"]
-  n2["cli.py"]
-  n3["ontology_loader.py"]
-  n4["config.py"]
-  n5["run.py"]
-  n0 --> n1
-  n0 --> n2
-  n0 --> n3
-  n0 --> n4
-  n0 --> n5
-```
-
-```mermaid
-flowchart LR
-  n0["cli.py"]
-  n1["pyproject.toml"]
-  n2["ontology_loader.py"]
-  n3["config.py"]
-  n4["run.py"]
-  n0 --> n1
-  n1 --> n0
-  n0 --> n2
-  n2 --> n3
-  n3 --> n4
-```
-
-```mermaid
-flowchart TB
-  page["How does this program start?"]
-  subgraph d0["repo root"]
-    e0["pyproject.toml"]
-  end
-  subgraph d1["docuharnessx"]
-    e1["cli.py"]
-    e2["ontology_loader.py"]
-    e3["config.py"]
-  end
-  subgraph d2["docuharnessx/pipeline"]
-    e4["run.py"]
-  end
-  page --> e0
-  page --> e1
-  page --> e2
-  page --> e3
-  page --> e4
-```
-
-
 # How does this program start?
 
 The `dhx` program starts in `docuharnessx/cli.py`, whose `main()` is the console-script entry point, and the startup path is: entry point → env loading → argparse construction → argv normalization → dispatch to a subcommand handler (defaulting to `run`).

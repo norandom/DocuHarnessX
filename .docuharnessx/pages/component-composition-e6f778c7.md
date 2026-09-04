@@ -12,87 +12,20 @@ summary: '`docuharnessx/composition` is the documentation **writing core** of Do
   only one gated prose step touches a model. `WriteStage` in `docuharnessx/stages/write.py`
   is described as a "thin HarnessX adapter" over this core (`docuharnessx/stages/write.py:6-9`).'
 related: []
+cited_files:
+- docuharnessx/composition/__init__.py
+- docuharnessx/stages/write.py
+- docuharnessx/composition/blueprint.py
+- docuharnessx/composition/model.py
+- docuharnessx/composition/prompt.py
+- docuharnessx/composition/prose.py
+- docuharnessx/composition/fallback.py
+- docuharnessx/composition/wiring.py
+- docuharnessx/composition/agent.py
+- docuharnessx/composition/budgets.py
+- docuharnessx/composition/harness_factory.py
+- docuharnessx/composition/explore_writer.py
 ---
-# What does composition do?
-
-```mermaid
-flowchart TB
-  n0["What does composition do?"]
-  n1["__init__.py"]
-  n2["write.py"]
-  n3["blueprint.py"]
-  n4["model.py"]
-  n5["prompt.py"]
-  n6["prose.py"]
-  n7["fallback.py"]
-  n8["wiring.py"]
-  n0 --> n1
-  n0 --> n2
-  n0 --> n3
-  n0 --> n4
-  n0 --> n5
-  n0 --> n6
-  n0 --> n7
-  n0 --> n8
-```
-
-```mermaid
-flowchart TB
-  n0["What does composition do?"]
-  n1["composition"]
-  n2["__init__.py"]
-  n3["agent.py"]
-  n4["blueprint.py"]
-  n5["budgets.py"]
-  n6["explore_writer.py"]
-  n7["write.py"]
-  n8["model.py"]
-  n9["prompt.py"]
-  n10["prose.py"]
-  n11["fallback.py"]
-  n12["wiring.py"]
-  n0 --> n1
-  n1 --> n2
-  n1 --> n3
-  n1 --> n4
-  n1 --> n5
-  n1 --> n6
-  n0 --> n2
-  n0 --> n7
-  n0 --> n4
-  n0 --> n8
-  n0 --> n9
-  n0 --> n10
-  n0 --> n11
-  n0 --> n12
-```
-
-```mermaid
-flowchart TB
-  page["What does composition do?"]
-  subgraph d0["docuharnessx/composition"]
-    e0["__init__.py"]
-    e1["blueprint.py"]
-    e2["model.py"]
-    e3["prompt.py"]
-    e4["prose.py"]
-    e5["fallback.py"]
-    e6["wiring.py"]
-  end
-  subgraph d1["docuharnessx/stages"]
-    e7["write.py"]
-  end
-  page --> e0
-  page --> e1
-  page --> e2
-  page --> e3
-  page --> e4
-  page --> e5
-  page --> e6
-  page --> e7
-```
-
-
 # What `docuharnessx.composition` does
 
 `docuharnessx/composition` is the documentation **writing core** of DocuHarnessX. Its package docstring calls it "the pure, model-free COBESY composition core": it turns each `PlannedSegment` of the frozen `CoveragePlan` into a COBESY-structured composition blueprint *before* any prose, and then renders an ontology `Segment` (`docuharnessx/composition/__init__.py:1-9`). The key architectural claim, repeated throughout the modules, is that **all structural work is deterministic and model-free**; only one gated prose step touches a model. `WriteStage` in `docuharnessx/stages/write.py` is described as a "thin HarnessX adapter" over this core (`docuharnessx/stages/write.py:6-9`).
