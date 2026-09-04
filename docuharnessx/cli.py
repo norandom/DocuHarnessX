@@ -283,7 +283,10 @@ def build_parser() -> argparse.ArgumentParser:
     # init subcommand (dispatched in task 4.3).
     init = subparsers.add_parser(
         "init",
-        help="Scaffold the project's .docuharnessx/ontology.yaml.",
+        help=(
+            "Adopt the blueprint: ontology, adoption record, pre-commit hook, "
+            "and CI workflow."
+        ),
     )
     init.add_argument(
         "project_dir",
@@ -1170,6 +1173,10 @@ def _init_command(args: argparse.Namespace, *, input_fn: "Any" = None) -> int:
             accepted=True,
             role_ids=tuple(r.id for r in vocab.roles),
         )
+    from docuharnessx.onboard import install_onboarding
+
+    for line in install_onboarding(args.project_dir):
+        print(line)
     return EXIT_OK
 
 

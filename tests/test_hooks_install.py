@@ -6,6 +6,7 @@ from pathlib import Path
 
 from docuharnessx import cli
 from docuharnessx.ci_install import CONSUMER_WORKFLOW_RELPATH, install_ci_workflow
+from docuharnessx.onboard import ONBOARDING_NEXT_STEPS, install_onboarding
 from docuharnessx.hooks import (
     HOOK_ID,
     install_git_hook,
@@ -64,6 +65,31 @@ def test_install_ci_workflow(tmp_path: Path) -> None:
         pass
     else:
         raise AssertionError("expected FileExistsError")
+
+
+def test_install_onboarding_skips_git_hook_without_checkout(tmp_path: Path) -> None:
+    lines = install_onboarding(str(tmp_path))
+    joined = "\n".join(lines)
+    assert (tmp_path / ".pre-commit-config.yaml").is_file()
+    assert (tmp_path / ".github" / "workflows" / "dhx.yml").is_file()
+    assert "skipped git hook" in joined
+    for step in ONBOARDING_NEXT_STEPS:
+        assert step in lines
+    assert not (tmp_path / ".git" / "hooks" / "pre-commit").exists()
+
+
+def test_init_onboards_hooks_and_ci_on_a_git_checkout(tmp_path) -> None:
+    project = tmp_path / "proj"
+    project.mkdir()
+    (project / ".git" / "hooks").mkdir(parents=True)
+    assert cli.main(["init", str(project), "--default"]) == 0
+    assert (project / ".pre-commit-config.yaml").is_file()
+    hook = project / ".git" / "hooks" / "pre-commit"
+    assert hook.is_file()
+    assert "dhx hook" in hook.read_text(encoding="utf-8")
+    assert (project / ".github" / "workflows" / "dhx.yml").is_file()
+    assert (project / ".docuharnessx" / "ontology.yaml").is_file()
+    assert (project / ".docuharnessx" / "adoption.yaml").is_file()
 
 
 def test_this_repo_dogfoods_adopt_from_checkout() -> None:

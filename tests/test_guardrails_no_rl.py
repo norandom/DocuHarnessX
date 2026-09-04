@@ -56,6 +56,9 @@ def test_readme_documents_adoption_interview() -> None:
         "OPENAI_API_KEY",
         "Secret",
         "Variable",
+        "pre-commit install",
+        "adoption.yaml",
+        "ontology.yaml",
     ):
         assert token in text, token
     assert "uvx" in text

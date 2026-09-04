@@ -269,6 +269,11 @@ def test_init_default_writes_adoption_and_reports_paths_and_version(tmp_path, ca
     assert adoption in out, out
     assert BLUEPRINT_VERSION in out, out
     assert "not agent-managed" in out, out
+    assert "commit .docuharnessx/ontology.yaml" in out, out
+    assert "pre-commit install" in out, out
+    assert (project / ".pre-commit-config.yaml").is_file()
+    assert (project / ".github" / "workflows" / "dhx.yml").is_file()
+    assert "skipped git hook" in out, out
 
 
 def test_init_default_second_run_without_force_leaves_files_unchanged(tmp_path, capsys) -> None:
@@ -335,7 +340,7 @@ def test_init_default_does_not_prompt_for_credentials_or_print_secrets(
     assert "sk-super-secret-value" not in combined
     assert "API key" not in combined
     assert "api key" not in combined.lower()
-    assert "OPENAI_API_KEY" not in combined
+    # The secret *name* is printed as a GitHub Actions instruction; the value is not.
 
 
 def test_init_accepts_harness_proposal(tmp_path, capsys, monkeypatch) -> None:

@@ -114,17 +114,35 @@ Each rejection line reports `steps=` and `exit=`: `exit=budget_exceeded` with lo
 means raise `DHX_WRITER_TOKEN_BUDGET`; `steps ≤ 1` means the model answered without reading
 files (a tool-calling/model issue).
 
-## 4. (Optional) Configure the ontology
+## 4. Adopt the project (ontology, hook, CI)
 
-The roles, intents, and tags are per-project configuration. You can keep the shipped
-default profile or customize it:
+The roles, intents, and tags are per-project configuration. `dhx init` seeds them
+**and** installs the pre-commit hook plus the GitHub Actions workflow the Action
+needs:
 
 ```bash
-dhx init --default     # seed .docuharnessx/ontology.yaml with the 10 default roles / 13 intents
-dhx init               # interactive: choose which roles, intents, and subjects apply
+dhx init --default     # seed default ontology + adoption, write hook + .github/workflows/dhx.yml
+dhx init               # interactive: credentials, then accept or edit ontology proposals
 ```
 
-If you skip this, `dhx` uses the default profile and prints a hint.
+Commit these (never `.env`):
+
+- `.docuharnessx/ontology.yaml`
+- `.docuharnessx/adoption.yaml` — without this file, CI ignores the ontology and uses the in-memory default
+- `.pre-commit-config.yaml`
+- `.github/workflows/dhx.yml`
+
+Then:
+
+```bash
+pre-commit install     # if you use the pre-commit framework; dhx also writes .git/hooks/pre-commit
+```
+
+On GitHub: **Secret** `OPENAI_API_KEY`; **Variables** `OPENAI_API_BASE` and
+`OPENAI_DEFAULT_MAIN_MODEL` (DeepSeek defaults if unset).
+
+If you skip `dhx init`, `dhx` uses the default profile and prints a hint — but the
+Action will not have a committed ontology/adoption pair.
 
 ## 5. Generate docs for a project
 

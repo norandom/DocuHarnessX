@@ -40,10 +40,18 @@ dhx --help
 
 ## Adopt on a project
 
-Interactive setup asks for an API key, base URL, and model. Press Enter to accept DeepSeek (`https://api.deepseek.com`, `deepseek-v4-flash`). If a key is already set, the prompt shows `***`; Enter or `***` keeps it.
+`dhx init` is the onboarding path. Interactive setup asks for an API key, base URL, and model. Press Enter to accept DeepSeek (`https://api.deepseek.com`, `deepseek-v4-flash`). If a key is already set, the prompt shows `***`; Enter or `***` keeps it.
+
+Then the harness writes the files CI and the hook need, and installs the hook:
 
 ```bash
-dhx init                  # interview: credentials, then ontology proposals
+dhx init                  # credentials, ontology, pre-commit hook, CI workflow
+# commit (never .env):
+#   .docuharnessx/ontology.yaml
+#   .docuharnessx/adoption.yaml
+#   .pre-commit-config.yaml
+#   .github/workflows/dhx.yml
+pre-commit install        # if you use the pre-commit framework
 dhx run .                 # add missing living pages
 dhx mcp .                 # multi-step refine on living pages
 dhx evolve                # adapt the harness from journals
@@ -51,7 +59,7 @@ dhx status                # coverage + sufficiency
 dhx sufficient            # declare the document sufficient
 ```
 
-Journals, living pages, ontology, and the adoption record live under `.docuharnessx/` and are meant to be committed. `.env` stays gitignored.
+`dhx ci` uses `.docuharnessx/ontology.yaml` only when `.docuharnessx/adoption.yaml` is also present. Commit both. Journals and living pages under `.docuharnessx/` are meant to be committed too. `.env` stays gitignored.
 
 ## Pre-commit hook (GitHub package)
 
