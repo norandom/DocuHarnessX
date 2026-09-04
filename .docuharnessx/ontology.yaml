@@ -1,0 +1,76 @@
+roles:
+- id: possible-adopter
+  label: Possible Adopter
+  description: Evaluating whether to adopt the project.
+- id: developer
+  label: Developer
+  description: Builds on or with the project's code.
+- id: tech-savvy-user
+  label: Tech-savvy User
+  description: Uses the project competently without developing it.
+- id: manager
+  label: Manager
+  description: Owns outcomes, budget, and direction.
+- id: devops-admin
+  label: DevOps/Admin
+  description: Deploys, configures, and administers the project.
+- id: researcher
+  label: Researcher
+  description: Studies, benchmarks, or extends the project's ideas.
+- id: security-compliance-officer
+  label: Security/Compliance Officer
+  description: Assesses security, privacy, and compliance posture.
+- id: contributor
+  label: Contributor
+  description: Contributes changes back to the project.
+- id: integrator
+  label: Integrator/API consumer
+  description: Integrates the project via its APIs or interfaces.
+- id: support-sre
+  label: Support/On-call (SRE)
+  description: Operates and supports the project in production.
+intents:
+- id: install
+  label: Install
+  description: Get the project installed.
+- id: configure
+  label: Configure
+  description: Configure the project for a context.
+- id: use
+  label: Use
+  description: Use the project for its primary purpose.
+- id: troubleshoot
+  label: Troubleshoot
+  description: Diagnose and fix problems.
+- id: monitor
+  label: Monitor
+  description: Observe health and behavior.
+- id: operate
+  label: Operate
+  description: Run the project day to day.
+- id: integrate
+  label: Integrate
+  description: Connect the project to other systems.
+- id: extend
+  label: Extend
+  description: Add capabilities or customize behavior.
+- id: evaluate
+  label: Evaluate
+  description: Assess fit before adopting.
+- id: assess-quality
+  label: Assess Quality
+  description: Judge quality, security, and compliance.
+- id: understand
+  label: Understand
+  description: Build a mental model of the project.
+- id: contribute
+  label: Contribute
+  description: Contribute changes back.
+- id: deliver
+  label: Deliver
+  description: Ship outcomes that depend on the project.
+subjects:
+- 'component:'
+- 'tech:'
+- 'artifact:'
+- 'topic:'
