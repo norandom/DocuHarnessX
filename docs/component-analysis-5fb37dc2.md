@@ -1,5 +1,5 @@
 ---
-id: [component](glossary.md#component):[analysis](glossary.md#analysis)
+id: component:[analysis](glossary.md#analysis)
 title: What does [analysis](glossary.md#analysis) do?
 subjects:
 - [analysis](glossary.md#analysis)

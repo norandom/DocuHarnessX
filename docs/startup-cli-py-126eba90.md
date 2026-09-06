@@ -101,7 +101,7 @@ After parsing, if no command was given, `main()` prints help and returns exit co
 
 ## Dependency guard and logging
 
-`install-hooks` and `install-ci` are dispatched immediately (`cli.py:1491-1494`) because they need no runtime. For every other real command, `main()` calls `_require_harnessx()` (`cli.py:1498`), which imports `harnessx` lazily and raises a typed `DependencyError` naming the missing dependency and its [install](glossary.md#install) URL if it is not importable (`cli.py:175-196`). Then `_configure_run_logging(getattr(args, "verbose", False))` (`cli.py:1501`, defined at `cli.py:1375`) raises the console level from `WARNING` to `INFO` under `-v` and installs filters that drop benign noise (the HarnessX `todo_write` serialization warning and the httpx "Event loop is closed" teardown error, `cli.py:1334-1372`).
+`install-hooks` and `install-ci` are dispatched immediately (`cli.py:1491-1494`) because they need no runtime. For every other real command, `main()` calls `_require_harnessx()` (`cli.py:1498`), which imports `harnessx` lazily and raises a typed `DependencyError` naming the missing dependency and its install URL if it is not importable (`cli.py:175-196`). Then `_configure_run_logging(getattr(args, "verbose", False))` (`cli.py:1501`, defined at `cli.py:1375`) raises the console level from `WARNING` to `INFO` under `-v` and installs filters that drop benign noise (the HarnessX `todo_write` serialization warning and the httpx "Event loop is closed" teardown error, `cli.py:1334-1372`).
 
 ## Dispatch to handlers
 

@@ -1,5 +1,5 @@
 ---
-id: [component](glossary.md#component):[assembler](glossary.md#assembler)
+id: component:[assembler](glossary.md#assembler)
 title: What does [assembler](glossary.md#assembler) do?
 subjects:
 - [assembler](glossary.md#assembler)
@@ -135,7 +135,7 @@ The package is deliberately pure and deterministic — no model, no network; the
 
 The whole tree lands under `<out_dir>/site` — the single write target — written as UTF-8 with verbatim `\n` newlines by `_write_text` so on-disk bytes equal the renderers' byte-stable output (`docuharnessx/assembler/writer.py:81, 130-140`).
 
-## 3. Render each [artifact](glossary.md#artifact) deterministically
+## 3. Render each artifact deterministically
 
 The renderers are pure, model-free, byte-stable transforms:
 

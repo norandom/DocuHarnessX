@@ -1,5 +1,5 @@
 ---
-id: [component](glossary.md#component):[comprehension](glossary.md#comprehension)
+id: component:[comprehension](glossary.md#comprehension)
 title: What does [comprehension](glossary.md#comprehension) do?
 subjects:
 - [comprehension](glossary.md#comprehension)

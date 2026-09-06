@@ -25,6 +25,19 @@ flowchart TB
 
 </div>
 
+<div class="dhx-layer" data-min="2" markdown="1">
+
+```mermaid
+flowchart TB
+  accepted["accepted 10"]
+  omitted["omitted 0"]
+  planned["planned 10"]
+  planned --> accepted
+  planned --> omitted
+```
+
+</div>
+
 <div class="dhx-layer" data-min="3" markdown="1">
 
 ```mermaid
@@ -35,13 +48,11 @@ flowchart TB
   n3["What does assembler do?"]
   n4["What does composition do?"]
   n5["What does comprehension do?"]
-  n6["What does deployer do?"]
-  n7["What does docuharnessx do?"]
-  n8["What does javascripts do?"]
-  n9["What does mcp do?"]
-  n10["How is the public surface used or exten…"]
-  n11["How does this program start?"]
-  n12["How are tests organized?"]
+  n6["What does docuharnessx do?"]
+  n7["What does javascripts do?"]
+  n8["How is the public surface used or exten…"]
+  n9["How does this program start?"]
+  n10["How are tests organized?"]
   n0 --> n1
   n0 --> n2
   n0 --> n3
@@ -52,8 +63,6 @@ flowchart TB
   n0 --> n8
   n0 --> n9
   n0 --> n10
-  n0 --> n11
-  n0 --> n12
 ```
 
 </div>
@@ -181,10 +190,8 @@ flowchart LR
 - [What does assembler do?](component-assembler-d9228a8c.md)
 - [What does composition do?](component-composition-e6f778c7.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
-- [What does deployer do?](component-deployer-f8b1b75f.md)
 - [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [What does javascripts do?](component-javascripts-2aa9650e.md)
-- [What does mcp do?](component-mcp-bdf519de.md)
 - [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
 - [How does this program start?](startup-cli-py-126eba90.md)
 - [How are tests organized?](tests-tests-37e0cc9c.md)
