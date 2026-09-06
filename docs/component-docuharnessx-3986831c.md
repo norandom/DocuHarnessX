@@ -16,7 +16,7 @@ related: []
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
-<a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a> is a Python package — version `2.0.0` (`docuharnessx/__init__.py:5`) — whose own docstring describes it as a tool to "generate grounded <a class="dhx-term" href="glossary.md#developer">developer</a> documentation from a software repository" (`docuharnessx/__init__.py:1`). In practice it is a CLI-driven <a class="dhx-term" href="glossary.md#pipeline">pipeline</a> that scans a target repo, decides which software questions deserve documentation, runs bounded model agents to write those <a class="dhx-term" href="glossary.md#pages">pages</a>, and assembles the accepted ones into an MkDocs site. Its pyproject entry point is the console script `dhx = "docuharnessx.cli:main"` (`pyproject.toml:33`).
+<a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a> is a Python package — version `2.0.0` (`docuharnessx/__init__.py:5`) — whose own docstring describes it as a tool to "generate grounded developer documentation from a software repository" (`docuharnessx/__init__.py:1`). In practice it is a CLI-driven <a class="dhx-term" href="glossary.md#pipeline">pipeline</a> that scans a target repo, decides which software questions deserve documentation, runs bounded model agents to write those <a class="dhx-term" href="glossary.md#pages">pages</a>, and assembles the accepted ones into an MkDocs site. Its pyproject entry point is the console script `dhx = "docuharnessx.cli:main"` (`pyproject.toml:33`).
 
 </div>
 
@@ -103,7 +103,7 @@ flowchart TB
 
 # What does DocuHarnessX do?
 
-<a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a> is a Python package — version `2.0.0` (`docuharnessx/__init__.py:5`) — whose own docstring describes it as a tool to "generate grounded <a class="dhx-term" href="glossary.md#developer">developer</a> documentation from a software repository" (`docuharnessx/__init__.py:1`). In practice it is a CLI-driven <a class="dhx-term" href="glossary.md#pipeline">pipeline</a> that scans a target repo, decides which software questions deserve documentation, runs bounded model agents to write those <a class="dhx-term" href="glossary.md#pages">pages</a>, and assembles the accepted ones into an MkDocs site. Its pyproject entry point is the console script `dhx = "docuharnessx.cli:main"` (`pyproject.toml:33`).
+<a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a> is a Python package — version `2.0.0` (`docuharnessx/__init__.py:5`) — whose own docstring describes it as a tool to "generate grounded developer documentation from a software repository" (`docuharnessx/__init__.py:1`). In practice it is a CLI-driven <a class="dhx-term" href="glossary.md#pipeline">pipeline</a> that scans a target repo, decides which software questions deserve documentation, runs bounded model agents to write those <a class="dhx-term" href="glossary.md#pages">pages</a>, and assembles the accepted ones into an MkDocs site. Its pyproject entry point is the console script `dhx = "docuharnessx.cli:main"` (`pyproject.toml:33`).
 
 ## The `dhx` command surface
 
