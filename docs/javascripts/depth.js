@@ -1,5 +1,5 @@
 (function () {
-  var DEFAULT_DEPTH = 5;
+  var DEFAULT_DEPTH = 1;
   var STORAGE_KEY = "dhx-depth";
   var LABELS = {
     1: "Adopter",

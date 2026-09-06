@@ -33,7 +33,7 @@ THEMES: tuple[str, ...] = ("black", "deepwiki")
 DEFAULT_THEME = "black"
 MIN_DEPTH = 1
 MAX_DEPTH = 7
-DEFAULT_DEPTH = 5
+DEFAULT_DEPTH = 1
 
 DEPTH_LABELS: dict[int, str] = {
     1: "Adopter",

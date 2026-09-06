@@ -179,7 +179,7 @@ def test_init_interactive_gathers_roles_intents_subjects(
             "",                      # base URL → DeepSeek default
             "",                      # model → DeepSeek default
             "",                      # site theme → black
-            "",                      # engineering depth → 5
+            "",                      # engineering depth → 1
             "",                      # compliance topics → none
             "edit",                  # reject proposal; enter terms by hand
             "developer: Developer",  # role 1
@@ -275,7 +275,7 @@ def test_init_default_writes_adoption_and_reports_paths_and_version(tmp_path, ca
     site_yaml = project / ".docuharnessx" / "site.yaml"
     assert site_yaml.is_file()
     assert "theme: black" in site_yaml.read_text(encoding="utf-8")
-    assert "depth: 5" in site_yaml.read_text(encoding="utf-8")
+    assert "depth: 1" in site_yaml.read_text(encoding="utf-8")
     assert "commit .docuharnessx/ontology.yaml" in out, out
     assert "pre-commit install" in out, out
     assert (project / ".pre-commit-config.yaml").is_file()

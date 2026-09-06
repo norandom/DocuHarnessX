@@ -61,7 +61,7 @@ dhx sufficient            # declare the document sufficient
 
 `dhx ci` uses `.docuharnessx/ontology.yaml` only when `.docuharnessx/adoption.yaml` is also present. Commit both. Journals and living pages under `.docuharnessx/` are meant to be committed too. `.env` stays gitignored.
 
-The published site defaults to Material **black/white**. Init asks if you want the older `deepwiki` (washi + violet) skin. A header **Depth** slider (1 Adopter … 5 Programmer … 7 Internals) shows summary at 1, diagrams at 3, full prose at 5, and grounding paths at 7. The default is 5.
+The published site defaults to Material **black/white**. Init asks if you want the older `deepwiki` (washi + violet) skin. A header **Depth** slider (1 Adopter … 5 Programmer … 7 Internals) shows summary at 1, diagrams at 3, full prose at 5, and grounding paths at 7. The default is 1 (Adopter).
 
 ## Pre-commit hook (GitHub package)
 

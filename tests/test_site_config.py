@@ -36,7 +36,7 @@ def test_save_and_load_round_trip(tmp_path: Path) -> None:
     assert loaded == SitePresentation(theme="deepwiki", depth=3)
 
 
-def test_missing_site_yaml_is_black_programmer(tmp_path: Path) -> None:
+def test_missing_site_yaml_is_black_adopter(tmp_path: Path) -> None:
     assert load_site_presentation(str(tmp_path)) == SitePresentation()
 
 
@@ -47,7 +47,7 @@ def test_prompt_keeps_enter_defaults() -> None:
         out=__import__("io").StringIO(),
     )
     assert result.theme == "black"
-    assert result.depth == 5
+    assert result.depth == 1
 
 
 def test_wrap_layer_skips_blank() -> None:
