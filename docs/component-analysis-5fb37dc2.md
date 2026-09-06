@@ -4,7 +4,7 @@ title: What does analysis do?
 subjects:
 - analysis
 summary: The five evidence files plus the directly-referenced `model.py`, `scanner.py`,
-  and `languages.py` give a complete picture. Here is the finished Markdown body.
+ and `languages.py` give a complete picture. Here is the finished Markdown body.
 related: []
 abstraction: component
 ---
@@ -20,45 +20,45 @@ The five evidence files plus the directly-referenced `model.py`, `scanner.py`, a
 
 ```mermaid
 classDiagram
-  direction LR
-  class CLI {
-    <<command>>
-    ci()
-    evolve()
-    hook()
-    init()
-    install_ci()
-    install_hooks()
-    mcp()
-    run()
-    status()
-    sufficient()
-  }
-  class Cadoption {
-    <<module>>
-    AdoptionRecord()
-    declare_sufficient()
-    load_adoption()
-    mark_stale()
-    save_adoption()
-  }
-  class Canalyzer {
-    <<module>>
-    analyze()
-  }
-  class Cdetectors {
-    <<module>>
-    detect_artifacts()
-    detect_build_files()
-    detect_ci()
-    detect_docs()
-    detect_entrypoints()
-    detect_public_surface()
-  }
-  class Cenrich {
-    <<module>>
-    enrich()
-  }
+ direction LR
+ class CLI {
+ <<command>>
+ ci()
+ evolve()
+ hook()
+ init()
+ install_ci()
+ install_hooks()
+ mcp()
+ run()
+ status()
+ sufficient()
+ }
+ class Cadoption {
+ <<module>>
+ AdoptionRecord()
+ declare_sufficient()
+ load_adoption()
+ mark_stale()
+ save_adoption()
+ }
+ class Canalyzer {
+ <<module>>
+ analyze()
+ }
+ class Cdetectors {
+ <<module>>
+ detect_artifacts()
+ detect_build_files()
+ detect_ci()
+ detect_docs()
+ detect_entrypoints()
+ detect_public_surface()
+ }
+ class Cenrich {
+ <<module>>
+ enrich()
+ }
 ```
 
 </div>
@@ -67,51 +67,51 @@ classDiagram
 
 ```mermaid
 flowchart TB
-  n0["What does analysis do?"]
-  n1["__init__.py"]
-  n2["analyzer.py"]
-  n3["scanner.py"]
-  n4["languages.py"]
-  n5["model.py"]
-  n6["detectors.py"]
-  n7["enrich.py"]
-  n8["errors.py"]
-  n0 --> n1
-  n0 --> n2
-  n0 --> n3
-  n0 --> n4
-  n0 --> n5
-  n0 --> n6
-  n0 --> n7
-  n0 --> n8
+ n0["What does analysis do?"]
+ n1["__init__.py"]
+ n2["analyzer.py"]
+ n3["scanner.py"]
+ n4["languages.py"]
+ n5["model.py"]
+ n6["detectors.py"]
+ n7["enrich.py"]
+ n8["errors.py"]
+ n0 --> n1
+ n0 --> n2
+ n0 --> n3
+ n0 --> n4
+ n0 --> n5
+ n0 --> n6
+ n0 --> n7
+ n0 --> n8
 ```
 
 ```mermaid
 flowchart TB
-  n0["What does analysis do?"]
-  n1["analysis"]
-  n2["__init__.py"]
-  n3["analyzer.py"]
-  n4["detectors.py"]
-  n5["enrich.py"]
-  n6["errors.py"]
-  n7["scanner.py"]
-  n8["languages.py"]
-  n9["model.py"]
-  n0 --> n1
-  n1 --> n2
-  n1 --> n3
-  n1 --> n4
-  n1 --> n5
-  n1 --> n6
-  n0 --> n2
-  n0 --> n3
-  n0 --> n7
-  n0 --> n8
-  n0 --> n9
-  n0 --> n4
-  n0 --> n5
-  n0 --> n6
+ n0["What does analysis do?"]
+ n1["analysis"]
+ n2["__init__.py"]
+ n3["analyzer.py"]
+ n4["detectors.py"]
+ n5["enrich.py"]
+ n6["errors.py"]
+ n7["scanner.py"]
+ n8["languages.py"]
+ n9["model.py"]
+ n0 --> n1
+ n1 --> n2
+ n1 --> n3
+ n1 --> n4
+ n1 --> n5
+ n1 --> n6
+ n0 --> n2
+ n0 --> n3
+ n0 --> n7
+ n0 --> n8
+ n0 --> n9
+ n0 --> n4
+ n0 --> n5
+ n0 --> n6
 ```
 
 </div>

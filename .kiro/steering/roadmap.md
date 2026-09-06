@@ -168,8 +168,8 @@ incl. docs/config, so a doc-heavy repo can report a markup language as primary.
 - [x] comprehension-visuals — depth-assigned pictures, glossary,
       architecture-style detection, diagrams catalog. Dependencies:
       explore-first-simplification.
-- [ ] architect-narrative — architecture model with abstraction
+- [x] architect-narrative — architecture model with abstraction
       levels; views from the model; COBESY blueprint + density trim
       on explore-first pages; harvested requirements linked to bands.
       Dependencies: comprehension-visuals.
-      _(spec.json: approved, implementing architecture overview)_
+      _(spec.json: approved, validated)_

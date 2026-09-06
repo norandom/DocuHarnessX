@@ -4,8 +4,8 @@ title: How does this program start?
 subjects:
 - cli.py
 summary: 'The `dhx` program starts in `docuharnessx/cli.py`, whose `main` is the console-script
-  entry point, and the startup path is: entry point → env loading → argparse construction
-  → argv normalization → dispatch to a subcommand handler (defaulting to `run`).'
+ entry point, and the startup path is: entry point → env loading → argparse construction
+ → argv normalization → dispatch to a subcommand handler (defaulting to `run`).'
 related: []
 abstraction: context
 ---
@@ -21,19 +21,19 @@ The `dhx` program starts in `docuharnessx/cli.py`, whose `main` is the console-s
 
 ```mermaid
 sequenceDiagram
-  autonumber
-  actor aOperator
-  participant container_CLI as CLI
-  participant container_analysis as analysis
-  participant container_assembler as assembler
-  participant container_composition as composition
-  participant container_comprehension as comprehension
-  aOperator->>container_CLI: run
-  container_CLI->>container_analysis: uses
-  container_CLI->>container_assembler: uses
-  container_CLI->>container_composition: uses
-  container_CLI->>container_comprehension: uses
-  container_CLI-->>aOperator: result
+ autonumber
+ actor aOperator
+ participant container_CLI as CLI
+ participant container_analysis as analysis
+ participant container_assembler as assembler
+ participant container_composition as composition
+ participant container_comprehension as comprehension
+ aOperator->>container_CLI: run
+ container_CLI->>container_analysis: uses
+ container_CLI->>container_assembler: uses
+ container_CLI->>container_composition: uses
+ container_CLI->>container_comprehension: uses
+ container_CLI-->>aOperator: result
 ```
 
 </div>
@@ -42,36 +42,36 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-  subgraph ginput["Inputs"]
-    n0(["Inputs"])
-  end
-  subgraph gtransform["This system"]
-    n1["cli.py"]
-    n2["docuharnessx"]
-    n4["analysis"]
-    n5["assembler"]
-    n6["composition"]
-    n7["comprehension"]
-  end
-  subgraph goutput["Outputs"]
-    n3[("Outputs")]
-  end
-  n0 --> n1
-  n1 --> n2
-  n2 --> n3
-  n1 --> n4
-  n4 --> n3
-  n1 --> n5
-  n5 --> n3
-  n1 --> n6
-  n6 --> n3
-  n1 --> n7
-  n7 --> n3
-  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
-  classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
-  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
-  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
-  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
+ subgraph ginput["Inputs"]
+ n0(["Inputs"])
+ end
+ subgraph gtransform["This system"]
+ n1["cli.py"]
+ n2["docuharnessx"]
+ n4["analysis"]
+ n5["assembler"]
+ n6["composition"]
+ n7["comprehension"]
+ end
+ subgraph goutput["Outputs"]
+ n3[("Outputs")]
+ end
+ n0 --> n1
+ n1 --> n2
+ n2 --> n3
+ n1 --> n4
+ n4 --> n3
+ n1 --> n5
+ n5 --> n3
+ n1 --> n6
+ n6 --> n3
+ n1 --> n7
+ n7 --> n3
+ classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+ classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
+ classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+ classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+ classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -80,17 +80,17 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  subgraph pipe["Pipeline"]
-    docs["docs"]
-    evolve["evolve"]
-  end
-  docs --> evolve
-  class docs,evolve container
-  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
-  classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
-  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
-  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
-  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
+ subgraph pipe["Pipeline"]
+ docs["docs"]
+ evolve["evolve"]
+ end
+ docs --> evolve
+ class docs,evolve container
+ classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+ classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
+ classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+ classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+ classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -99,17 +99,17 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  subgraph pipe["Pipeline"]
-    docs["docs"]
-    evolve["evolve"]
-  end
-  docs --> evolve
-  class docs,evolve container
-  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
-  classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
-  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
-  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
-  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
+ subgraph pipe["Pipeline"]
+ docs["docs"]
+ evolve["evolve"]
+ end
+ docs --> evolve
+ class docs,evolve container
+ classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+ classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
+ classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+ classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+ classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -118,52 +118,52 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-  n0["How does this program start?"]
-  n1["pyproject.toml"]
-  n2["cli.py"]
-  n3["ontology_loader.py"]
-  n4["config.py"]
-  n5["run.py"]
-  n0 --> n1
-  n0 --> n2
-  n0 --> n3
-  n0 --> n4
-  n0 --> n5
+ n0["How does this program start?"]
+ n1["pyproject.toml"]
+ n2["cli.py"]
+ n3["ontology_loader.py"]
+ n4["config.py"]
+ n5["run.py"]
+ n0 --> n1
+ n0 --> n2
+ n0 --> n3
+ n0 --> n4
+ n0 --> n5
 ```
 
 ```mermaid
 flowchart LR
-  n0["cli.py"]
-  n1["pyproject.toml"]
-  n2["ontology_loader.py"]
-  n3["config.py"]
-  n4["run.py"]
-  n0 --> n1
-  n1 --> n0
-  n0 --> n2
-  n2 --> n3
-  n3 --> n4
+ n0["cli.py"]
+ n1["pyproject.toml"]
+ n2["ontology_loader.py"]
+ n3["config.py"]
+ n4["run.py"]
+ n0 --> n1
+ n1 --> n0
+ n0 --> n2
+ n2 --> n3
+ n3 --> n4
 ```
 
 ```mermaid
 flowchart TB
-  page["How does this program start?"]
-  subgraph d0["repo root"]
-    e0["pyproject.toml"]
-  end
-  subgraph d1["docuharnessx"]
-    e1["cli.py"]
-    e2["ontology_loader.py"]
-    e3["config.py"]
-  end
-  subgraph d2["docuharnessx/pipeline"]
-    e4["run.py"]
-  end
-  page --> e0
-  page --> e1
-  page --> e2
-  page --> e3
-  page --> e4
+ page["How does this program start?"]
+ subgraph d0["repo root"]
+ e0["pyproject.toml"]
+ end
+ subgraph d1["docuharnessx"]
+ e1["cli.py"]
+ e2["ontology_loader.py"]
+ e3["config.py"]
+ end
+ subgraph d2["docuharnessx/pipeline"]
+ e4["run.py"]
+ end
+ page --> e0
+ page --> e1
+ page --> e2
+ page --> e3
+ page --> e4
 ```
 
 </div>

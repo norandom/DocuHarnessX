@@ -4,9 +4,9 @@ title: What does docuharnessx do?
 subjects:
 - docuharnessx
 summary: DocuHarnessX is a Python package — version `2.0.0` — whose own docstring
-  describes it as a tool to "generate grounded developer documentation from a software
-  repository". In practice it is a CLI-driven pipeline that scans a target repo, decides
-  which software questions deserve
+ describes it as a tool to "generate grounded developer documentation from a software
+ repository". In practice it is a CLI-driven pipeline that scans a target repo, decides
+ which software questions deserve
 related: []
 abstraction: container
 ---
@@ -22,31 +22,31 @@ abstraction: container
 
 ```mermaid
 flowchart TB
-  subgraph people["People"]
-  actor_operator(["Operator"])
-  end
-  subgraph enterprise["This system"]
-  system["DocuHarnessX"]
-  end
-  subgraph external["External"]
-  external_ci["GitHub Actions"]
-  external_docs[("Documentation site")]
-  external_repo[("norandom/DocuHarnessX")]
-  end
-  actor_operator -->|"runs CLI"| system
-  system -->|"reads and cites"| external_repo
-  external_ci -->|"runs in"| system
-  system -->|"publishes"| external_docs
-  class actor_operator person
-  class system system
-  class external_ci external
-  class external_docs store
-  class external_repo store
-  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
-  classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
-  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
-  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
-  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
+ subgraph people["People"]
+ actor_operator(["Operator"])
+ end
+ subgraph enterprise["This system"]
+ system["DocuHarnessX"]
+ end
+ subgraph external["External"]
+ external_ci["GitHub Actions"]
+ external_docs[("Documentation site")]
+ external_repo[("norandom/DocuHarnessX")]
+ end
+ actor_operator -->|"runs CLI"| system
+ system -->|"reads and cites"| external_repo
+ external_ci -->|"runs in"| system
+ system -->|"publishes"| external_docs
+ class actor_operator person
+ class system system
+ class external_ci external
+ class external_docs store
+ class external_repo store
+ classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+ classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
+ classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+ classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+ classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -55,31 +55,31 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-  subgraph b0["Interface"]
-    b0m0["CLI"]
-    b0m1["mcp"]
-  end
-  subgraph b1["Application"]
-    b1m0["assembler"]
-    b1m1["composition"]
-    b1m2["deployer"]
-    b1m3["pipeline"]
-    b1m4["planning"]
-    b1m5["review"]
-  end
-  subgraph b2["Domain"]
-    b2m0["analysis"]
-    b2m1["comprehension"]
-    b2m2["ontology"]
-  end
-  b0 -->|"depends on"| b1
-  b1 -->|"depends on"| b2
-  class b0m0,b0m1,b1m0,b1m1,b1m2,b1m3,b1m4,b1m5,b2m0,b2m1,b2m2 container
-  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
-  classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
-  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
-  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
-  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
+ subgraph b0["Interface"]
+ b0m0["CLI"]
+ b0m1["mcp"]
+ end
+ subgraph b1["Application"]
+ b1m0["assembler"]
+ b1m1["composition"]
+ b1m2["deployer"]
+ b1m3["pipeline"]
+ b1m4["planning"]
+ b1m5["review"]
+ end
+ subgraph b2["Domain"]
+ b2m0["analysis"]
+ b2m1["comprehension"]
+ b2m2["ontology"]
+ end
+ b0 -->|"depends on"| b1
+ b1 -->|"depends on"| b2
+ class b0m0,b0m1,b1m0,b1m1,b1m2,b1m3,b1m4,b1m5,b2m0,b2m1,b2m2 container
+ classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+ classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
+ classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+ classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+ classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -88,46 +88,46 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-  actor_operator(["Operator"])
-  subgraph sys["DocuHarnessX"]
-    subgraph band_interface["Interface"]
-  container_CLI["CLI"]
-  container_mcp["mcp"]
-    end
-    subgraph band_application["Application"]
-  container_assembler["assembler"]
-  container_composition["composition"]
-  container_deployer["deployer"]
-  container_pipeline["pipeline"]
-  container_planning["planning"]
-  container_review["review"]
-    end
-    subgraph band_domain["Domain"]
-  container_analysis["analysis"]
-  container_comprehension["comprehension"]
-  container_ontology["ontology"]
-    end
-  end
-  actor_operator -->|"runs CLI"| container_CLI
-  container_CLI -->|"depends on"| container_assembler
-  container_assembler -->|"depends on"| container_analysis
-  class actor_operator person
-  class container_CLI container
-  class container_analysis container
-  class container_assembler container
-  class container_composition container
-  class container_comprehension container
-  class container_deployer container
-  class container_mcp container
-  class container_ontology container
-  class container_pipeline container
-  class container_planning container
-  class container_review container
-  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
-  classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
-  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
-  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
-  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
+ actor_operator(["Operator"])
+ subgraph sys["DocuHarnessX"]
+ subgraph band_interface["Interface"]
+ container_CLI["CLI"]
+ container_mcp["mcp"]
+ end
+ subgraph band_application["Application"]
+ container_assembler["assembler"]
+ container_composition["composition"]
+ container_deployer["deployer"]
+ container_pipeline["pipeline"]
+ container_planning["planning"]
+ container_review["review"]
+ end
+ subgraph band_domain["Domain"]
+ container_analysis["analysis"]
+ container_comprehension["comprehension"]
+ container_ontology["ontology"]
+ end
+ end
+ actor_operator -->|"runs CLI"| container_CLI
+ container_CLI -->|"depends on"| container_assembler
+ container_assembler -->|"depends on"| container_analysis
+ class actor_operator person
+ class container_CLI container
+ class container_analysis container
+ class container_assembler container
+ class container_composition container
+ class container_comprehension container
+ class container_deployer container
+ class container_mcp container
+ class container_ontology container
+ class container_pipeline container
+ class container_planning container
+ class container_review container
+ classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+ classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
+ classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+ classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+ classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -136,45 +136,45 @@ flowchart TB
 
 ```mermaid
 classDiagram
-  direction LR
-  class CLI {
-    <<command>>
-    ci()
-    evolve()
-    hook()
-    init()
-    install_ci()
-    install_hooks()
-    mcp()
-    run()
-    status()
-    sufficient()
-  }
-  class Cadoption {
-    <<module>>
-    AdoptionRecord()
-    declare_sufficient()
-    load_adoption()
-    mark_stale()
-    save_adoption()
-  }
-  class Canalyzer {
-    <<module>>
-    analyze()
-  }
-  class Cdetectors {
-    <<module>>
-    detect_artifacts()
-    detect_build_files()
-    detect_ci()
-    detect_docs()
-    detect_entrypoints()
-    detect_public_surface()
-  }
-  class Cenrich {
-    <<module>>
-    enrich()
-  }
+ direction LR
+ class CLI {
+ <<command>>
+ ci()
+ evolve()
+ hook()
+ init()
+ install_ci()
+ install_hooks()
+ mcp()
+ run()
+ status()
+ sufficient()
+ }
+ class Cadoption {
+ <<module>>
+ AdoptionRecord()
+ declare_sufficient()
+ load_adoption()
+ mark_stale()
+ save_adoption()
+ }
+ class Canalyzer {
+ <<module>>
+ analyze()
+ }
+ class Cdetectors {
+ <<module>>
+ detect_artifacts()
+ detect_build_files()
+ detect_ci()
+ detect_docs()
+ detect_entrypoints()
+ detect_public_surface()
+ }
+ class Cenrich {
+ <<module>>
+ enrich()
+ }
 ```
 
 </div>
@@ -183,44 +183,44 @@ classDiagram
 
 ```mermaid
 flowchart TB
-  n0["What does docuharnessx do?"]
-  n1["__init__.py"]
-  n2["pyproject.toml"]
-  n0 --> n1
-  n0 --> n2
+ n0["What does docuharnessx do?"]
+ n1["__init__.py"]
+ n2["pyproject.toml"]
+ n0 --> n1
+ n0 --> n2
 ```
 
 ```mermaid
 flowchart TB
-  n0["What does docuharnessx do?"]
-  n1["docuharnessx"]
-  n2["__init__.py"]
-  n3["_ontology.py"]
-  n4["adoption.py"]
-  n5["blueprint.py"]
-  n6["bundle.py"]
-  n7["pyproject.toml"]
-  n0 --> n1
-  n1 --> n2
-  n1 --> n3
-  n1 --> n4
-  n1 --> n5
-  n1 --> n6
-  n0 --> n2
-  n0 --> n7
+ n0["What does docuharnessx do?"]
+ n1["docuharnessx"]
+ n2["__init__.py"]
+ n3["_ontology.py"]
+ n4["adoption.py"]
+ n5["blueprint.py"]
+ n6["bundle.py"]
+ n7["pyproject.toml"]
+ n0 --> n1
+ n1 --> n2
+ n1 --> n3
+ n1 --> n4
+ n1 --> n5
+ n1 --> n6
+ n0 --> n2
+ n0 --> n7
 ```
 
 ```mermaid
 flowchart TB
-  page["What does docuharnessx do?"]
-  subgraph d0["docuharnessx"]
-    e0["__init__.py"]
-  end
-  subgraph d1["repo root"]
-    e1["pyproject.toml"]
-  end
-  page --> e0
-  page --> e1
+ page["What does docuharnessx do?"]
+ subgraph d0["docuharnessx"]
+ e0["__init__.py"]
+ end
+ subgraph d1["repo root"]
+ e1["pyproject.toml"]
+ end
+ page --> e0
+ page --> e1
 ```
 
 </div>

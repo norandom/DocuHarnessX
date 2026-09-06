@@ -4,9 +4,9 @@ title: How is this project built and verified?
 subjects:
 - pyproject.toml
 summary: 'The build is declared entirely in the root `pyproject.toml`. The package
-  is built with **hatchling** rather than setuptools: -37` sets `requires = ["hatchling"]`
-  and `build-backend = "hatchling.build"`, and -44` restricts the wheel to `packages
-  = ["docuharnessx"]`.'
+ is built with **hatchling** rather than setuptools: -37` sets `requires = ["hatchling"]`
+ and `build-backend = "hatchling.build"`, and -44` restricts the wheel to `packages
+ = ["docuharnessx"]`.'
 related: []
 abstraction: container
 ---
@@ -22,77 +22,77 @@ The build is declared entirely in the root `pyproject.toml`. The package is buil
 
 ```mermaid
 flowchart TB
-  n0["How is this project built and verified?"]
-  n1["pyproject.toml"]
-  n2["cli.py"]
-  n3["pyproject.toml"]
-  n4["test_deployer_pyproject_deps.py"]
-  n5["test_mcp_pyproject_dep.py"]
-  n6["test_fixture_agentic_repo.py"]
-  n7["README.md"]
-  n0 --> n1
-  n0 --> n2
-  n0 --> n3
-  n0 --> n4
-  n0 --> n5
-  n0 --> n6
-  n0 --> n7
+ n0["How is this project built and verified?"]
+ n1["pyproject.toml"]
+ n2["cli.py"]
+ n3["pyproject.toml"]
+ n4["test_deployer_pyproject_deps.py"]
+ n5["test_mcp_pyproject_dep.py"]
+ n6["test_fixture_agentic_repo.py"]
+ n7["README.md"]
+ n0 --> n1
+ n0 --> n2
+ n0 --> n3
+ n0 --> n4
+ n0 --> n5
+ n0 --> n6
+ n0 --> n7
 ```
 
 ```mermaid
 flowchart LR
-  n0["How is this project built and verified?"]
-  n1["pyproject.toml"]
-  n2["pyproject.toml"]
-  n3["adopt.yml"]
-  n4["dhx.yml"]
-  n5["docs.yml"]
-  n6["pyproject.toml"]
-  n7["cli.py"]
-  n8["pyproject.toml"]
-  n9["test_deployer_pyproject_deps.py"]
-  n10["test_mcp_pyproject_dep.py"]
-  n11["test_fixture_agentic_repo.py"]
-  n12["README.md"]
-  n0 --> n1
-  n1 --> n2
-  n0 --> n3
-  n0 --> n4
-  n0 --> n5
-  n0 --> n6
-  n0 --> n7
-  n0 --> n8
-  n0 --> n9
-  n0 --> n10
-  n0 --> n11
-  n0 --> n12
+ n0["How is this project built and verified?"]
+ n1["pyproject.toml"]
+ n2["pyproject.toml"]
+ n3["adopt.yml"]
+ n4["dhx.yml"]
+ n5["docs.yml"]
+ n6["pyproject.toml"]
+ n7["cli.py"]
+ n8["pyproject.toml"]
+ n9["test_deployer_pyproject_deps.py"]
+ n10["test_mcp_pyproject_dep.py"]
+ n11["test_fixture_agentic_repo.py"]
+ n12["README.md"]
+ n0 --> n1
+ n1 --> n2
+ n0 --> n3
+ n0 --> n4
+ n0 --> n5
+ n0 --> n6
+ n0 --> n7
+ n0 --> n8
+ n0 --> n9
+ n0 --> n10
+ n0 --> n11
+ n0 --> n12
 ```
 
 ```mermaid
 flowchart TB
-  page["How is this project built and verified?"]
-  subgraph d0["repo root"]
-    e0["pyproject.toml"]
-    e1["README.md"]
-  end
-  subgraph d1["docuharnessx"]
-    e2["cli.py"]
-  end
-  subgraph d2["tests/fixtures/agentic_repo"]
-    e3["pyproject.toml"]
-  end
-  subgraph d3["tests"]
-    e4["test_deployer_pyproject_deps.py"]
-    e5["test_mcp_pyproject_dep.py"]
-    e6["test_fixture_agentic_repo.py"]
-  end
-  page --> e0
-  page --> e1
-  page --> e2
-  page --> e3
-  page --> e4
-  page --> e5
-  page --> e6
+ page["How is this project built and verified?"]
+ subgraph d0["repo root"]
+ e0["pyproject.toml"]
+ e1["README.md"]
+ end
+ subgraph d1["docuharnessx"]
+ e2["cli.py"]
+ end
+ subgraph d2["tests/fixtures/agentic_repo"]
+ e3["pyproject.toml"]
+ end
+ subgraph d3["tests"]
+ e4["test_deployer_pyproject_deps.py"]
+ e5["test_mcp_pyproject_dep.py"]
+ e6["test_fixture_agentic_repo.py"]
+ end
+ page --> e0
+ page --> e1
+ page --> e2
+ page --> e3
+ page --> e4
+ page --> e5
+ page --> e6
 ```
 
 </div>
@@ -125,7 +125,7 @@ Unit verification is pytest, configured in the same file: the `dev` extra declar
 End-to-end verification runs through the GitHub Actions in `.github/workflows`. `dhx.yml` dogfoods the reusable workflow on this repository: it calls `./.github/workflows/adopt.yml` with `source: checkout` (`dhx.yml:17-22`). The `docs` job of `adopt.yml` then executes the CLI's CI path in a clean environment:
 
 ```bash
-uvx --python 3.12 --from . dhx ci .    # adopt.yml:76
+uvx --python 3.12 --from . dhx ci . # adopt.yml:76
 ```
 
 (`source: git` would instead <a class="dhx-term" href="glossary.md#run">run</a> `uvx ... --from "git+https://github.com/norandom/DocuHarnessX.git@${DHX_REF}" dhx ci .`, `adopt.yml:78`.) On the CLI side, `_ci_command` (`docuharnessx/cli.py:1272`) skips bot/`[dhx]` commits and keyless runs, then calls `_generate_docs` (`docuharnessx/cli.py:1240`), which drives the <a class="dhx-term" href="glossary.md#run">run</a> <a class="dhx-term" href="glossary.md#pipeline">pipeline</a> with `deploy_mode="emit-ci-workflow"` (`docuharnessx/cli.py:1248`) — i.e. it assembles `docs/` plus `mkdocs.yml` into the target tree. When MkDocs itself must be <a class="dhx-term" href="glossary.md#run">run</a> from a generated site, the publish path uses `_PythonMkdocsRunner`, which rewrites a `mkdocs` argv entry into `sys.executable -m mkdocs` so the venv package is used even when no console script is on `PATH` (`docuharnessx/cli.py:715-720`). `adopt.yml:80-98` then commits the resulting `docs`, `mkdocs.yml`, `.docuharnessx`, and `.github/workflows/docs.yml` paths with a `[dhx] update living docs and MkDocs` message.

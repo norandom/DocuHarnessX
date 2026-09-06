@@ -38,23 +38,23 @@ Read the numbered list first. Later questions cover individual modules.
 
 ```mermaid
 flowchart LR
-  subgraph path["Read in this order"]
-    direction LR
-    p0["1. How does this program start?"]
-    p1["2. What does docuharnessx do?"]
-    p2["3. How is this project built and verif…"]
-    p3["4. How are tests organized?"]
-    p4["5. How is the public surface used or e…"]
-  end
-  p0 -->|"then"| p1
-  p1 -->|"then"| p2
-  p2 -->|"then"| p3
-  p3 -->|"then"| p4
-  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
-  classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
-  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
-  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
-  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
+ subgraph path["Read in this order"]
+ direction LR
+ p0["1. How does this program start?"]
+ p1["2. What does docuharnessx do?"]
+ p2["3. How is this project built and verif…"]
+ p3["4. How are tests organized?"]
+ p4["5. How is the public surface used or e…"]
+ end
+ p0 -->|"then"| p1
+ p1 -->|"then"| p2
+ p2 -->|"then"| p3
+ p3 -->|"then"| p4
+ classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+ classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
+ classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+ classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+ classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -63,8 +63,8 @@ flowchart LR
 
 ```mermaid
 pie showData
-  title Documentation coverage
-  "Accepted pages" : 12
+ title Documentation coverage
+ "Accepted pages" : 12
 ```
 
 </div>
@@ -73,31 +73,31 @@ pie showData
 
 ```mermaid
 flowchart TB
-  subgraph b0["Interface"]
-    b0m0["CLI"]
-    b0m1["mcp"]
-  end
-  subgraph b1["Application"]
-    b1m0["assembler"]
-    b1m1["composition"]
-    b1m2["deployer"]
-    b1m3["pipeline"]
-    b1m4["planning"]
-    b1m5["review"]
-  end
-  subgraph b2["Domain"]
-    b2m0["analysis"]
-    b2m1["comprehension"]
-    b2m2["ontology"]
-  end
-  b0 -->|"depends on"| b1
-  b1 -->|"depends on"| b2
-  class b0m0,b0m1,b1m0,b1m1,b1m2,b1m3,b1m4,b1m5,b2m0,b2m1,b2m2 container
-  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
-  classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
-  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
-  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
-  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
+ subgraph b0["Interface"]
+ b0m0["CLI"]
+ b0m1["mcp"]
+ end
+ subgraph b1["Application"]
+ b1m0["assembler"]
+ b1m1["composition"]
+ b1m2["deployer"]
+ b1m3["pipeline"]
+ b1m4["planning"]
+ b1m5["review"]
+ end
+ subgraph b2["Domain"]
+ b2m0["analysis"]
+ b2m1["comprehension"]
+ b2m2["ontology"]
+ end
+ b0 -->|"depends on"| b1
+ b1 -->|"depends on"| b2
+ class b0m0,b0m1,b1m0,b1m1,b1m2,b1m3,b1m4,b1m5,b2m0,b2m1,b2m2 container
+ classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+ classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
+ classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+ classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+ classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -106,31 +106,31 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-  subgraph people["People"]
-  actor_operator(["Operator"])
-  end
-  subgraph enterprise["This system"]
-  system["DocuHarnessX"]
-  end
-  subgraph external["External"]
-  external_ci["GitHub Actions"]
-  external_docs[("Documentation site")]
-  external_repo[("norandom/DocuHarnessX")]
-  end
-  actor_operator -->|"runs CLI"| system
-  system -->|"reads and cites"| external_repo
-  external_ci -->|"runs in"| system
-  system -->|"publishes"| external_docs
-  class actor_operator person
-  class system system
-  class external_ci external
-  class external_docs store
-  class external_repo store
-  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
-  classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
-  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
-  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
-  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
+ subgraph people["People"]
+ actor_operator(["Operator"])
+ end
+ subgraph enterprise["This system"]
+ system["DocuHarnessX"]
+ end
+ subgraph external["External"]
+ external_ci["GitHub Actions"]
+ external_docs[("Documentation site")]
+ external_repo[("norandom/DocuHarnessX")]
+ end
+ actor_operator -->|"runs CLI"| system
+ system -->|"reads and cites"| external_repo
+ external_ci -->|"runs in"| system
+ system -->|"publishes"| external_docs
+ class actor_operator person
+ class system system
+ class external_ci external
+ class external_docs store
+ class external_repo store
+ classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+ classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
+ classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+ classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+ classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -139,32 +139,32 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-  subgraph start["Start here"]
-    s0["How does this program start?"]
-    s1["What does docuharnessx do?"]
-    s2["How is this project built and verif…"]
-    s3["How are tests organized?"]
-    s4["How is the public surface used or e…"]
-  end
-  s0 --> s1
-  s1 --> s2
-  s2 --> s3
-  s3 --> s4
-  subgraph more["Further questions"]
-    m0["What does analysis do?"]
-    m1["What does assembler do?"]
-    m2["What does composition do?"]
-    m3["What does comprehension do?"]
-    m4["What does deployer do?"]
-    m5["What does javascripts do?"]
-    m6["What does mcp do?"]
-  end
-  s4 -.-> m0
-  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
-  classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
-  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
-  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
-  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
+ subgraph start["Start here"]
+ s0["How does this program start?"]
+ s1["What does docuharnessx do?"]
+ s2["How is this project built and verif…"]
+ s3["How are tests organized?"]
+ s4["How is the public surface used or e…"]
+ end
+ s0 --> s1
+ s1 --> s2
+ s2 --> s3
+ s3 --> s4
+ subgraph more["Further questions"]
+ m0["What does analysis do?"]
+ m1["What does assembler do?"]
+ m2["What does composition do?"]
+ m3["What does comprehension do?"]
+ m4["What does deployer do?"]
+ m5["What does javascripts do?"]
+ m6["What does mcp do?"]
+ end
+ s4 -.-> m0
+ classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+ classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
+ classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+ classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+ classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -173,36 +173,36 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-  subgraph ginput["Inputs"]
-    n0(["Inputs"])
-  end
-  subgraph gtransform["This system"]
-    n1["cli.py"]
-    n2["docuharnessx"]
-    n4["analysis"]
-    n5["assembler"]
-    n6["composition"]
-    n7["comprehension"]
-  end
-  subgraph goutput["Outputs"]
-    n3[("Outputs")]
-  end
-  n0 --> n1
-  n1 --> n2
-  n2 --> n3
-  n1 --> n4
-  n4 --> n3
-  n1 --> n5
-  n5 --> n3
-  n1 --> n6
-  n6 --> n3
-  n1 --> n7
-  n7 --> n3
-  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
-  classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
-  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
-  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
-  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
+ subgraph ginput["Inputs"]
+ n0(["Inputs"])
+ end
+ subgraph gtransform["This system"]
+ n1["cli.py"]
+ n2["docuharnessx"]
+ n4["analysis"]
+ n5["assembler"]
+ n6["composition"]
+ n7["comprehension"]
+ end
+ subgraph goutput["Outputs"]
+ n3[("Outputs")]
+ end
+ n0 --> n1
+ n1 --> n2
+ n2 --> n3
+ n1 --> n4
+ n4 --> n3
+ n1 --> n5
+ n5 --> n3
+ n1 --> n6
+ n6 --> n3
+ n1 --> n7
+ n7 --> n3
+ classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+ classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
+ classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+ classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+ classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -211,36 +211,36 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  subgraph ginput["Inputs"]
-    n0(["Inputs"])
-  end
-  subgraph gtransform["This system"]
-    n1["cli.py"]
-    n2["docuharnessx"]
-    n4["analysis"]
-    n5["assembler"]
-    n6["composition"]
-    n7["comprehension"]
-  end
-  subgraph goutput["Outputs"]
-    n3[("Outputs")]
-  end
-  n0 --> n1
-  n1 --> n2
-  n2 --> n3
-  n1 --> n4
-  n4 --> n3
-  n1 --> n5
-  n5 --> n3
-  n1 --> n6
-  n6 --> n3
-  n1 --> n7
-  n7 --> n3
-  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
-  classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
-  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
-  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
-  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
+ subgraph ginput["Inputs"]
+ n0(["Inputs"])
+ end
+ subgraph gtransform["This system"]
+ n1["cli.py"]
+ n2["docuharnessx"]
+ n4["analysis"]
+ n5["assembler"]
+ n6["composition"]
+ n7["comprehension"]
+ end
+ subgraph goutput["Outputs"]
+ n3[("Outputs")]
+ end
+ n0 --> n1
+ n1 --> n2
+ n2 --> n3
+ n1 --> n4
+ n4 --> n3
+ n1 --> n5
+ n5 --> n3
+ n1 --> n6
+ n6 --> n3
+ n1 --> n7
+ n7 --> n3
+ classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+ classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
+ classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+ classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+ classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -249,17 +249,17 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  subgraph pipe["Pipeline"]
-    docs["docs"]
-    evolve["evolve"]
-  end
-  docs --> evolve
-  class docs,evolve container
-  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
-  classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
-  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
-  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
-  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
+ subgraph pipe["Pipeline"]
+ docs["docs"]
+ evolve["evolve"]
+ end
+ docs --> evolve
+ class docs,evolve container
+ classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+ classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
+ classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+ classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+ classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -268,17 +268,17 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  subgraph pipe["Pipeline"]
-    docs["docs"]
-    evolve["evolve"]
-  end
-  docs --> evolve
-  class docs,evolve container
-  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
-  classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
-  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
-  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
-  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
+ subgraph pipe["Pipeline"]
+ docs["docs"]
+ evolve["evolve"]
+ end
+ docs --> evolve
+ class docs,evolve container
+ classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+ classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
+ classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+ classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+ classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>

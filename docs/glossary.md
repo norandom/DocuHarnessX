@@ -10,23 +10,23 @@ Related: [analysis](#analysis), [analyze](#analyze), [composition](#composition)
 
 ```mermaid
 flowchart LR
-  here["aggregate"]
-  r0["analysis"]
-  here --> r0
-  r1["analyze"]
-  here --> r1
-  r2["composition"]
-  here --> r2
-  r3["docuharnessx"]
-  here --> r3
-  r4["enrich"]
-  here --> r4
-  r5["hook"]
-  here --> r5
-  r6["main"]
-  here --> r6
-  r7["pipeline"]
-  here --> r7
+ here["aggregate"]
+ r0["analysis"]
+ here --> r0
+ r1["analyze"]
+ here --> r1
+ r2["composition"]
+ here --> r2
+ r3["docuharnessx"]
+ here --> r3
+ r4["enrich"]
+ here --> r4
+ r5["hook"]
+ here --> r5
+ r6["main"]
+ here --> r6
+ r7["pipeline"]
+ here --> r7
 ```
 
 Appears on:
@@ -43,23 +43,23 @@ Related: [aggregate](#aggregate), [analyze](#analyze), [composition](#compositio
 
 ```mermaid
 flowchart LR
-  here["analysis"]
-  r0["aggregate"]
-  here --> r0
-  r1["analyze"]
-  here --> r1
-  r2["composition"]
-  here --> r2
-  r3["docuharnessx"]
-  here --> r3
-  r4["enrich"]
-  here --> r4
-  r5["hook"]
-  here --> r5
-  r6["main"]
-  here --> r6
-  r7["pipeline"]
-  here --> r7
+ here["analysis"]
+ r0["aggregate"]
+ here --> r0
+ r1["analyze"]
+ here --> r1
+ r2["composition"]
+ here --> r2
+ r3["docuharnessx"]
+ here --> r3
+ r4["enrich"]
+ here --> r4
+ r5["hook"]
+ here --> r5
+ r6["main"]
+ here --> r6
+ r7["pipeline"]
+ here --> r7
 ```
 
 Appears on:
@@ -84,23 +84,23 @@ Related: [aggregate](#aggregate), [analysis](#analysis), [composition](#composit
 
 ```mermaid
 flowchart LR
-  here["analyze"]
-  r0["aggregate"]
-  here --> r0
-  r1["analysis"]
-  here --> r1
-  r2["composition"]
-  here --> r2
-  r3["docuharnessx"]
-  here --> r3
-  r4["enrich"]
-  here --> r4
-  r5["hook"]
-  here --> r5
-  r6["main"]
-  here --> r6
-  r7["pipeline"]
-  here --> r7
+ here["analyze"]
+ r0["aggregate"]
+ here --> r0
+ r1["analysis"]
+ here --> r1
+ r2["composition"]
+ here --> r2
+ r3["docuharnessx"]
+ here --> r3
+ r4["enrich"]
+ here --> r4
+ r5["hook"]
+ here --> r5
+ r6["main"]
+ here --> r6
+ r7["pipeline"]
+ here --> r7
 ```
 
 Appears on:
@@ -127,23 +127,23 @@ Related: [analysis](#analysis), [analyze](#analyze), [composition](#composition)
 
 ```mermaid
 flowchart LR
-  here["assembler"]
-  r0["analysis"]
-  here --> r0
-  r1["analyze"]
-  here --> r1
-  r2["composition"]
-  here --> r2
-  r3["deployer"]
-  here --> r3
-  r4["docuharnessx"]
-  here --> r4
-  r5["mcp"]
-  here --> r5
-  r6["ontology"]
-  here --> r6
-  r7["pipeline"]
-  here --> r7
+ here["assembler"]
+ r0["analysis"]
+ here --> r0
+ r1["analyze"]
+ here --> r1
+ r2["composition"]
+ here --> r2
+ r3["deployer"]
+ here --> r3
+ r4["docuharnessx"]
+ here --> r4
+ r5["mcp"]
+ here --> r5
+ r6["ontology"]
+ here --> r6
+ r7["pipeline"]
+ here --> r7
 ```
 
 Appears on:
@@ -171,23 +171,23 @@ Related: [aggregate](#aggregate), [analysis](#analysis), [analyze](#analyze), [d
 
 ```mermaid
 flowchart LR
-  here["composition"]
-  r0["aggregate"]
-  here --> r0
-  r1["analysis"]
-  here --> r1
-  r2["analyze"]
-  here --> r2
-  r3["docuharnessx"]
-  here --> r3
-  r4["enrich"]
-  here --> r4
-  r5["hook"]
-  here --> r5
-  r6["main"]
-  here --> r6
-  r7["pipeline"]
-  here --> r7
+ here["composition"]
+ r0["aggregate"]
+ here --> r0
+ r1["analysis"]
+ here --> r1
+ r2["analyze"]
+ here --> r2
+ r3["docuharnessx"]
+ here --> r3
+ r4["enrich"]
+ here --> r4
+ r5["hook"]
+ here --> r5
+ r6["main"]
+ here --> r6
+ r7["pipeline"]
+ here --> r7
 ```
 
 Appears on:
@@ -210,23 +210,23 @@ Related: [analysis](#analysis), [assembler](#assembler), [docuharnessx](#docuhar
 
 ```mermaid
 flowchart LR
-  here["comprehension"]
-  r0["analysis"]
-  here --> r0
-  r1["assembler"]
-  here --> r1
-  r2["docuharnessx"]
-  here --> r2
-  r3["ontology"]
-  here --> r3
-  r4["pages"]
-  here --> r4
-  r5["pipeline"]
-  here --> r5
-  r6["stages"]
-  here --> r6
-  r7["status"]
-  here --> r7
+ here["comprehension"]
+ r0["analysis"]
+ here --> r0
+ r1["assembler"]
+ here --> r1
+ r2["docuharnessx"]
+ here --> r2
+ r3["ontology"]
+ here --> r3
+ r4["pages"]
+ here --> r4
+ r5["pipeline"]
+ here --> r5
+ r6["stages"]
+ here --> r6
+ r7["status"]
+ here --> r7
 ```
 
 Appears on:
@@ -244,23 +244,23 @@ Related: [analysis](#analysis), [analyze](#analyze), [--default](#default), [doc
 
 ```mermaid
 flowchart LR
-  here["--config"]
-  r0["analysis"]
-  here --> r0
-  r1["analyze"]
-  here --> r1
-  r2["--default"]
-  here --> r2
-  r3["docuharnessx"]
-  here --> r3
-  r4["--force"]
-  here --> r4
-  r5["hook"]
-  here --> r5
-  r6["init"]
-  here --> r6
-  r7["install-ci"]
-  here --> r7
+ here["--config"]
+ r0["analysis"]
+ here --> r0
+ r1["analyze"]
+ here --> r1
+ r2["--default"]
+ here --> r2
+ r3["docuharnessx"]
+ here --> r3
+ r4["--force"]
+ here --> r4
+ r5["hook"]
+ here --> r5
+ r6["init"]
+ here --> r6
+ r7["install-ci"]
+ here --> r7
 ```
 
 Appears on:
@@ -278,23 +278,23 @@ Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [docuh
 
 ```mermaid
 flowchart LR
-  here["--default"]
-  r0["analysis"]
-  here --> r0
-  r1["analyze"]
-  here --> r1
-  r2["--config"]
-  here --> r2
-  r3["docuharnessx"]
-  here --> r3
-  r4["--force"]
-  here --> r4
-  r5["hook"]
-  here --> r5
-  r6["init"]
-  here --> r6
-  r7["install-ci"]
-  here --> r7
+ here["--default"]
+ r0["analysis"]
+ here --> r0
+ r1["analyze"]
+ here --> r1
+ r2["--config"]
+ here --> r2
+ r3["docuharnessx"]
+ here --> r3
+ r4["--force"]
+ here --> r4
+ r5["hook"]
+ here --> r5
+ r6["init"]
+ here --> r6
+ r7["install-ci"]
+ here --> r7
 ```
 
 Appears on:
@@ -317,23 +317,23 @@ Related: [analysis](#analysis), [analyze](#analyze), [assembler](#assembler), [c
 
 ```mermaid
 flowchart LR
-  here["deployer"]
-  r0["analysis"]
-  here --> r0
-  r1["analyze"]
-  here --> r1
-  r2["assembler"]
-  here --> r2
-  r3["composition"]
-  here --> r3
-  r4["docuharnessx"]
-  here --> r4
-  r5["mcp"]
-  here --> r5
-  r6["ontology"]
-  here --> r6
-  r7["pipeline"]
-  here --> r7
+ here["deployer"]
+ r0["analysis"]
+ here --> r0
+ r1["analyze"]
+ here --> r1
+ r2["assembler"]
+ here --> r2
+ r3["composition"]
+ here --> r3
+ r4["docuharnessx"]
+ here --> r4
+ r5["mcp"]
+ here --> r5
+ r6["ontology"]
+ here --> r6
+ r7["pipeline"]
+ here --> r7
 ```
 
 Appears on:
@@ -352,23 +352,23 @@ Related: [aggregate](#aggregate), [analysis](#analysis), [analyze](#analyze), [c
 
 ```mermaid
 flowchart LR
-  here["docuharnessx"]
-  r0["aggregate"]
-  here --> r0
-  r1["analysis"]
-  here --> r1
-  r2["analyze"]
-  here --> r2
-  r3["composition"]
-  here --> r3
-  r4["enrich"]
-  here --> r4
-  r5["hook"]
-  here --> r5
-  r6["main"]
-  here --> r6
-  r7["pipeline"]
-  here --> r7
+ here["docuharnessx"]
+ r0["aggregate"]
+ here --> r0
+ r1["analysis"]
+ here --> r1
+ r2["analyze"]
+ here --> r2
+ r3["composition"]
+ here --> r3
+ r4["enrich"]
+ here --> r4
+ r5["hook"]
+ here --> r5
+ r6["main"]
+ here --> r6
+ r7["pipeline"]
+ here --> r7
 ```
 
 Appears on:
@@ -396,23 +396,23 @@ Related: [aggregate](#aggregate), [analysis](#analysis), [analyze](#analyze), [c
 
 ```mermaid
 flowchart LR
-  here["enrich"]
-  r0["aggregate"]
-  here --> r0
-  r1["analysis"]
-  here --> r1
-  r2["analyze"]
-  here --> r2
-  r3["composition"]
-  here --> r3
-  r4["docuharnessx"]
-  here --> r4
-  r5["hook"]
-  here --> r5
-  r6["main"]
-  here --> r6
-  r7["pipeline"]
-  here --> r7
+ here["enrich"]
+ r0["aggregate"]
+ here --> r0
+ r1["analysis"]
+ here --> r1
+ r2["analyze"]
+ here --> r2
+ r3["composition"]
+ here --> r3
+ r4["docuharnessx"]
+ here --> r4
+ r5["hook"]
+ here --> r5
+ r6["main"]
+ here --> r6
+ r7["pipeline"]
+ here --> r7
 ```
 
 Appears on:
@@ -436,23 +436,23 @@ Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [--def
 
 ```mermaid
 flowchart LR
-  here["--force"]
-  r0["analysis"]
-  here --> r0
-  r1["analyze"]
-  here --> r1
-  r2["--config"]
-  here --> r2
-  r3["--default"]
-  here --> r3
-  r4["docuharnessx"]
-  here --> r4
-  r5["hook"]
-  here --> r5
-  r6["init"]
-  here --> r6
-  r7["install-ci"]
-  here --> r7
+ here["--force"]
+ r0["analysis"]
+ here --> r0
+ r1["analyze"]
+ here --> r1
+ r2["--config"]
+ here --> r2
+ r3["--default"]
+ here --> r3
+ r4["docuharnessx"]
+ here --> r4
+ r5["hook"]
+ here --> r5
+ r6["init"]
+ here --> r6
+ r7["install-ci"]
+ here --> r7
 ```
 
 Appears on:
@@ -476,23 +476,23 @@ Related: [aggregate](#aggregate), [analysis](#analysis), [analyze](#analyze), [c
 
 ```mermaid
 flowchart LR
-  here["hook"]
-  r0["aggregate"]
-  here --> r0
-  r1["analysis"]
-  here --> r1
-  r2["analyze"]
-  here --> r2
-  r3["composition"]
-  here --> r3
-  r4["docuharnessx"]
-  here --> r4
-  r5["enrich"]
-  here --> r5
-  r6["main"]
-  here --> r6
-  r7["pipeline"]
-  here --> r7
+ here["hook"]
+ r0["aggregate"]
+ here --> r0
+ r1["analysis"]
+ here --> r1
+ r2["analyze"]
+ here --> r2
+ r3["composition"]
+ here --> r3
+ r4["docuharnessx"]
+ here --> r4
+ r5["enrich"]
+ here --> r5
+ r6["main"]
+ here --> r6
+ r7["pipeline"]
+ here --> r7
 ```
 
 Appears on:
@@ -513,23 +513,23 @@ Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [--def
 
 ```mermaid
 flowchart LR
-  here["init"]
-  r0["analysis"]
-  here --> r0
-  r1["analyze"]
-  here --> r1
-  r2["--config"]
-  here --> r2
-  r3["--default"]
-  here --> r3
-  r4["docuharnessx"]
-  here --> r4
-  r5["--force"]
-  here --> r5
-  r6["hook"]
-  here --> r6
-  r7["install-ci"]
-  here --> r7
+ here["init"]
+ r0["analysis"]
+ here --> r0
+ r1["analyze"]
+ here --> r1
+ r2["--config"]
+ here --> r2
+ r3["--default"]
+ here --> r3
+ r4["docuharnessx"]
+ here --> r4
+ r5["--force"]
+ here --> r5
+ r6["hook"]
+ here --> r6
+ r7["install-ci"]
+ here --> r7
 ```
 
 Appears on:
@@ -548,23 +548,23 @@ Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [--def
 
 ```mermaid
 flowchart LR
-  here["install-ci"]
-  r0["analysis"]
-  here --> r0
-  r1["analyze"]
-  here --> r1
-  r2["--config"]
-  here --> r2
-  r3["--default"]
-  here --> r3
-  r4["docuharnessx"]
-  here --> r4
-  r5["--force"]
-  here --> r5
-  r6["hook"]
-  here --> r6
-  r7["init"]
-  here --> r7
+ here["install-ci"]
+ r0["analysis"]
+ here --> r0
+ r1["analyze"]
+ here --> r1
+ r2["--config"]
+ here --> r2
+ r3["--default"]
+ here --> r3
+ r4["docuharnessx"]
+ here --> r4
+ r5["--force"]
+ here --> r5
+ r6["hook"]
+ here --> r6
+ r7["init"]
+ here --> r7
 ```
 
 Appears on:
@@ -583,23 +583,23 @@ Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [--def
 
 ```mermaid
 flowchart LR
-  here["install-hooks"]
-  r0["analysis"]
-  here --> r0
-  r1["analyze"]
-  here --> r1
-  r2["--config"]
-  here --> r2
-  r3["--default"]
-  here --> r3
-  r4["docuharnessx"]
-  here --> r4
-  r5["--force"]
-  here --> r5
-  r6["hook"]
-  here --> r6
-  r7["init"]
-  here --> r7
+ here["install-hooks"]
+ r0["analysis"]
+ here --> r0
+ r1["analyze"]
+ here --> r1
+ r2["--config"]
+ here --> r2
+ r3["--default"]
+ here --> r3
+ r4["docuharnessx"]
+ here --> r4
+ r5["--force"]
+ here --> r5
+ r6["hook"]
+ here --> r6
+ r7["init"]
+ here --> r7
 ```
 
 Appears on:
@@ -618,21 +618,21 @@ Related: [analysis](#analysis), [assembler](#assembler), [composition](#composit
 
 ```mermaid
 flowchart LR
-  here["javascripts"]
-  r0["analysis"]
-  here --> r0
-  r1["assembler"]
-  here --> r1
-  r2["composition"]
-  here --> r2
-  r3["comprehension"]
-  here --> r3
-  r4["deployer"]
-  here --> r4
-  r5["docuharnessx"]
-  here --> r5
-  r6["mcp"]
-  here --> r6
+ here["javascripts"]
+ r0["analysis"]
+ here --> r0
+ r1["assembler"]
+ here --> r1
+ r2["composition"]
+ here --> r2
+ r3["comprehension"]
+ here --> r3
+ r4["deployer"]
+ here --> r4
+ r5["docuharnessx"]
+ here --> r5
+ r6["mcp"]
+ here --> r6
 ```
 
 Appears on:
@@ -650,23 +650,23 @@ Related: [aggregate](#aggregate), [analysis](#analysis), [analyze](#analyze), [c
 
 ```mermaid
 flowchart LR
-  here["main"]
-  r0["aggregate"]
-  here --> r0
-  r1["analysis"]
-  here --> r1
-  r2["analyze"]
-  here --> r2
-  r3["composition"]
-  here --> r3
-  r4["docuharnessx"]
-  here --> r4
-  r5["enrich"]
-  here --> r5
-  r6["hook"]
-  here --> r6
-  r7["pipeline"]
-  here --> r7
+ here["main"]
+ r0["aggregate"]
+ here --> r0
+ r1["analysis"]
+ here --> r1
+ r2["analyze"]
+ here --> r2
+ r3["composition"]
+ here --> r3
+ r4["docuharnessx"]
+ here --> r4
+ r5["enrich"]
+ here --> r5
+ r6["hook"]
+ here --> r6
+ r7["pipeline"]
+ here --> r7
 ```
 
 Appears on:
@@ -695,23 +695,23 @@ Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [--def
 
 ```mermaid
 flowchart LR
-  here["mcp"]
-  r0["analysis"]
-  here --> r0
-  r1["analyze"]
-  here --> r1
-  r2["--config"]
-  here --> r2
-  r3["--default"]
-  here --> r3
-  r4["docuharnessx"]
-  here --> r4
-  r5["--force"]
-  here --> r5
-  r6["hook"]
-  here --> r6
-  r7["init"]
-  here --> r7
+ here["mcp"]
+ r0["analysis"]
+ here --> r0
+ r1["analyze"]
+ here --> r1
+ r2["--config"]
+ here --> r2
+ r3["--default"]
+ here --> r3
+ r4["docuharnessx"]
+ here --> r4
+ r5["--force"]
+ here --> r5
+ r6["hook"]
+ here --> r6
+ r7["init"]
+ here --> r7
 ```
 
 Appears on:
@@ -740,23 +740,23 @@ Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [--def
 
 ```mermaid
 flowchart LR
-  here["ontology"]
-  r0["analysis"]
-  here --> r0
-  r1["analyze"]
-  here --> r1
-  r2["--config"]
-  here --> r2
-  r3["--default"]
-  here --> r3
-  r4["docuharnessx"]
-  here --> r4
-  r5["--force"]
-  here --> r5
-  r6["hook"]
-  here --> r6
-  r7["init"]
-  here --> r7
+ here["ontology"]
+ r0["analysis"]
+ here --> r0
+ r1["analyze"]
+ here --> r1
+ r2["--config"]
+ here --> r2
+ r3["--default"]
+ here --> r3
+ r4["docuharnessx"]
+ here --> r4
+ r5["--force"]
+ here --> r5
+ r6["hook"]
+ here --> r6
+ r7["init"]
+ here --> r7
 ```
 
 Appears on:
@@ -779,23 +779,23 @@ Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [--def
 
 ```mermaid
 flowchart LR
-  here["--out"]
-  r0["analysis"]
-  here --> r0
-  r1["analyze"]
-  here --> r1
-  r2["--config"]
-  here --> r2
-  r3["--default"]
-  here --> r3
-  r4["docuharnessx"]
-  here --> r4
-  r5["--force"]
-  here --> r5
-  r6["hook"]
-  here --> r6
-  r7["init"]
-  here --> r7
+ here["--out"]
+ r0["analysis"]
+ here --> r0
+ r1["analyze"]
+ here --> r1
+ r2["--config"]
+ here --> r2
+ r3["--default"]
+ here --> r3
+ r4["docuharnessx"]
+ here --> r4
+ r5["--force"]
+ here --> r5
+ r6["hook"]
+ here --> r6
+ r7["init"]
+ here --> r7
 ```
 
 Appears on:
@@ -813,23 +813,23 @@ Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [--def
 
 ```mermaid
 flowchart LR
-  here["pages"]
-  r0["analysis"]
-  here --> r0
-  r1["analyze"]
-  here --> r1
-  r2["--config"]
-  here --> r2
-  r3["--default"]
-  here --> r3
-  r4["docuharnessx"]
-  here --> r4
-  r5["--force"]
-  here --> r5
-  r6["hook"]
-  here --> r6
-  r7["init"]
-  here --> r7
+ here["pages"]
+ r0["analysis"]
+ here --> r0
+ r1["analyze"]
+ here --> r1
+ r2["--config"]
+ here --> r2
+ r3["--default"]
+ here --> r3
+ r4["docuharnessx"]
+ here --> r4
+ r5["--force"]
+ here --> r5
+ r6["hook"]
+ here --> r6
+ r7["init"]
+ here --> r7
 ```
 
 Appears on:
@@ -850,23 +850,23 @@ Related: [aggregate](#aggregate), [analysis](#analysis), [analyze](#analyze), [c
 
 ```mermaid
 flowchart LR
-  here["pipeline"]
-  r0["aggregate"]
-  here --> r0
-  r1["analysis"]
-  here --> r1
-  r2["analyze"]
-  here --> r2
-  r3["composition"]
-  here --> r3
-  r4["docuharnessx"]
-  here --> r4
-  r5["enrich"]
-  here --> r5
-  r6["hook"]
-  here --> r6
-  r7["main"]
-  here --> r7
+ here["pipeline"]
+ r0["aggregate"]
+ here --> r0
+ r1["analysis"]
+ here --> r1
+ r2["analyze"]
+ here --> r2
+ r3["composition"]
+ here --> r3
+ r4["docuharnessx"]
+ here --> r4
+ r5["enrich"]
+ here --> r5
+ r6["hook"]
+ here --> r6
+ r7["main"]
+ here --> r7
 ```
 
 Appears on:
@@ -891,23 +891,23 @@ Related: [analysis](#analysis), [analyze](#analyze), [composition](#composition)
 
 ```mermaid
 flowchart LR
-  here["planning"]
-  r0["analysis"]
-  here --> r0
-  r1["analyze"]
-  here --> r1
-  r2["composition"]
-  here --> r2
-  r3["--config"]
-  here --> r3
-  r4["docuharnessx"]
-  here --> r4
-  r5["--force"]
-  here --> r5
-  r6["hook"]
-  here --> r6
-  r7["init"]
-  here --> r7
+ here["planning"]
+ r0["analysis"]
+ here --> r0
+ r1["analyze"]
+ here --> r1
+ r2["composition"]
+ here --> r2
+ r3["--config"]
+ here --> r3
+ r4["docuharnessx"]
+ here --> r4
+ r5["--force"]
+ here --> r5
+ r6["hook"]
+ here --> r6
+ r7["init"]
+ here --> r7
 ```
 
 Appears on:
@@ -944,23 +944,23 @@ Related: [analysis](#analysis), [analyze](#analyze), [composition](#composition)
 
 ```mermaid
 flowchart LR
-  here["review"]
-  r0["analysis"]
-  here --> r0
-  r1["analyze"]
-  here --> r1
-  r2["composition"]
-  here --> r2
-  r3["--config"]
-  here --> r3
-  r4["docuharnessx"]
-  here --> r4
-  r5["--force"]
-  here --> r5
-  r6["hook"]
-  here --> r6
-  r7["init"]
-  here --> r7
+ here["review"]
+ r0["analysis"]
+ here --> r0
+ r1["analyze"]
+ here --> r1
+ r2["composition"]
+ here --> r2
+ r3["--config"]
+ here --> r3
+ r4["docuharnessx"]
+ here --> r4
+ r5["--force"]
+ here --> r5
+ r6["hook"]
+ here --> r6
+ r7["init"]
+ here --> r7
 ```
 
 Appears on:
@@ -986,23 +986,23 @@ Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [--def
 
 ```mermaid
 flowchart LR
-  here["run"]
-  r0["analysis"]
-  here --> r0
-  r1["analyze"]
-  here --> r1
-  r2["--config"]
-  here --> r2
-  r3["--default"]
-  here --> r3
-  r4["docuharnessx"]
-  here --> r4
-  r5["--force"]
-  here --> r5
-  r6["hook"]
-  here --> r6
-  r7["init"]
-  here --> r7
+ here["run"]
+ r0["analysis"]
+ here --> r0
+ r1["analyze"]
+ here --> r1
+ r2["--config"]
+ here --> r2
+ r3["--default"]
+ here --> r3
+ r4["docuharnessx"]
+ here --> r4
+ r5["--force"]
+ here --> r5
+ r6["hook"]
+ here --> r6
+ r7["init"]
+ here --> r7
 ```
 
 Appears on:
@@ -1026,23 +1026,23 @@ Related: [aggregate](#aggregate), [analysis](#analysis), [analyze](#analyze), [c
 
 ```mermaid
 flowchart LR
-  here["scan"]
-  r0["aggregate"]
-  here --> r0
-  r1["analysis"]
-  here --> r1
-  r2["analyze"]
-  here --> r2
-  r3["composition"]
-  here --> r3
-  r4["docuharnessx"]
-  here --> r4
-  r5["enrich"]
-  here --> r5
-  r6["hook"]
-  here --> r6
-  r7["main"]
-  here --> r7
+ here["scan"]
+ r0["aggregate"]
+ here --> r0
+ r1["analysis"]
+ here --> r1
+ r2["analyze"]
+ here --> r2
+ r3["composition"]
+ here --> r3
+ r4["docuharnessx"]
+ here --> r4
+ r5["enrich"]
+ here --> r5
+ r6["hook"]
+ here --> r6
+ r7["main"]
+ here --> r7
 ```
 
 Appears on:
@@ -1063,23 +1063,23 @@ Related: [aggregate](#aggregate), [analysis](#analysis), [analyze](#analyze), [c
 
 ```mermaid
 flowchart LR
-  here["stages"]
-  r0["aggregate"]
-  here --> r0
-  r1["analysis"]
-  here --> r1
-  r2["analyze"]
-  here --> r2
-  r3["composition"]
-  here --> r3
-  r4["docuharnessx"]
-  here --> r4
-  r5["enrich"]
-  here --> r5
-  r6["hook"]
-  here --> r6
-  r7["main"]
-  here --> r7
+ here["stages"]
+ r0["aggregate"]
+ here --> r0
+ r1["analysis"]
+ here --> r1
+ r2["analyze"]
+ here --> r2
+ r3["composition"]
+ here --> r3
+ r4["docuharnessx"]
+ here --> r4
+ r5["enrich"]
+ here --> r5
+ r6["hook"]
+ here --> r6
+ r7["main"]
+ here --> r7
 ```
 
 Appears on:
@@ -1101,23 +1101,23 @@ Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [--def
 
 ```mermaid
 flowchart LR
-  here["status"]
-  r0["analysis"]
-  here --> r0
-  r1["analyze"]
-  here --> r1
-  r2["--config"]
-  here --> r2
-  r3["--default"]
-  here --> r3
-  r4["docuharnessx"]
-  here --> r4
-  r5["--force"]
-  here --> r5
-  r6["hook"]
-  here --> r6
-  r7["init"]
-  here --> r7
+ here["status"]
+ r0["analysis"]
+ here --> r0
+ r1["analyze"]
+ here --> r1
+ r2["--config"]
+ here --> r2
+ r3["--default"]
+ here --> r3
+ r4["docuharnessx"]
+ here --> r4
+ r5["--force"]
+ here --> r5
+ r6["hook"]
+ here --> r6
+ r7["init"]
+ here --> r7
 ```
 
 Appears on:
@@ -1138,23 +1138,23 @@ Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [--def
 
 ```mermaid
 flowchart LR
-  here["sufficient"]
-  r0["analysis"]
-  here --> r0
-  r1["analyze"]
-  here --> r1
-  r2["--config"]
-  here --> r2
-  r3["--default"]
-  here --> r3
-  r4["docuharnessx"]
-  here --> r4
-  r5["--force"]
-  here --> r5
-  r6["hook"]
-  here --> r6
-  r7["init"]
-  here --> r7
+ here["sufficient"]
+ r0["analysis"]
+ here --> r0
+ r1["analyze"]
+ here --> r1
+ r2["--config"]
+ here --> r2
+ r3["--default"]
+ here --> r3
+ r4["docuharnessx"]
+ here --> r4
+ r5["--force"]
+ here --> r5
+ r6["hook"]
+ here --> r6
+ r7["init"]
+ here --> r7
 ```
 
 Appears on:

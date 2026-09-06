@@ -4,9 +4,9 @@ title: What does javascripts do?
 subjects:
 - javascripts
 summary: 'In this repository, `javascripts` is the single client-side script folder
-  of the generated MkDocs site: it contains exactly one file, `docs/javascripts/depth.js`,
-  which powers an **engineering-depth slider** that progressively discloses each documentation
-  page by reader'
+ of the generated MkDocs site: it contains exactly one file, `docs/javascripts/depth.js`,
+ which powers an **engineering-depth slider** that progressively discloses each documentation
+ page by reader'
 related: []
 abstraction: component
 ---
@@ -22,45 +22,45 @@ In this repository, `javascripts` is the single client-side script folder of the
 
 ```mermaid
 classDiagram
-  direction LR
-  class CLI {
-    <<command>>
-    ci()
-    evolve()
-    hook()
-    init()
-    install_ci()
-    install_hooks()
-    mcp()
-    run()
-    status()
-    sufficient()
-  }
-  class Cadoption {
-    <<module>>
-    AdoptionRecord()
-    declare_sufficient()
-    load_adoption()
-    mark_stale()
-    save_adoption()
-  }
-  class Canalyzer {
-    <<module>>
-    analyze()
-  }
-  class Cdetectors {
-    <<module>>
-    detect_artifacts()
-    detect_build_files()
-    detect_ci()
-    detect_docs()
-    detect_entrypoints()
-    detect_public_surface()
-  }
-  class Cenrich {
-    <<module>>
-    enrich()
-  }
+ direction LR
+ class CLI {
+ <<command>>
+ ci()
+ evolve()
+ hook()
+ init()
+ install_ci()
+ install_hooks()
+ mcp()
+ run()
+ status()
+ sufficient()
+ }
+ class Cadoption {
+ <<module>>
+ AdoptionRecord()
+ declare_sufficient()
+ load_adoption()
+ mark_stale()
+ save_adoption()
+ }
+ class Canalyzer {
+ <<module>>
+ analyze()
+ }
+ class Cdetectors {
+ <<module>>
+ detect_artifacts()
+ detect_build_files()
+ detect_ci()
+ detect_docs()
+ detect_entrypoints()
+ detect_public_surface()
+ }
+ class Cenrich {
+ <<module>>
+ enrich()
+ }
 ```
 
 </div>
@@ -69,78 +69,78 @@ classDiagram
 
 ```mermaid
 flowchart TB
-  n0["What does javascripts do?"]
-  n1["mkdocs.yml"]
-  n2["theme.py"]
-  n3["writer.py"]
-  n4["question_site.py"]
-  n5["depth.js"]
-  n6["site_config.py"]
-  n7["component-docuharnessx-3986831c.md"]
-  n8["build-pyproject-toml-a625bf0a.md"]
-  n0 --> n1
-  n0 --> n2
-  n0 --> n3
-  n0 --> n4
-  n0 --> n5
-  n0 --> n6
-  n0 --> n7
-  n0 --> n8
+ n0["What does javascripts do?"]
+ n1["mkdocs.yml"]
+ n2["theme.py"]
+ n3["writer.py"]
+ n4["question_site.py"]
+ n5["depth.js"]
+ n6["site_config.py"]
+ n7["component-docuharnessx-3986831c.md"]
+ n8["build-pyproject-toml-a625bf0a.md"]
+ n0 --> n1
+ n0 --> n2
+ n0 --> n3
+ n0 --> n4
+ n0 --> n5
+ n0 --> n6
+ n0 --> n7
+ n0 --> n8
 ```
 
 ```mermaid
 flowchart TB
-  n0["What does javascripts do?"]
-  n1["javascripts"]
-  n2["depth.js"]
-  n3["mkdocs.yml"]
-  n4["theme.py"]
-  n5["writer.py"]
-  n6["question_site.py"]
-  n7["site_config.py"]
-  n8["component-docuharnessx-3986831c.md"]
-  n9["build-pyproject-toml-a625bf0a.md"]
-  n0 --> n1
-  n1 --> n2
-  n0 --> n3
-  n0 --> n4
-  n0 --> n5
-  n0 --> n6
-  n0 --> n2
-  n0 --> n7
-  n0 --> n8
-  n0 --> n9
+ n0["What does javascripts do?"]
+ n1["javascripts"]
+ n2["depth.js"]
+ n3["mkdocs.yml"]
+ n4["theme.py"]
+ n5["writer.py"]
+ n6["question_site.py"]
+ n7["site_config.py"]
+ n8["component-docuharnessx-3986831c.md"]
+ n9["build-pyproject-toml-a625bf0a.md"]
+ n0 --> n1
+ n1 --> n2
+ n0 --> n3
+ n0 --> n4
+ n0 --> n5
+ n0 --> n6
+ n0 --> n2
+ n0 --> n7
+ n0 --> n8
+ n0 --> n9
 ```
 
 ```mermaid
 flowchart TB
-  page["What does javascripts do?"]
-  subgraph d0["repo root"]
-    e0["mkdocs.yml"]
-  end
-  subgraph d1["docuharnessx/assembler"]
-    e1["theme.py"]
-    e2["writer.py"]
-    e3["question_site.py"]
-  end
-  subgraph d2["docs/javascripts"]
-    e4["depth.js"]
-  end
-  subgraph d3["docuharnessx"]
-    e5["site_config.py"]
-  end
-  subgraph d4["docs"]
-    e6["component-docuharnessx-3986831c.md"]
-    e7["build-pyproject-toml-a625bf0a.md"]
-  end
-  page --> e0
-  page --> e1
-  page --> e2
-  page --> e3
-  page --> e4
-  page --> e5
-  page --> e6
-  page --> e7
+ page["What does javascripts do?"]
+ subgraph d0["repo root"]
+ e0["mkdocs.yml"]
+ end
+ subgraph d1["docuharnessx/assembler"]
+ e1["theme.py"]
+ e2["writer.py"]
+ e3["question_site.py"]
+ end
+ subgraph d2["docs/javascripts"]
+ e4["depth.js"]
+ end
+ subgraph d3["docuharnessx"]
+ e5["site_config.py"]
+ end
+ subgraph d4["docs"]
+ e6["component-docuharnessx-3986831c.md"]
+ e7["build-pyproject-toml-a625bf0a.md"]
+ end
+ page --> e0
+ page --> e1
+ page --> e2
+ page --> e3
+ page --> e4
+ page --> e5
+ page --> e6
+ page --> e7
 ```
 
 </div>

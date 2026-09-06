@@ -4,9 +4,9 @@ title: What does mcp do?
 subjects:
 - mcp
 summary: '`docuharnessx.mcp` is a **Model Context Protocol (MCP) server package that
-  lets a human conversationally refine already-generated documentation**. It is described
-  in its own docstring as "the stdio MCP refine server" and is the single public namespace
-  for that interactive'
+ lets a human conversationally refine already-generated documentation**. It is described
+ in its own docstring as "the stdio MCP refine server" and is the single public namespace
+ for that interactive'
 related: []
 abstraction: component
 ---
@@ -22,45 +22,45 @@ abstraction: component
 
 ```mermaid
 classDiagram
-  direction LR
-  class CLI {
-    <<command>>
-    ci()
-    evolve()
-    hook()
-    init()
-    install_ci()
-    install_hooks()
-    mcp()
-    run()
-    status()
-    sufficient()
-  }
-  class Cadoption {
-    <<module>>
-    AdoptionRecord()
-    declare_sufficient()
-    load_adoption()
-    mark_stale()
-    save_adoption()
-  }
-  class Canalyzer {
-    <<module>>
-    analyze()
-  }
-  class Cdetectors {
-    <<module>>
-    detect_artifacts()
-    detect_build_files()
-    detect_ci()
-    detect_docs()
-    detect_entrypoints()
-    detect_public_surface()
-  }
-  class Cenrich {
-    <<module>>
-    enrich()
-  }
+ direction LR
+ class CLI {
+ <<command>>
+ ci()
+ evolve()
+ hook()
+ init()
+ install_ci()
+ install_hooks()
+ mcp()
+ run()
+ status()
+ sufficient()
+ }
+ class Cadoption {
+ <<module>>
+ AdoptionRecord()
+ declare_sufficient()
+ load_adoption()
+ mark_stale()
+ save_adoption()
+ }
+ class Canalyzer {
+ <<module>>
+ analyze()
+ }
+ class Cdetectors {
+ <<module>>
+ detect_artifacts()
+ detect_build_files()
+ detect_ci()
+ detect_docs()
+ detect_entrypoints()
+ detect_public_surface()
+ }
+ class Cenrich {
+ <<module>>
+ enrich()
+ }
 ```
 
 </div>
@@ -69,44 +69,44 @@ classDiagram
 
 ```mermaid
 flowchart TB
-  n0["What does mcp do?"]
-  n1["__init__.py"]
-  n2["server.py"]
-  n3["session.py"]
-  n4["schemas.py"]
-  n5["overview.py"]
-  n6["planned.py"]
-  n0 --> n1
-  n0 --> n2
-  n0 --> n3
-  n0 --> n4
-  n0 --> n5
-  n0 --> n6
+ n0["What does mcp do?"]
+ n1["__init__.py"]
+ n2["server.py"]
+ n3["session.py"]
+ n4["schemas.py"]
+ n5["overview.py"]
+ n6["planned.py"]
+ n0 --> n1
+ n0 --> n2
+ n0 --> n3
+ n0 --> n4
+ n0 --> n5
+ n0 --> n6
 ```
 
 ```mermaid
 flowchart TB
-  n0["What does mcp do?"]
-  n1["mcp"]
-  n2["__init__.py"]
-  n3["handlers.py"]
-  n4["overview.py"]
-  n5["planned.py"]
-  n6["schemas.py"]
-  n7["server.py"]
-  n8["session.py"]
-  n0 --> n1
-  n1 --> n2
-  n1 --> n3
-  n1 --> n4
-  n1 --> n5
-  n1 --> n6
-  n0 --> n2
-  n0 --> n7
-  n0 --> n8
-  n0 --> n6
-  n0 --> n4
-  n0 --> n5
+ n0["What does mcp do?"]
+ n1["mcp"]
+ n2["__init__.py"]
+ n3["handlers.py"]
+ n4["overview.py"]
+ n5["planned.py"]
+ n6["schemas.py"]
+ n7["server.py"]
+ n8["session.py"]
+ n0 --> n1
+ n1 --> n2
+ n1 --> n3
+ n1 --> n4
+ n1 --> n5
+ n1 --> n6
+ n0 --> n2
+ n0 --> n7
+ n0 --> n8
+ n0 --> n6
+ n0 --> n4
+ n0 --> n5
 ```
 
 </div>

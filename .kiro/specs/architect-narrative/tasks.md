@@ -1,8 +1,7 @@
 # Tasks — architect-narrative
 
-Requirements, design, and tasks are approved (`spec.json`). Architecture
-overview is tasks 1–2; COBESY writer/density and requirements trace are
-later.
+Requirements, design, and tasks are approved (`spec.json`). Tasks 1–6
+are implemented and validated.
 
 ## 1. Architecture model
 
@@ -38,5 +37,15 @@ later.
 
 ## 6. Validation
 
-- [ ] 6.1 Full pytest; dogfood assemble on this repo; depth 1 home and package page have a story opening and a model view, not a file star. _Depends:_ 2, 3, 4.
-- [ ] 6.2 Confirm published pages contain no `SCQA`/`Minto`/`COBESY`. _Depends:_ 3.2.
+- [x] 6.1 Full pytest; dogfood assemble on this repo; depth 1 home and package page have a story opening and a model view, not a file star. _Depends:_ 2, 3, 4.
+- [x] 6.2 Confirm published pages contain no `SCQA`/`Minto`/`COBESY`. _Depends:_ 3.2.
+
+## Implementation Notes
+
+Validation (2026-09-06):
+
+- `pytest`: 2357 passed, 3 skipped.
+- `mkdocs build --strict` on the dogfood tree: clean.
+- Home depth 1 is the numbered reading path; no mermaid. Package page depth 1 is the trimmed summary plus system context (Operator / This system), not a file star. File graphs stay at depth 5.
+- Published `docs/*.md` contain none of `SCQA` / `Minto` / `COBESY` / `andragogy` (assemble-time strip). Living pages under `.docuharnessx/pages/` are unchanged.
+- Density empty-after-trim is recorded as an HTML comment on the page, not a RunReport field: the run report stays counts and omissions only.

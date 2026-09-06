@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from docuharnessx.assembler.home import HOME_PAGE_PATH, render_question_home
+from docuharnessx.assembler.methodology import suppress_methodology_labels
 from docuharnessx.assembler.mkdocs_config import build_question_mkdocs_yaml
 from docuharnessx.assembler.story import story_order
 from docuharnessx.assembler.model import (
@@ -78,6 +79,11 @@ def _write_text(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="") as handle:
         handle.write(content)
+
+
+def _write_markdown(path: Path, content: str) -> None:
+    """Write published Markdown with methodology labels stripped."""
+    _write_text(path, suppress_methodology_labels(content))
 
 
 def assemble_question_site(
@@ -163,13 +169,13 @@ def assemble_question_site(
     glossary = relate_cooccurring(glossary, appearances)
 
     for rel_path, _title, content in rendered:
-        _write_text(docs_dir / rel_path, autolink_markdown(content, glossary))
+        _write_markdown(docs_dir / rel_path, autolink_markdown(content, glossary))
     _write_text(docs_dir / EXTRA_CSS_PATH, render_extra_css(look.theme))
     _write_text(docs_dir / EXTRA_JS_PATH, render_depth_js(look.depth))
 
     extra_nav: list[tuple[str, str]] = []
     if glossary.terms:
-        _write_text(
+        _write_markdown(
             docs_dir / "glossary.md",
             render_glossary_page(glossary, appearances),
         )
@@ -188,12 +194,12 @@ def assemble_question_site(
         model=live_signals.model,
     )
     if catalog:
-        _write_text(docs_dir / DIAGRAMS_PAGE_PATH, catalog)
+        _write_markdown(docs_dir / DIAGRAMS_PAGE_PATH, catalog)
         extra_nav.append(("Diagrams", DIAGRAMS_PAGE_PATH))
     selection = load_compliance(root) if root else ComplianceSelection()
     if selection.frameworks:
         cells = score_matrix(selection, analysis)
-        _write_text(
+        _write_markdown(
             docs_dir / "compliance.md",
             render_compliance_page(selection, cells),
         )

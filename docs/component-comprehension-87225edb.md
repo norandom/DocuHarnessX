@@ -4,9 +4,9 @@ title: What does comprehension do?
 subjects:
 - comprehension
 summary: In DocuHarnessX, `comprehension` is the `docuharnessx.comprehension` package
-  — its own docstring is "Depth-assigned visuals, glossary, and compliance self-assessment.".
-  It turns a parsed `RepoAnalysis` plus the raw repo path into the *extra* material
-  that makes an assembled
+ — its own docstring is "Depth-assigned visuals, glossary, and compliance self-assessment.".
+ It turns a parsed `RepoAnalysis` plus the raw repo path into the *extra* material
+ that makes an assembled
 related: []
 abstraction: component
 ---
@@ -22,45 +22,45 @@ In <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>, `compre
 
 ```mermaid
 classDiagram
-  direction LR
-  class CLI {
-    <<command>>
-    ci()
-    evolve()
-    hook()
-    init()
-    install_ci()
-    install_hooks()
-    mcp()
-    run()
-    status()
-    sufficient()
-  }
-  class Cadoption {
-    <<module>>
-    AdoptionRecord()
-    declare_sufficient()
-    load_adoption()
-    mark_stale()
-    save_adoption()
-  }
-  class Canalyzer {
-    <<module>>
-    analyze()
-  }
-  class Cdetectors {
-    <<module>>
-    detect_artifacts()
-    detect_build_files()
-    detect_ci()
-    detect_docs()
-    detect_entrypoints()
-    detect_public_surface()
-  }
-  class Cenrich {
-    <<module>>
-    enrich()
-  }
+ direction LR
+ class CLI {
+ <<command>>
+ ci()
+ evolve()
+ hook()
+ init()
+ install_ci()
+ install_hooks()
+ mcp()
+ run()
+ status()
+ sufficient()
+ }
+ class Cadoption {
+ <<module>>
+ AdoptionRecord()
+ declare_sufficient()
+ load_adoption()
+ mark_stale()
+ save_adoption()
+ }
+ class Canalyzer {
+ <<module>>
+ analyze()
+ }
+ class Cdetectors {
+ <<module>>
+ detect_artifacts()
+ detect_build_files()
+ detect_ci()
+ detect_docs()
+ detect_entrypoints()
+ detect_public_surface()
+ }
+ class Cenrich {
+ <<module>>
+ enrich()
+ }
 ```
 
 </div>
@@ -69,77 +69,77 @@ classDiagram
 
 ```mermaid
 flowchart TB
-  n0["What does comprehension do?"]
-  n1["__init__.py"]
-  n2["question_site.py"]
-  n3["detect.py"]
-  n4["signals.py"]
-  n5["glossary.py"]
-  n6["autolink.py"]
-  n7["compliance.py"]
-  n8["graphs.py"]
-  n0 --> n1
-  n0 --> n2
-  n0 --> n3
-  n0 --> n4
-  n0 --> n5
-  n0 --> n6
-  n0 --> n7
-  n0 --> n8
+ n0["What does comprehension do?"]
+ n1["__init__.py"]
+ n2["question_site.py"]
+ n3["detect.py"]
+ n4["signals.py"]
+ n5["glossary.py"]
+ n6["autolink.py"]
+ n7["compliance.py"]
+ n8["graphs.py"]
+ n0 --> n1
+ n0 --> n2
+ n0 --> n3
+ n0 --> n4
+ n0 --> n5
+ n0 --> n6
+ n0 --> n7
+ n0 --> n8
 ```
 
 ```mermaid
 flowchart TB
-  n0["What does comprehension do?"]
-  n1["comprehension"]
-  n2["__init__.py"]
-  n3["architecture.py"]
-  n4["autolink.py"]
-  n5["compliance.py"]
-  n6["detect.py"]
-  n7["question_site.py"]
-  n8["signals.py"]
-  n9["glossary.py"]
-  n10["graphs.py"]
-  n0 --> n1
-  n1 --> n2
-  n1 --> n3
-  n1 --> n4
-  n1 --> n5
-  n1 --> n6
-  n0 --> n2
-  n0 --> n7
-  n0 --> n6
-  n0 --> n8
-  n0 --> n9
-  n0 --> n4
-  n0 --> n5
-  n0 --> n10
+ n0["What does comprehension do?"]
+ n1["comprehension"]
+ n2["__init__.py"]
+ n3["architecture.py"]
+ n4["autolink.py"]
+ n5["compliance.py"]
+ n6["detect.py"]
+ n7["question_site.py"]
+ n8["signals.py"]
+ n9["glossary.py"]
+ n10["graphs.py"]
+ n0 --> n1
+ n1 --> n2
+ n1 --> n3
+ n1 --> n4
+ n1 --> n5
+ n1 --> n6
+ n0 --> n2
+ n0 --> n7
+ n0 --> n6
+ n0 --> n8
+ n0 --> n9
+ n0 --> n4
+ n0 --> n5
+ n0 --> n10
 ```
 
 ```mermaid
 flowchart TB
-  page["What does comprehension do?"]
-  subgraph d0["docuharnessx/comprehension"]
-    e0["__init__.py"]
-    e1["detect.py"]
-    e2["signals.py"]
-    e3["glossary.py"]
-    e4["autolink.py"]
-    e5["compliance.py"]
-    e6["graphs.py"]
-  end
-  subgraph d1["docuharnessx/assembler"]
-    e7["question_site.py"]
-  end
-  page --> e0
-  page --> e1
-  page --> e2
-  page --> e3
-  page --> e4
-  page --> e5
-  page --> e6
-  page --> e7
+ page["What does comprehension do?"]
+ subgraph d0["docuharnessx/comprehension"]
+ e0["__init__.py"]
+ e1["detect.py"]
+ e2["signals.py"]
+ e3["glossary.py"]
+ e4["autolink.py"]
+ e5["compliance.py"]
+ e6["graphs.py"]
+ end
+ subgraph d1["docuharnessx/assembler"]
+ e7["question_site.py"]
+ end
+ page --> e0
+ page --> e1
+ page --> e2
+ page --> e3
+ page --> e4
+ page --> e5
+ page --> e6
+ page --> e7
 ```
 
 </div>

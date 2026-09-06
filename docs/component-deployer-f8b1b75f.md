@@ -4,9 +4,9 @@ title: What does deployer do?
 subjects:
 - deployer
 summary: '`docuharnessx/deployer` is the **pure, model-free MkDocs deploy core** behind
-  the pipeline''s Deploy stage (the "finale" of DocuHarnessX''s Ingest → … → Assemble
-  → Deploy run). Its own docstring calls it "the deterministic, harness-free deploy
-  core behind the thin `DeployStage`'
+ the pipeline''s Deploy stage (the "finale" of DocuHarnessX''s Ingest → … → Assemble
+ → Deploy run). Its own docstring calls it "the deterministic, harness-free deploy
+ core behind the thin `DeployStage`'
 related: []
 abstraction: component
 ---
@@ -22,45 +22,45 @@ abstraction: component
 
 ```mermaid
 classDiagram
-  direction LR
-  class CLI {
-    <<command>>
-    ci()
-    evolve()
-    hook()
-    init()
-    install_ci()
-    install_hooks()
-    mcp()
-    run()
-    status()
-    sufficient()
-  }
-  class Cadoption {
-    <<module>>
-    AdoptionRecord()
-    declare_sufficient()
-    load_adoption()
-    mark_stale()
-    save_adoption()
-  }
-  class Canalyzer {
-    <<module>>
-    analyze()
-  }
-  class Cdetectors {
-    <<module>>
-    detect_artifacts()
-    detect_build_files()
-    detect_ci()
-    detect_docs()
-    detect_entrypoints()
-    detect_public_surface()
-  }
-  class Cenrich {
-    <<module>>
-    enrich()
-  }
+ direction LR
+ class CLI {
+ <<command>>
+ ci()
+ evolve()
+ hook()
+ init()
+ install_ci()
+ install_hooks()
+ mcp()
+ run()
+ status()
+ sufficient()
+ }
+ class Cadoption {
+ <<module>>
+ AdoptionRecord()
+ declare_sufficient()
+ load_adoption()
+ mark_stale()
+ save_adoption()
+ }
+ class Canalyzer {
+ <<module>>
+ analyze()
+ }
+ class Cdetectors {
+ <<module>>
+ detect_artifacts()
+ detect_build_files()
+ detect_ci()
+ detect_docs()
+ detect_entrypoints()
+ detect_public_surface()
+ }
+ class Cenrich {
+ <<module>>
+ enrich()
+ }
 ```
 
 </div>
@@ -69,76 +69,76 @@ classDiagram
 
 ```mermaid
 flowchart TB
-  n0["What does deployer do?"]
-  n1["__init__.py"]
-  n2["deploy.py"]
-  n3["deploy.py"]
-  n4["model.py"]
-  n5["mode.py"]
-  n6["workflow.py"]
-  n7["tree.py"]
-  n8["commands.py"]
-  n0 --> n1
-  n0 --> n2
-  n0 --> n3
-  n0 --> n4
-  n0 --> n5
-  n0 --> n6
-  n0 --> n7
-  n0 --> n8
+ n0["What does deployer do?"]
+ n1["__init__.py"]
+ n2["deploy.py"]
+ n3["deploy.py"]
+ n4["model.py"]
+ n5["mode.py"]
+ n6["workflow.py"]
+ n7["tree.py"]
+ n8["commands.py"]
+ n0 --> n1
+ n0 --> n2
+ n0 --> n3
+ n0 --> n4
+ n0 --> n5
+ n0 --> n6
+ n0 --> n7
+ n0 --> n8
 ```
 
 ```mermaid
 flowchart TB
-  n0["What does deployer do?"]
-  n1["deployer"]
-  n2["__init__.py"]
-  n3["commands.py"]
-  n4["deploy.py"]
-  n5["mode.py"]
-  n6["model.py"]
-  n7["deploy.py"]
-  n8["workflow.py"]
-  n9["tree.py"]
-  n0 --> n1
-  n1 --> n2
-  n1 --> n3
-  n1 --> n4
-  n1 --> n5
-  n1 --> n6
-  n0 --> n2
-  n0 --> n7
-  n0 --> n4
-  n0 --> n6
-  n0 --> n5
-  n0 --> n8
-  n0 --> n9
-  n0 --> n3
+ n0["What does deployer do?"]
+ n1["deployer"]
+ n2["__init__.py"]
+ n3["commands.py"]
+ n4["deploy.py"]
+ n5["mode.py"]
+ n6["model.py"]
+ n7["deploy.py"]
+ n8["workflow.py"]
+ n9["tree.py"]
+ n0 --> n1
+ n1 --> n2
+ n1 --> n3
+ n1 --> n4
+ n1 --> n5
+ n1 --> n6
+ n0 --> n2
+ n0 --> n7
+ n0 --> n4
+ n0 --> n6
+ n0 --> n5
+ n0 --> n8
+ n0 --> n9
+ n0 --> n3
 ```
 
 ```mermaid
 flowchart TB
-  page["What does deployer do?"]
-  subgraph d0["docuharnessx/deployer"]
-    e0["__init__.py"]
-    e1["deploy.py"]
-    e2["model.py"]
-    e3["mode.py"]
-    e4["workflow.py"]
-    e5["tree.py"]
-    e6["commands.py"]
-  end
-  subgraph d1["docuharnessx/stages"]
-    e7["deploy.py"]
-  end
-  page --> e0
-  page --> e1
-  page --> e2
-  page --> e3
-  page --> e4
-  page --> e5
-  page --> e6
-  page --> e7
+ page["What does deployer do?"]
+ subgraph d0["docuharnessx/deployer"]
+ e0["__init__.py"]
+ e1["deploy.py"]
+ e2["model.py"]
+ e3["mode.py"]
+ e4["workflow.py"]
+ e5["tree.py"]
+ e6["commands.py"]
+ end
+ subgraph d1["docuharnessx/stages"]
+ e7["deploy.py"]
+ end
+ page --> e0
+ page --> e1
+ page --> e2
+ page --> e3
+ page --> e4
+ page --> e5
+ page --> e6
+ page --> e7
 ```
 
 </div>
