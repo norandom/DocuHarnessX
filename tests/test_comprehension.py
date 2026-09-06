@@ -6,7 +6,12 @@ from pathlib import Path
 
 import pytest
 
-from docuharnessx.comprehension.autolink import autolink_markdown
+from docuharnessx.comprehension.autolink import (
+    appearances_for_pages,
+    autolink_markdown,
+    relate_cooccurring,
+)
+from docuharnessx.comprehension.graphs import render_glossary_page
 from docuharnessx.comprehension.compliance import (
     ComplianceSelection,
     load_compliance,
@@ -63,13 +68,35 @@ def test_invalid_glossary_raises(tmp_path: Path) -> None:
         load_glossary(str(tmp_path))
 
 
+def test_autolink_skips_frontmatter_and_headings() -> None:
+    glossary = Glossary(terms=(GlossaryTerm(id="mcp", label="mcp"),))
+    text = (
+        "---\n"
+        "id: component:mcp\n"
+        "title: What does mcp do?\n"
+        "subjects:\n"
+        "- mcp\n"
+        "summary: mcp is a server\n"
+        "---\n"
+        "# What does mcp do?\n"
+        "\n"
+        "The mcp package refines docs.\n"
+    )
+    out = autolink_markdown(text, glossary)
+    assert "id: component:mcp" in out
+    assert "title: What does mcp do?" in out
+    assert "# What does mcp do?" in out
+    assert 'href="glossary.md#mcp"' in out
+    assert out.split("---", 2)[1].count("glossary.md") == 0
+
+
 def test_autolink_skips_code() -> None:
     glossary = Glossary(
         terms=(GlossaryTerm(id="signal", label="Signal"),)
     )
     text = "A Signal in prose and `Signal` in code and\n```\nSignal\n```\n"
     out = autolink_markdown(text, glossary)
-    assert "[Signal](glossary.md#signal)" in out
+    assert 'href="glossary.md#signal"' in out
     assert "`Signal`" in out
     assert "```\nSignal\n```" in out
     linked = autolink_markdown("[go](component-root-551790a4.md)", glossary)
@@ -80,7 +107,29 @@ def test_autolink_skips_code() -> None:
             GlossaryTerm(id="glossary", label="glossary"),
         )
     ))
-    assert nested.count("](") == 1
+    assert nested.count("href=") == 1
+
+
+def test_glossary_page_links_related_and_appearances() -> None:
+    glossary = Glossary(
+        terms=(
+            GlossaryTerm(id="mcp", label="mcp"),
+            GlossaryTerm(id="refine", label="refine"),
+        )
+    )
+    pages = [
+        (
+            "component-mcp.md",
+            "What does mcp do?",
+            "---\nid: component:mcp\n---\nThe mcp refine server.\n",
+        )
+    ]
+    seen = appearances_for_pages(glossary, pages)
+    glossary = relate_cooccurring(glossary, seen)
+    html = render_glossary_page(glossary, seen)
+    assert "[refine](#refine)" in html or "refine" in html
+    assert "Appears on:" in html
+    assert "component-mcp.md" in html
 
 
 def test_parse_frameworks() -> None:

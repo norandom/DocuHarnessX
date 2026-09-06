@@ -1,22 +1,22 @@
 ---
-id: [component](glossary.md#component):[deployer](glossary.md#deployer)
-title: What does [deployer](glossary.md#deployer) do?
+id: component:deployer
+title: What does deployer do?
 subjects:
-- [deployer](glossary.md#deployer)
+- deployer
 summary: '`docuharnessx/deployer` is the **pure, model-free MkDocs deploy core** behind
-  the [pipeline](glossary.md#pipeline)''s Deploy stage (the "finale" of [DocuHarnessX](glossary.md#docuharnessx)''s Ingest → … → Assemble
-  → Deploy [run](glossary.md#run)). Its own docstring calls it "the deterministic, harness-free deploy
+  the pipeline''s Deploy stage (the "finale" of DocuHarnessX''s Ingest → … → Assemble
+  → Deploy run). Its own docstring calls it "the deterministic, harness-free deploy
   core behind the thin `DeployStage` adapter" (`docuharnessx/deployer/__init__.py:1`),
   and the adapter describes it as the place where all the real work — mode resolution,
   workflow rendering, target-tree writing, build validation, and the isolated `gh-deploy`
   push — lives (`docuharnessx/stages/deploy.py:5`).'
 related: []
 ---
-# What does [deployer](glossary.md#deployer) do?
+# What does deployer do?
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
-`docuharnessx/deployer` is the **pure, model-free MkDocs deploy core** behind the [pipeline](glossary.md#pipeline)'s Deploy stage (the "finale" of [DocuHarnessX](glossary.md#docuharnessx)'s Ingest → … → Assemble → Deploy [run](glossary.md#run)). Its own docstring calls it "the deterministic, harness-free deploy core behind the thin `DeployStage` adapter" (`docuharnessx/deployer/__init__.py:1`), and the adapter describes it as the place where all the real work — mode resolution, workflow rendering, target-tree writing, build validation, and the isolated `gh-deploy` push — lives (`docuharnessx/stages/deploy.py:5`).
+`docuharnessx/deployer` is the **pure, model-free MkDocs deploy core** behind the <a class="dhx-term" href="glossary.md#pipeline">pipeline</a>'s Deploy stage (the "finale" of <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>'s Ingest → … → Assemble → Deploy <a class="dhx-term" href="glossary.md#run">run</a>). Its own docstring calls it "the deterministic, harness-free deploy core behind the thin `DeployStage` adapter" (`docuharnessx/deployer/__init__.py:1`), and the adapter describes it as the place where all the real work — mode resolution, workflow rendering, target-tree writing, build validation, and the isolated `gh-deploy` push — lives (`docuharnessx/stages/deploy.py:5`).
 
 </div>
 
@@ -135,11 +135,11 @@ flowchart TB
 
 # What `deployer` does
 
-`docuharnessx/deployer` is the **pure, model-free MkDocs deploy core** behind the [pipeline](glossary.md#pipeline)'s Deploy stage (the "finale" of [DocuHarnessX](glossary.md#docuharnessx)'s Ingest → … → Assemble → Deploy [run](glossary.md#run)). Its own docstring calls it "the deterministic, harness-free deploy core behind the thin `DeployStage` adapter" (`docuharnessx/deployer/__init__.py:1`), and the adapter describes it as the place where all the real work — mode resolution, workflow rendering, target-tree writing, build validation, and the isolated `gh-deploy` push — lives (`docuharnessx/stages/deploy.py:5`).
+`docuharnessx/deployer` is the **pure, model-free MkDocs deploy core** behind the <a class="dhx-term" href="glossary.md#pipeline">pipeline</a>'s Deploy stage (the "finale" of <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>'s Ingest → … → Assemble → Deploy <a class="dhx-term" href="glossary.md#run">run</a>). Its own docstring calls it "the deterministic, harness-free deploy core behind the thin `DeployStage` adapter" (`docuharnessx/deployer/__init__.py:1`), and the adapter describes it as the place where all the real work — mode resolution, workflow rendering, target-tree writing, build validation, and the isolated `gh-deploy` push — lives (`docuharnessx/stages/deploy.py:5`).
 
 ## What it consumes
 
-It never assembles or generates docs itself. `deploy_site` takes the frozen, read-only `AssembledSite` produced by the [assembler](glossary.md#assembler) (its `mkdocs_yml_path`, `docs_dir`, and resolved `SiteIdentity` whose `site_url` becomes the result's `target_pages_url`), plus the resolved `target_repo` path, the [run](glossary.md#run) `out_dir`, the already-validated `DeployMode`, and an injected `CommandRunner` (`docuharnessx/deployer/deploy.py:82`). All per-target values are consumed from that site — the [deployer](glossary.md#deployer) never derives [DocuHarnessX](glossary.md#docuharnessx)'s own identity and only ever writes against the *target* project (`docuharnessx/deployer/deploy.py:44`).
+It never assembles or generates docs itself. `deploy_site` takes the frozen, read-only `AssembledSite` produced by the <a class="dhx-term" href="glossary.md#assembler">assembler</a> (its `mkdocs_yml_path`, `docs_dir`, and resolved `SiteIdentity` whose `site_url` becomes the result's `target_pages_url`), plus the resolved `target_repo` path, the <a class="dhx-term" href="glossary.md#run">run</a> `out_dir`, the already-validated `DeployMode`, and an injected `CommandRunner` (`docuharnessx/deployer/deploy.py:82`). All per-target values are consumed from that site — the <a class="dhx-term" href="glossary.md#deployer">deployer</a> never derives <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>'s own identity and only ever writes against the *target* project (`docuharnessx/deployer/deploy.py:44`).
 
 ## The three modes
 
@@ -159,11 +159,11 @@ The mode set is a `Literal` in `model.py`: `"emit-ci-workflow"` (default), `"gh-
 
 `DeployResult` is a frozen dataclass carrying `schema_version` (pinned to `DEPLOY_RESULT_SCHEMA_VERSION = 1`), `mode`, `status`, `target_pages_url`, `written_paths` (a tuple), `built_path`, and a one-line `detail` (`docuharnessx/deployer/model.py:87`), so it is deeply immutable and hashable. `DeployError` is the base error class with `DeployInputError` as its specific input subclass (`docuharnessx/deployer/model.py:129`).
 
-## How it is wired into the [pipeline](glossary.md#pipeline)
+## How it is wired into the pipeline
 
-`__init__.py` is the single public namespace re-exporting `deploy_site`, `resolve_deploy_mode`, `render_pages_workflow`, `write_target_tree`, the command-runner symbols, and the model types (`docuharnessx/deployer/__init__.py:77`). The `DeployStage` adapter (`STAGE_NAME = "deploy"`) captures the [run](glossary.md#run) `State` on `on_task_start`, and on `on_step_end` reads `SLOT_ASSEMBLED_SITE` / `SLOT_OUTPUT_DIR` / `SLOT_TARGET_REPO`, pins `ASSEMBLED_SITE_SCHEMA_VERSION`, resolves the mode via `resolve_deploy_mode(self._deploy_mode_value())`, runs `deploy_site(...)` through an injected or default `CommandRunner`, publishes the result with `run_context.set_deploy_result(result)` into `SLOT_DEPLOY_RESULT`, and journals only a bounded scalar summary (`docuharnessx/stages/deploy.py:145`, `:184`).
+`__init__.py` is the single public namespace re-exporting `deploy_site`, `resolve_deploy_mode`, `render_pages_workflow`, `write_target_tree`, the command-runner symbols, and the model types (`docuharnessx/deployer/__init__.py:77`). The `DeployStage` adapter (`STAGE_NAME = "deploy"`) captures the <a class="dhx-term" href="glossary.md#run">run</a> `State` on `on_task_start`, and on `on_step_end` reads `SLOT_ASSEMBLED_SITE` / `SLOT_OUTPUT_DIR` / `SLOT_TARGET_REPO`, pins `ASSEMBLED_SITE_SCHEMA_VERSION`, resolves the mode via `resolve_deploy_mode(self._deploy_mode_value())`, runs `deploy_site(...)` through an injected or default `CommandRunner`, publishes the result with `run_context.set_deploy_result(result)` into `SLOT_DEPLOY_RESULT`, and journals only a bounded scalar summary (`docuharnessx/stages/deploy.py:145`, `:184`).
 
-In short: given an already-assembled MkDocs site, `deployer` deterministically either equips the target repo to self-publish to GitHub [Pages](glossary.md#pages) on push (the default), merely validates a `mkdocs build`, or performs the single network `gh-deploy` push — recording a frozen `DeployResult` as the seam for the rest of the [run](glossary.md#run).
+In short: given an already-assembled MkDocs site, `deployer` deterministically either equips the target repo to self-publish to GitHub <a class="dhx-term" href="glossary.md#pages">Pages</a> on push (the default), merely validates a `mkdocs build`, or performs the single network `gh-deploy` push — recording a frozen `DeployResult` as the seam for the rest of the <a class="dhx-term" href="glossary.md#run">run</a>.
 
 </div>
 

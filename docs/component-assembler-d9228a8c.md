@@ -1,25 +1,25 @@
 ---
-id: component:[assembler](glossary.md#assembler)
-title: What does [assembler](glossary.md#assembler) do?
+id: component:assembler
+title: What does assembler do?
 subjects:
-- [assembler](glossary.md#assembler)
-summary: '`docuharnessx.assembler` is [DocuHarnessX](glossary.md#docuharnessx)''s **MkDocs site-assembly core**
+- assembler
+summary: '`docuharnessx.assembler` is DocuHarnessX''s **MkDocs site-assembly core**
   — the "pure, model-free" stage that turns quality-gated content into a publishable
   **Material for MkDocs** source tree. Its own docstring names it the deterministic,
   harness-free core behind the thin `AssembleStage` adapter: it consumes the accepted
-  [ontology](glossary.md#ontology) `Segment` set from the frozen `ReviewReport`, the loaded project `Vocabulary`,
+  ontology `Segment` set from the frozen `ReviewReport`, the loaded project `Vocabulary`,
   and an optional `RepoAnalysis`, then "emits a Material for MkDocs source tree under
-  the [run](glossary.md#run)''s output directory: one `docs/*.md` page per accepted segment, per-role
-  landing [pages](glossary.md#pages) with COBESY-structured intent-ordered agendas, a tags index, and a
+  the run''s output directory: one `docs/*.md` page per accepted segment, per-role
+  landing pages with COBESY-structured intent-ordered agendas, a tags index, and a
   `mkdocs.yml`" (`docuharnessx/assembler/__init__.py:1-13`). Everything downstream
   imports from this one public namespace rather than the submodules (`docuharnessx/assembler/__init__.py:15-18`).'
 related: []
 ---
-# What does [assembler](glossary.md#assembler) do?
+# What does assembler do?
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
-`docuharnessx.assembler` is [DocuHarnessX](glossary.md#docuharnessx)'s **MkDocs site-assembly core** — the "pure, model-free" stage that turns quality-gated content into a publishable **Material for MkDocs** source tree. Its own docstring names it the deterministic, harness-free core behind the thin `AssembleStage` adapter: it consumes the accepted [ontology](glossary.md#ontology) `Segment` set from the frozen `ReviewReport`, the loaded project `Vocabulary`, and an optional `RepoAnalysis`, then "emits a Material for MkDocs source tree under the [run](glossary.md#run)'s output directory: one `docs/*.md` page per accepted segment, per-role landing [pages](glossary.md#pages) with COBESY-structured intent-ordered agendas, a tags index, and a `mkdocs.yml`" (`docuharnessx/assembler/__init__.py:1-13`). Everything downstream imports from this one public namespace rather than the submodules (`docuharnessx/assembler/__init__.py:15-18`).
+`docuharnessx.assembler` is <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>'s **MkDocs site-assembly core** — the "pure, model-free" stage that turns quality-gated content into a publishable **Material for MkDocs** source tree. Its own docstring names it the deterministic, harness-free core behind the thin `AssembleStage` adapter: it consumes the accepted <a class="dhx-term" href="glossary.md#ontology">ontology</a> `Segment` set from the frozen `ReviewReport`, the loaded project `Vocabulary`, and an optional `RepoAnalysis`, then "emits a Material for MkDocs source tree under the <a class="dhx-term" href="glossary.md#run">run</a>'s output directory: one `docs/*.md` page per accepted segment, per-role landing <a class="dhx-term" href="glossary.md#pages">pages</a> with COBESY-structured intent-ordered agendas, a tags index, and a `mkdocs.yml`" (`docuharnessx/assembler/__init__.py:1-13`). Everything downstream imports from this one public namespace rather than the submodules (`docuharnessx/assembler/__init__.py:15-18`).
 
 </div>
 
@@ -114,20 +114,20 @@ flowchart TB
 
 # What `docuharnessx.assembler` does
 
-`docuharnessx.assembler` is [DocuHarnessX](glossary.md#docuharnessx)'s **MkDocs site-assembly core** — the "pure, model-free" stage that turns quality-gated content into a publishable **Material for MkDocs** source tree. Its own docstring names it the deterministic, harness-free core behind the thin `AssembleStage` adapter: it consumes the accepted [ontology](glossary.md#ontology) `Segment` set from the frozen `ReviewReport`, the loaded project `Vocabulary`, and an optional `RepoAnalysis`, then "emits a Material for MkDocs source tree under the [run](glossary.md#run)'s output directory: one `docs/*.md` page per accepted segment, per-role landing [pages](glossary.md#pages) with COBESY-structured intent-ordered agendas, a tags index, and a `mkdocs.yml`" (`docuharnessx/assembler/__init__.py:1-13`). Everything downstream imports from this one public namespace rather than the submodules (`docuharnessx/assembler/__init__.py:15-18`).
+`docuharnessx.assembler` is <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>'s **MkDocs site-assembly core** — the "pure, model-free" stage that turns quality-gated content into a publishable **Material for MkDocs** source tree. Its own docstring names it the deterministic, harness-free core behind the thin `AssembleStage` adapter: it consumes the accepted <a class="dhx-term" href="glossary.md#ontology">ontology</a> `Segment` set from the frozen `ReviewReport`, the loaded project `Vocabulary`, and an optional `RepoAnalysis`, then "emits a Material for MkDocs source tree under the <a class="dhx-term" href="glossary.md#run">run</a>'s output directory: one `docs/*.md` page per accepted segment, per-role landing <a class="dhx-term" href="glossary.md#pages">pages</a> with COBESY-structured intent-ordered agendas, a tags index, and a `mkdocs.yml`" (`docuharnessx/assembler/__init__.py:1-13`). Everything downstream imports from this one public namespace rather than the submodules (`docuharnessx/assembler/__init__.py:15-18`).
 
 The package is deliberately pure and deterministic — no model, no network; the only subprocess is the mockable, read-only git read in `identity.py` (`docuharnessx/assembler/__init__.py:12-13`). What it actually does breaks into a few concrete transforms:
 
 ## 1. Resolve the per-target site identity
 
-`resolve_site_identity(target_repo, remote_url, overrides)` computes a frozen `SiteIdentity` — display `site_name`, `owner/repo` `repo_name`, `repo_url`, the GitHub project-Pages `site_url`, the `/<repo>/` `base_path`, and the Material `edit_uri` — from the target's git `origin` remote, never from [DocuHarnessX](glossary.md#docuharnessx)'s own identity (`docuharnessx/assembler/identity.py:237-284`). Three regexes (`_GITHUB_HTTPS`, `_GITHUB_SSH`, `_GITHUB_SSH_URL`) parse GitHub remotes into `(owner, repo)`; a non-GitHub or absent remote falls back to a root base-path with a target-directory-derived `site_name` (`docuharnessx/assembler/identity.py:175-208`). The resolver itself is pure; the one I/O surface is `read_origin_remote`, which runs `git -C <target_repo> remote get-url origin` in a time-bounded subprocess and swallows every failure to `None` so the no-remote fallback applies instead of aborting the [run](glossary.md#run) (`docuharnessx/assembler/identity.py:73-91`).
+`resolve_site_identity(target_repo, remote_url, overrides)` computes a frozen `SiteIdentity` — display `site_name`, `owner/repo` `repo_name`, `repo_url`, the GitHub project-Pages `site_url`, the `/<repo>/` `base_path`, and the Material `edit_uri` — from the target's git `origin` remote, never from <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>'s own identity (`docuharnessx/assembler/identity.py:237-284`). Three regexes (`_GITHUB_HTTPS`, `_GITHUB_SSH`, `_GITHUB_SSH_URL`) parse GitHub remotes into `(owner, repo)`; a non-GitHub or absent remote falls back to a root base-path with a target-directory-derived `site_name` (`docuharnessx/assembler/identity.py:175-208`). The resolver itself is pure; the one I/O surface is `read_origin_remote`, which runs `git -C <target_repo> remote get-url origin` in a time-bounded subprocess and swallows every failure to `None` so the no-remote fallback applies instead of aborting the <a class="dhx-term" href="glossary.md#run">run</a> (`docuharnessx/assembler/identity.py:73-91`).
 
 ## 2. Orchestrate the tree in `assemble_site`
 
 `assemble_site(report, vocab, analysis, out_dir, identity)` in the writer is the single place that wires the renderers together (`docuharnessx/assembler/writer.py:143-250`). Its steps, spelled out in code:
 
 1. builds a **fresh accepted-only** `InMemorySegmentStore` over `report.accepted` so role agendas contain only accepted segments (`_build_accepted_store`, `docuharnessx/assembler/writer.py:96-111`);
-2. renders one `docs/<segment>.md` per accepted segment via `render_segment_page`, passing the accepted-id set so cross-links resolve only to accepted [pages](glossary.md#pages) (`docuharnessx/assembler/writer.py:190-195`);
+2. renders one `docs/<segment>.md` per accepted segment via `render_segment_page`, passing the accepted-id set so cross-links resolve only to accepted <a class="dhx-term" href="glossary.md#pages">pages</a> (`docuharnessx/assembler/writer.py:190-195`);
 3. renders `docs/<role>/index.md` for each vocabulary role that has at least one accepted segment, in vocabulary order (`_emitted_roles`, `docuharnessx/assembler/writer.py:200-207`);
 4. writes `docs/tags.md` carrying the `<!-- material/tags -->` directive the Material `tags` plugin discovers (`docuharnessx/assembler/writer.py:227`);
 5. writes `docs/index.md` via `render_home_page` and the extra CSS stylesheet (`docuharnessx/assembler/writer.py:232-235`);
@@ -139,10 +139,10 @@ The whole tree lands under `<out_dir>/site` — the single write target — writ
 
 The renderers are pure, model-free, byte-stable transforms:
 
-- **Segment [pages](glossary.md#pages)** — `pages.py`: `page_filename` maps a segment id to `<slug>-<sha256-digest-8>.md` so distinct ids never collide even when slugs do (`docuharnessx/assembler/pages.py:75-88`); `render_segment_page` emits YAML frontmatter whose `tags:` is exactly `emit_tags(segment, vocab)`, the title as H1, the segment body verbatim, and a "Related" section filtered to accepted ids (`docuharnessx/assembler/pages.py:91-120`).
-- **Role landing [pages](glossary.md#pages)** — `roles.py`: `render_role_landing_page` builds a COBESY SCQA opener (Situation/Complication/Question/Answer) framed only from the role's vocabulary `label`/`description`, an intent-ordered guided agenda of links derived through `build_role_view` (no body duplication), and a Material `!!! info` role-switch admonition listing the other role [pages](glossary.md#pages) (`docuharnessx/assembler/roles.py:142-243`). `role_page_path` owns the `<role>/index.md` path rule with a filesystem-safe slug from `_slug` (`docuharnessx/assembler/roles.py:63-84`).
-- **Home page** — `home.py`: `render_home_page(identity, role_pages)` produces the docs-root `index.md`: a heading naming the *target* project, a "choose your path" index over role [pages](glossary.md#pages), and a pointer to the tags index (`docuharnessx/assembler/home.py:33-74`); `render_question_home` is the question-list variant that also embeds `render_home_diagrams` (`docuharnessx/assembler/home.py:77-102`).
-- **Mermaid companions** — `graphs.py`: `render_page_diagrams` and `render_home_diagrams` derive small flowcharts from the page record (related [pages](glossary.md#pages), cited files, [analysis](glossary.md#analysis) entrypoints/components/public surface/build/tests) and emit them above question-page prose via a tiny deterministic `_Graph` builder (`docuharnessx/assembler/graphs.py:274-317`).
+- **Segment <a class="dhx-term" href="glossary.md#pages">pages</a>** — `pages.py`: `page_filename` maps a segment id to `<slug>-<sha256-digest-8>.md` so distinct ids never collide even when slugs do (`docuharnessx/assembler/pages.py:75-88`); `render_segment_page` emits YAML frontmatter whose `tags:` is exactly `emit_tags(segment, vocab)`, the title as H1, the segment body verbatim, and a "Related" section filtered to accepted ids (`docuharnessx/assembler/pages.py:91-120`).
+- **Role landing <a class="dhx-term" href="glossary.md#pages">pages</a>** — `roles.py`: `render_role_landing_page` builds a COBESY SCQA opener (Situation/Complication/Question/Answer) framed only from the role's vocabulary `label`/`description`, an intent-ordered guided agenda of links derived through `build_role_view` (no body duplication), and a Material `!!! info` role-switch admonition listing the other role <a class="dhx-term" href="glossary.md#pages">pages</a> (`docuharnessx/assembler/roles.py:142-243`). `role_page_path` owns the `<role>/index.md` path rule with a filesystem-safe slug from `_slug` (`docuharnessx/assembler/roles.py:63-84`).
+- **Home page** — `home.py`: `render_home_page(identity, role_pages)` produces the docs-root `index.md`: a heading naming the *target* project, a "choose your path" index over role <a class="dhx-term" href="glossary.md#pages">pages</a>, and a pointer to the tags index (`docuharnessx/assembler/home.py:33-74`); `render_question_home` is the question-list variant that also embeds `render_home_diagrams` (`docuharnessx/assembler/home.py:77-102`).
+- **Mermaid companions** — `graphs.py`: `render_page_diagrams` and `render_home_diagrams` derive small flowcharts from the page record (related <a class="dhx-term" href="glossary.md#pages">pages</a>, cited files, <a class="dhx-term" href="glossary.md#analysis">analysis</a> entrypoints/components/public surface/build/tests) and emit them above question-page prose via a tiny deterministic `_Graph` builder (`docuharnessx/assembler/graphs.py:274-317`).
 
 ## 4. Build `mkdocs.yml`
 
@@ -152,9 +152,9 @@ The renderers are pure, model-free, byte-stable transforms:
 
 `model.py` defines the frozen value objects of the output seam: `SiteIdentity`, `AssembledSite` (`schema_version`, absolute `site_dir`/`docs_dir`/`mkdocs_yml_path`, `identity`, `page_count`, `role_page_count`), the single `ASSEMBLED_SITE_SCHEMA_VERSION = 1` authority, and the `AssemblerError`/`AssemblerInputError` family kept independent of the other specs' error families (`docuharnessx/assembler/model.py:59-156`).
 
-Separately, `assemble_question_site(pages, identity, out_dir, analysis)` is the explore-first, question-organised entry point: it writes a Material tree from accepted question `Page` values only — home lists question titles, nav is home + [pages](glossary.md#pages), no per-role landings — and returns `None` (writing nothing under `site/`) when no [pages](glossary.md#pages) are accepted so callers skip deploy (`docuharnessx/assembler/question_site.py:48-99`).
+Separately, `assemble_question_site(pages, identity, out_dir, analysis)` is the explore-first, question-organised entry point: it writes a Material tree from accepted question `Page` values only — home lists question titles, nav is home + <a class="dhx-term" href="glossary.md#pages">pages</a>, no per-role landings — and returns `None` (writing nothing under `site/`) when no <a class="dhx-term" href="glossary.md#pages">pages</a> are accepted so callers skip deploy (`docuharnessx/assembler/question_site.py:48-99`).
 
-In short: [assembler](glossary.md#assembler) is the deterministic "renderer + writer" core that takes the frozen [review](glossary.md#review) output and vocabulary, resolves the target project's site identity from its git remote, renders per-segment [pages](glossary.md#pages), per-role COBESY landing [pages](glossary.md#pages), a home page, tags index, extra CSS, and Mermaid diagrams, generates a byte-stable `mkdocs.yml`, writes the entire Material-for-MkDocs tree under `<out_dir>/site`, and returns an immutable `AssembledSite` seam for the deploy stage — with an alternate question-organised writer (`assemble_question_site`) as the explore-first path.
+In short: <a class="dhx-term" href="glossary.md#assembler">assembler</a> is the deterministic "renderer + writer" core that takes the frozen <a class="dhx-term" href="glossary.md#review">review</a> output and vocabulary, resolves the target project's site identity from its git remote, renders per-segment <a class="dhx-term" href="glossary.md#pages">pages</a>, per-role COBESY landing <a class="dhx-term" href="glossary.md#pages">pages</a>, a home page, tags index, extra CSS, and Mermaid diagrams, generates a byte-stable `mkdocs.yml`, writes the entire Material-for-MkDocs tree under `<out_dir>/site`, and returns an immutable `AssembledSite` seam for the deploy stage — with an alternate question-organised writer (`assemble_question_site`) as the explore-first path.
 
 </div>
 

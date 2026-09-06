@@ -5,8 +5,6 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from docuharnessx.analysis.model import RepoAnalysis
-from docuharnessx.assembler.depth import wrap_layer
-from docuharnessx.assembler.graphs import render_home_diagrams, render_page_diagrams
 from docuharnessx.comprehension.compliance import (
     PILLARS,
     ComplianceCell,
@@ -26,6 +24,12 @@ __all__ = [
     "render_home_extras",
     "render_page_extras",
 ]
+
+
+def _wrap(min_depth: int, markdown: str) -> str:
+    from docuharnessx.assembler.depth import wrap_layer
+
+    return wrap_layer(min_depth, markdown)
 
 
 def _fence_flow(direction: str, lines: Sequence[str]) -> str:
@@ -165,6 +169,8 @@ def render_page_extras(
             "surface" in page.id or page.id.startswith("component:")
         ):
             blocks.append((4, surface))
+    from docuharnessx.assembler.graphs import render_page_diagrams
+
     diagrams = render_page_diagrams(page, accepted, analysis)
     if diagrams:
         blocks.append((5, diagrams))
@@ -188,6 +194,8 @@ def render_home_extras(
     pie = render_coverage_pie(counts)
     if pie:
         blocks.append((2, pie))
+    from docuharnessx.assembler.graphs import render_home_diagrams
+
     home_map = render_home_diagrams(pages)
     if home_map:
         blocks.append((3, home_map))
@@ -200,26 +208,50 @@ def render_home_extras(
     return [(d, b) for d, b in blocks if b]
 
 
-def render_glossary_page(glossary: Glossary) -> str:
+def render_glossary_page(
+    glossary: Glossary,
+    appearances: dict[str, tuple[tuple[str, str], ...]] | None = None,
+) -> str:
+    seen = appearances or {}
+    by_id = glossary.by_id()
     lines = [
         "# Glossary",
         "",
-        "Project terms. Highlighted words in the docs link here.",
+        "Highlighted words in the docs link here. Related terms are other "
+        "glossary entries that appear on the same page.",
         "",
     ]
     for term in glossary.terms:
         lines.append(f'<h2 id="{term.id}">{term.label}</h2>')
         lines.append("")
-        lines.append(term.definition or "_undefined_")
+        lines.append(term.definition or "_No definition in the repository yet._")
         lines.append("")
         if term.aliases:
-            lines.append("Aliases: " + ", ".join(term.aliases))
+            lines.append("Aliases: " + ", ".join(f"`{a}`" for a in term.aliases))
             lines.append("")
-        if term.related:
+        related = [by_id[rid] for rid in term.related if rid in by_id]
+        if related:
             lines.append(
                 "Related: "
-                + ", ".join(f"[{rid}](#{rid})" for rid in term.related)
+                + ", ".join(f"[{item.label}](#{item.id})" for item in related)
             )
+            lines.append("")
+            node_lines = [f'  here["{_label(term.label)}"]']
+            for index, item in enumerate(related[:8]):
+                nid = f"r{index}"
+                node_lines.append(f'  {nid}["{_label(item.label)}"]')
+                node_lines.append(f"  here --> {nid}")
+            lines.append("```mermaid")
+            lines.append("flowchart LR")
+            lines.extend(node_lines)
+            lines.append("```")
+            lines.append("")
+        hits = seen.get(term.id, ())
+        if hits:
+            lines.append("Appears on:")
+            lines.append("")
+            for title, href in hits[:12]:
+                lines.append(f"- [{title}]({href})")
             lines.append("")
         if term.sources:
             lines.append("Sources: " + ", ".join(f"`{s}`" for s in term.sources[:8]))
@@ -246,12 +278,12 @@ def render_compliance_page(
         "This matrix is a **self-assessment reference**, not a certification "
         "or auditor opinion.",
         "",
-        wrap_layer(
+        _wrap(
             1,
             _matrix_markdown(in_scope, cells, labels, css, mark),
         ),
         "",
-        wrap_layer(5, _evidence_markdown(in_scope, cells, labels)),
+        _wrap(5, _evidence_markdown(in_scope, cells, labels)),
         "",
     ]
     return "\n".join(part for part in lines if part is not None).replace("\n\n\n", "\n\n")

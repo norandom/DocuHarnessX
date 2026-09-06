@@ -23,7 +23,6 @@ from docuharnessx.assembler.depth import wrap_layer
 from docuharnessx.assembler.graphs import render_home_diagrams
 from docuharnessx.assembler.mkdocs_config import HOME_PAGE_PATH, TAGS_INDEX_PATH
 from docuharnessx.assembler.pages import page_filename
-from docuharnessx.comprehension.graphs import render_home_extras
 from docuharnessx.comprehension.signals import ComprehensionSignals, CoverageCounts
 from docuharnessx.pages.model import Page
 
@@ -100,6 +99,8 @@ def render_question_home(
         f"Documentation for {target}.",
         "",
     ]
+    from docuharnessx.comprehension.graphs import render_home_extras
+
     extras = render_home_extras(pages, analysis, signals, counts)
     if extras:
         for depth, block in extras:

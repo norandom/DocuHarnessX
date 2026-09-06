@@ -31,7 +31,11 @@ from docuharnessx.assembler.theme import (
     render_depth_js,
     render_extra_css,
 )
-from docuharnessx.comprehension.autolink import autolink_markdown
+from docuharnessx.comprehension.autolink import (
+    appearances_for_pages,
+    autolink_markdown,
+    relate_cooccurring,
+)
 from docuharnessx.comprehension.compliance import (
     ComplianceSelection,
     load_compliance,
@@ -116,6 +120,7 @@ def assemble_question_site(
         load_glossary(root) if root else Glossary(),
     )
 
+    rendered: list[tuple[str, str, str]] = []
     for page in accepted:
         rel_path, content = render_question_page(
             page,
@@ -123,8 +128,7 @@ def assemble_question_site(
             analysis=analysis,
             signals=live_signals,
         )
-        _write_text(docs_dir / rel_path, autolink_markdown(content, glossary))
-
+        rendered.append((rel_path, page.title, content))
     home = render_question_home(
         identity,
         accepted,
@@ -132,13 +136,21 @@ def assemble_question_site(
         signals=live_signals,
         counts=counts,
     )
-    _write_text(docs_dir / HOME_PAGE_PATH, autolink_markdown(home, glossary))
+    rendered.append((HOME_PAGE_PATH, identity.site_name, home))
+    appearances = appearances_for_pages(glossary, rendered)
+    glossary = relate_cooccurring(glossary, appearances)
+
+    for rel_path, _title, content in rendered:
+        _write_text(docs_dir / rel_path, autolink_markdown(content, glossary))
     _write_text(docs_dir / EXTRA_CSS_PATH, render_extra_css(look.theme))
     _write_text(docs_dir / EXTRA_JS_PATH, render_depth_js(look.depth))
 
     extra_nav: list[tuple[str, str]] = []
     if glossary.terms:
-        _write_text(docs_dir / "glossary.md", render_glossary_page(glossary))
+        _write_text(
+            docs_dir / "glossary.md",
+            render_glossary_page(glossary, appearances),
+        )
         extra_nav.append(("Glossary", "glossary.md"))
     selection = load_compliance(root) if root else ComplianceSelection()
     if selection.frameworks:

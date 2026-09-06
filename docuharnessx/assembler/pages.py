@@ -35,8 +35,6 @@ import yaml
 
 from docuharnessx.assembler.depth import wrap_layer
 from docuharnessx.assembler.graphs import render_page_diagrams
-from docuharnessx.comprehension.graphs import render_page_extras
-from docuharnessx.comprehension.signals import ComprehensionSignals
 from docuharnessx.ontology import Segment, Vocabulary, emit_tags
 from docuharnessx.pages.model import Page
 
@@ -207,7 +205,7 @@ def render_question_page(
     *,
     analysis: "RepoAnalysis | None" = None,
     include_diagrams: bool = True,
-    signals: "ComprehensionSignals | None" = None,
+    signals: object | None = None,
 ) -> tuple[str, str]:
     """Render one accepted question ``page`` to ``(relative_docs_path, markdown)``.
 
@@ -222,6 +220,8 @@ def render_question_page(
     if summary:
         parts.append("\n" + wrap_layer(1, summary))
     if include_diagrams:
+        from docuharnessx.comprehension.graphs import render_page_extras
+
         extras = render_page_extras(page, accepted, analysis, signals)
         if extras:
             for depth, block in extras:

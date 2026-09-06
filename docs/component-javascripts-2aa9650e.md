@@ -1,15 +1,15 @@
 ---
-id: component:[javascripts](glossary.md#javascripts)
-title: What does [javascripts](glossary.md#javascripts) do?
+id: component:javascripts
+title: What does javascripts do?
 subjects:
-- [javascripts](glossary.md#javascripts)
+- javascripts
 summary: 'In this repository, `javascripts` is the single client-side script folder
   of the generated MkDocs site: it contains exactly one file, `docs/javascripts/depth.js`,
   which powers an **engineering-depth slider** that progressively discloses each documentation
   page by reader expertise.'
 related: []
 ---
-# What does [javascripts](glossary.md#javascripts) do?
+# What does javascripts do?
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
@@ -132,7 +132,7 @@ flowchart TB
 
 <div class="dhx-layer" data-min="5" markdown="1">
 
-# What does [javascripts](glossary.md#javascripts) do?
+# What does javascripts do?
 
 In this repository, `javascripts` is the single client-side script folder of the generated MkDocs site: it contains exactly one file, `docs/javascripts/depth.js`, which powers an **engineering-depth slider** that progressively discloses each documentation page by reader expertise.
 
@@ -145,7 +145,7 @@ extra_javascript:
 - javascripts/depth.js
 ```
 
-so Material-for-MkDocs injects `depth.js` into every page, not just one. The script is not hand-edited; it is a deterministic artifact of the [assembler](glossary.md#assembler). `docuharnessx/assembler/theme.py:20` defines `EXTRA_JS_PATH: str = "javascripts/depth.js"`, and `render_depth_js()` at `theme.py:189-191` substitutes the configured project depth into the `%DEPTH%` placeholder of the `_DEPTH_JS` template (`theme.py:126-179`). The write happens during site assembly, e.g. `docuharnessx/assembler/writer.py:243` and `docuharnessx/assembler/question_site.py:95` both call `_write_text(docs_dir / EXTRA_JS_PATH, render_depth_js(look.depth))`. The checked-in `docs/javascripts/depth.js:2` (`var DEFAULT_DEPTH = 5;`) is that template rendered with the project default `DEFAULT_DEPTH = 5` from `docuharnessx/site_config.py:36`.
+so Material-for-MkDocs injects `depth.js` into every page, not just one. The script is not hand-edited; it is a deterministic <a class="dhx-term" href="glossary.md#artifact">artifact</a> of the <a class="dhx-term" href="glossary.md#assembler">assembler</a>. `docuharnessx/assembler/theme.py:20` defines `EXTRA_JS_PATH: str = "javascripts/depth.js"`, and `render_depth_js()` at `theme.py:189-191` substitutes the configured project depth into the `%DEPTH%` placeholder of the `_DEPTH_JS` template (`theme.py:126-179`). The write happens during site assembly, e.g. `docuharnessx/assembler/writer.py:243` and `docuharnessx/assembler/question_site.py:95` both call `_write_text(docs_dir / EXTRA_JS_PATH, render_depth_js(look.depth))`. The checked-in `docs/javascripts/depth.js:2` (`var DEFAULT_DEPTH = 5;`) is that template rendered with the project default `DEFAULT_DEPTH = 5` from `docuharnessx/site_config.py:36`.
 
 ## What the slider does at runtime
 
