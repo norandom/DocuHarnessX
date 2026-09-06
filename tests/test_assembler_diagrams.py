@@ -177,6 +177,21 @@ def test_empty_index_is_empty_string() -> None:
     assert render_diagrams_index(()) == ""
 
 
+def test_requirements_only_index_is_not_empty() -> None:
+    from docuharnessx.comprehension.signals import RequirementHit
+
+    html = render_diagrams_index(
+        (),
+        requirements=(
+            RequirementHit(text="The widget shall boot.", path="requirements.md"),
+        ),
+    )
+    assert "## Requirements" in html
+    assert "The widget shall boot." in html
+    assert "unlinked" in html
+    assert "ReqIF" not in html
+
+
 def test_context_is_c4_shaped_not_a_star() -> None:
     from docuharnessx.comprehension.graphs import render_c4_context
 

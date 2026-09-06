@@ -7,6 +7,7 @@ frozen :class:`ArchitectureModel`; they do not invent extra nodes.
 from __future__ import annotations
 
 import os
+import re
 from collections.abc import Sequence
 
 import yaml
@@ -21,6 +22,7 @@ from docuharnessx.comprehension.signals import (
     ArchitectureModel,
     ArchitectureNode,
     ArchitectureStyle,
+    RequirementHit,
 )
 
 if TYPE_CHECKING:
@@ -492,10 +494,69 @@ def _system_name(
     return "System"
 
 
+_WORD = re.compile(r"[A-Za-z0-9_]+")
+
+
+def _hit_key(hit: RequirementHit) -> str:
+    return hit.path + "\n" + hit.text
+
+
+def _tokens(*parts: str) -> frozenset[str]:
+    found: set[str] = set()
+    for part in parts:
+        for token in _WORD.findall(part):
+            if len(token) >= 4:
+                found.add(token.casefold())
+    return frozenset(found)
+
+
+def _requirement_links(
+    nodes: tuple[ArchitectureNode, ...],
+    styles: tuple[ArchitectureStyle, ...],
+    hits: tuple[RequirementHit, ...],
+) -> tuple[tuple[str, str], ...]:
+    """Link harvested shall-cards to nodes by whole-word overlap. Never invent hits."""
+    if not hits or not nodes:
+        return ()
+    names: list[tuple[str, str]] = []
+    for node in nodes:
+        label = (node.label or "").strip()
+        if len(label) >= 4:
+            names.append((label.casefold(), node.id))
+        band = (node.band or "").strip()
+        if len(band) >= 4:
+            names.append((band.casefold(), node.id))
+    for style in styles:
+        for band in style.bands:
+            members = tuple(node.id for node in nodes if node.band == band.id)
+            compact = band.label.strip().casefold()
+            for target in members:
+                if len(band.id) >= 4:
+                    names.append((band.id.casefold(), target))
+                if len(compact) >= 4 and " " not in compact and "/" not in compact:
+                    names.append((compact, target))
+    names = list(dict.fromkeys(names))
+    links: list[tuple[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for hit in hits:
+        tokens = _tokens(hit.text, *hit.term_ids)
+        key = _hit_key(hit)
+        for name, target in names:
+            if name not in tokens:
+                continue
+            pair = (key, target)
+            if pair in seen:
+                continue
+            seen.add(pair)
+            links.append(pair)
+    return tuple(sorted(links))
+
+
 def build_architecture_model(
     analysis: RepoAnalysis | None,
     identity: "SiteIdentity | None" = None,
     styles: tuple[ArchitectureStyle, ...] = (),
+    hits: tuple[RequirementHit, ...] = (),
 ) -> ArchitectureModel | None:
     """Build one fail-closed model. Views must not invent extra nodes."""
     if analysis is None:
@@ -670,4 +731,5 @@ def build_architecture_model(
         nodes=ordered,
         edges=tuple(edges),
         styles=live_styles,
+        requirement_links=_requirement_links(ordered, live_styles, hits),
     )

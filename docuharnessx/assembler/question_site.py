@@ -126,7 +126,10 @@ def assemble_question_site(
         live_signals = replace(
             live_signals,
             model=build_architecture_model(
-                analysis, identity, live_signals.architectures
+                analysis,
+                identity,
+                live_signals.architectures,
+                hits=live_signals.requirement_sentences,
             ),
         )
     site_dir = Path(out_dir) / _SITE_SUBDIR
@@ -181,6 +184,8 @@ def assemble_question_site(
             accepted, analysis, live_signals, counts, identity
         ),
         glossary_links,
+        requirements=live_signals.requirement_sentences,
+        model=live_signals.model,
     )
     if catalog:
         _write_text(docs_dir / DIAGRAMS_PAGE_PATH, catalog)

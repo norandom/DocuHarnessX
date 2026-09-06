@@ -13,6 +13,7 @@ Every picture this site assembled, in one catalog. Each also lives on the linked
 - [Public surface](#public-surface)
 - [Lineage](#lineage)
 - [Pipeline](#pipeline)
+- [Requirements](#requirements)
 - [Start-here path](#start-here-path)
 - [Question map](#question-map)
 - [Coverage](#coverage)
@@ -342,6 +343,59 @@ flowchart LR
   classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
   classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
+
+## Requirements
+
+Harvested requirement sentences from the repository. A card is linked when a name overlaps a part of the architecture; otherwise it stays unlinked. This is not a certification.
+
+- 1. For each planned segment, the Write stage shall run a real HarnessX agentic loop that — unlinked
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- 1. The Write stage module shall keep the stable `STAGE_NAME` value `"write"`, the — unlinked
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- 1. The Write stage shall read the `CoveragePlan`, the optional repository analysis, the — analysis
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- 1. The Write stage shall seed each agentic run's prompt with the existing deterministic — unlinked
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- 2. If the coverage-plan slot is unset when a run state is bound, the Write stage shall raise — unlinked
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- 2. The Write stage shall give the agent a file-system view rooted at the target repository in — unlinked
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- 2. The Write stage's task prompt shall instruct the agent to include at least one valid — unlinked
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- 2. When the Write stage participates in the pipeline, the Write stage shall do its work as a — pipeline
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- 3. The Write stage shall scope each agentic run's task prompt to the segment's planner — unlinked
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- 3. The Write stage's task prompt shall instruct the agent to cite real `file:line` sources so — unlinked
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- 4. The Write stage shall obtain the live run state from the task-start event and read its — unlinked
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- 4. When the agent returns a body, the Write stage shall validate that the body contains at — unlinked
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- 4. While the agent runs, the Write stage shall make the tool outputs (read/grep/glob/bash — unlinked
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- 5. The Write stage shall use the final agent answer as the source of the segment body. — unlinked
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- 5. The agentic-codebase-writer shall not modify the stage registry, the `make_docgen` bundle — unlinked
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- 5. When a body passes structure validation, the Write stage shall use it verbatim as the — unlinked
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- 5. Where the repository-analysis slot is unset, the Write stage shall tolerate the absence — analysis
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- 6. The agentic-codebase-writer shall not build or rely on any embedding, vector index, or — unlinked
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- Write stage shall raise a writer input error naming the missing slot and produce no — unlinked
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- Write stage shall raise a writer input error naming the unsupported version and produce no — unlinked
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- Write stage shall record a deterministic flag and fall back to the deterministic body for — unlinked
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- `file:line` citations, and shall treat a body that fails this validation as an unusable — unlinked
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- retrieval-augmented store; repository context shall be obtained agentically through the — unlinked
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
+- shall forward the event unchanged and write nothing, exactly like the prior no-op base. — unlinked
+  From `.kiro/specs/agentic-codebase-writer/requirements.md`.
 
 ## Reading path
 

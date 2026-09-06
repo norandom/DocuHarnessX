@@ -296,21 +296,23 @@ def _requirements(repo: str, analysis: RepoAnalysis) -> tuple[RequirementHit, ..
                 return tuple(hits)
     specs = os.path.join(repo, ".kiro", "specs")
     if os.path.isdir(specs):
+        spec_files: list[str] = []
         for root, _dirs, files in os.walk(specs):
             for name in files:
                 if name != "requirements.md":
                     continue
                 full = os.path.join(root, name)
                 rel = os.path.relpath(full, repo).replace("\\", "/")
-                if rel in seen:
-                    continue
-                seen.add(rel)
-                text = _read(repo, rel)
-                for match in _SHALL.finditer(text):
-                    line = " ".join(match.group(0).split())
-                    hits.append(RequirementHit(text=line[:240], path=rel))
-                    if len(hits) >= 24:
-                        return tuple(hits)
+                if rel not in seen:
+                    spec_files.append(rel)
+        for rel in sorted(spec_files):
+            seen.add(rel)
+            text = _read(repo, rel)
+            for match in _SHALL.finditer(text):
+                line = " ".join(match.group(0).split())
+                hits.append(RequirementHit(text=line[:240], path=rel))
+                if len(hits) >= 24:
+                    return tuple(hits)
     _ = extra
     return tuple(hits)
 
@@ -328,11 +330,12 @@ def detect_comprehension(
     if not pipelines:
         pipelines.extend(_coarse(analysis))
     styles = detect_architectures(analysis, repo_path)
+    hits = _requirements(repo_path, analysis)
     return ComprehensionSignals(
         pipelines=tuple(pipelines),
         lineage=_lineage(analysis),
         project_kinds=_project_kinds(analysis),
-        requirement_sentences=_requirements(repo_path, analysis),
+        requirement_sentences=hits,
         architectures=styles,
-        model=build_architecture_model(analysis, styles=styles),
+        model=build_architecture_model(analysis, styles=styles, hits=hits),
     )

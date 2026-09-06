@@ -39,6 +39,7 @@ from docuharnessx.comprehension.signals import (
     ArchitectureBand,
     ArchitectureStyle,
     CoverageCounts,
+    RequirementHit,
 )
 from docuharnessx.pages.model import Page
 from docuharnessx.planning.question_model import QuestionKind, make_question_id
@@ -394,3 +395,114 @@ def test_catalog_groups_architecture_first() -> None:
     containers_h3 = html.find('<h3 id="containers">')
     assert architecture != -1
     assert architecture < context_h3 < containers_h3
+
+
+def _layered_analysis() -> RepoAnalysis:
+    return _analysis(
+        _comp("cli", "app/cli"),
+        _comp("assembler", "app/assembler"),
+        _comp("ontology", "app/ontology"),
+        extra={
+            "entrypoints": (Entrypoint(path="app.py", kind="cli", name="app"),)
+        },
+    )
+
+
+def test_requirement_links_whole_word_overlap() -> None:
+    analysis = _layered_analysis()
+    hits = (
+        RequirementHit(
+            text="The assembler shall emit one page per accepted question.",
+            path=".kiro/specs/demo/requirements.md",
+        ),
+        RequirementHit(
+            text="The frobnicator shall never appear in the model.",
+            path=".kiro/specs/demo/requirements.md",
+        ),
+        RequirementHit(
+            text="The preassembler shall not match a neighboring node.",
+            path=".kiro/specs/other/requirements.md",
+        ),
+    )
+    styles = detect_architectures(analysis)
+    first = build_architecture_model(analysis, _identity(), styles, hits=hits)
+    second = build_architecture_model(analysis, _identity(), styles, hits=hits)
+    assert first is not None
+    assert first == second
+    linked = {key: target for key, target in first.requirement_links}
+    assembler_key = (
+        ".kiro/specs/demo/requirements.md\n"
+        "The assembler shall emit one page per accepted question."
+    )
+    assert linked[assembler_key] == "container:assembler"
+    assert all("frobnicator" not in key for key, _target in first.requirement_links)
+    assert all("preassembler" not in key for key, _target in first.requirement_links)
+    assert first.requirement_links == tuple(sorted(first.requirement_links))
+
+
+def test_requirement_term_ids_can_link() -> None:
+    analysis = _layered_analysis()
+    hits = (
+        RequirementHit(
+            text="The module shall stay fail-closed.",
+            path="requirements.md",
+            term_ids=("ontology",),
+        ),
+    )
+    model = build_architecture_model(
+        analysis, _identity(), detect_architectures(analysis), hits=hits
+    )
+    assert model is not None
+    assert ("requirements.md\nThe module shall stay fail-closed.", "container:ontology") in model.requirement_links
+
+
+def test_catalog_lists_harvested_requirements() -> None:
+    analysis = _layered_analysis()
+    hits = (
+        RequirementHit(
+            text="The assembler shall emit one page per accepted question.",
+            path=".kiro/specs/demo/requirements.md",
+        ),
+        RequirementHit(
+            text="The frobnicator shall never appear in the model.",
+            path=".kiro/specs/demo/requirements.md",
+        ),
+    )
+    model = build_architecture_model(
+        analysis, _identity(), detect_architectures(analysis), hits=hits
+    )
+    html = render_diagrams_index(
+        collect_diagram_figures(
+            (
+                _page(QuestionKind.STARTUP, "cli.py", "How does this program start?"),
+                _page(
+                    QuestionKind.COMPONENT,
+                    "engine",
+                    "What does Engine do?",
+                    ("engine.py",),
+                ),
+            ),
+            analysis,
+            None,
+            CoverageCounts(planned=2, accepted=2, omitted=0),
+            _identity(),
+        ),
+        requirements=hits,
+        model=model,
+    )
+    architecture = html.find("## Architecture")
+    requirements = html.find("## Requirements")
+    reading = html.find("## Reading path")
+    assert architecture != -1
+    assert requirements != -1
+    assert architecture < requirements
+    if reading != -1:
+        assert requirements < reading
+    assert "The assembler shall emit one page per accepted question." in html
+    assert "assembler" in html.lower()
+    assert "The frobnicator shall never appear in the model." in html
+    assert "unlinked" in html
+    assert "frobnicator" in html
+    assert html.count("The assembler shall emit one page per accepted question.") >= 1
+    for banned in ("ReqIF", "SysML", "editor", "ArchiMate"):
+        assert banned not in html

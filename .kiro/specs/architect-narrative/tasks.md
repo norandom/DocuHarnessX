@@ -33,8 +33,8 @@ later.
 
 ## 5. Requirements trace
 
-- [ ] 5.1 Link harvested `RequirementHit`s to model nodes/bands by whole-word name overlap (length ≥ 4). Unlinked if no overlap. _Boundary:_ architecture.py. _Depends:_ 1.2.
-- [ ] 5.2 Surface links on the architecture catalog or compliance-adjacent list. No editor, no ReqIF. _Depends:_ 5.1, 2.3.
+- [x] 5.1 Link harvested `RequirementHit`s to model nodes/bands by whole-word name overlap (length ≥ 4). Unlinked if no overlap. _Boundary:_ architecture.py. _Depends:_ 1.2.
+- [x] 5.2 Surface links on the architecture catalog or compliance-adjacent list. No editor, no ReqIF. _Depends:_ 5.1, 2.3.
 
 ## 6. Validation
 

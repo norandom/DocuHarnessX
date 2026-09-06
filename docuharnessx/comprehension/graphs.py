@@ -21,6 +21,7 @@ from docuharnessx.comprehension.signals import (
     ComprehensionSignals,
     CoverageCounts,
     PipelineDag,
+    RequirementHit,
 )
 from docuharnessx.pages.model import Page
 
@@ -1134,12 +1135,53 @@ def collect_diagram_figures(
     return tuple(figures)
 
 
+def _requirements_lines(
+    hits: Sequence[RequirementHit],
+    model: ArchitectureModel | None,
+) -> list[str]:
+    """Harvested shall-cards. Linked when a name overlaps; never invented."""
+    if not hits:
+        return []
+    by_id = model.by_id() if model is not None else {}
+    linked: dict[str, list[str]] = {}
+    if model is not None:
+        for key, target in model.requirement_links:
+            linked.setdefault(key, []).append(target)
+    lines = [
+        "## Requirements",
+        "",
+        "Harvested requirement sentences from the repository. A card is linked "
+        "when a name overlaps a part of the architecture; otherwise it stays "
+        "unlinked. This is not a certification.",
+        "",
+    ]
+    for hit in sorted(hits, key=lambda item: (item.path, item.text)):
+        key = hit.path + "\n" + hit.text
+        labels: list[str] = []
+        for target in linked.get(key, ()):
+            node = by_id.get(target)
+            if node is None:
+                continue
+            if node.label not in labels:
+                labels.append(node.label)
+        text = hit.text.strip()
+        if labels:
+            lines.append(f"- {text} — {', '.join(labels)}")
+        else:
+            lines.append(f"- {text} — unlinked")
+        lines.append(f"  From `{hit.path}`.")
+    lines.append("")
+    return lines
+
+
 def render_diagrams_index(
     figures: Sequence[DiagramFigure],
     glossary_links: Sequence[tuple[str, str]] = (),
+    requirements: Sequence[RequirementHit] = (),
+    model: ArchitectureModel | None = None,
 ) -> str:
     """Render ``diagrams.md``. Pictures are not depth-wrapped so they stay visible."""
-    if not figures and not glossary_links:
+    if not figures and not glossary_links and not requirements:
         return ""
     lines = [
         "# Diagrams",
@@ -1187,17 +1229,34 @@ def render_diagrams_index(
             item.heading,
         ),
     )
+    req_lines = _requirements_lines(requirements, model)
     if ordered:
         lines.append("## Contents")
         lines.append("")
+        req_in_toc = False
+        previous = ""
         for figure in ordered:
+            if (
+                previous == "Architecture"
+                and figure.section != "Architecture"
+                and req_lines
+            ):
+                lines.append("- [Requirements](#requirements)")
+                req_in_toc = True
+            previous = figure.section
             lines.append(f"- [{figure.heading}](#{figure.slug})")
+        if req_lines and not req_in_toc:
+            lines.append("- [Requirements](#requirements)")
         if glossary_links:
             lines.append("- [Glossary related-term graphs](#glossary-related-term-graphs)")
         lines.append("")
         current_section = ""
+        requirements_emitted = False
         for figure in ordered:
             if figure.section != current_section:
+                if current_section == "Architecture" and req_lines:
+                    lines.extend(req_lines)
+                    requirements_emitted = True
                 current_section = figure.section
                 lines.append(f"## {figure.section}")
                 lines.append("")
@@ -1213,6 +1272,10 @@ def render_diagrams_index(
             lines.append("")
             lines.append(figure.mermaid.rstrip("\n"))
             lines.append("")
+        if req_lines and not requirements_emitted:
+            lines.extend(req_lines)
+    elif req_lines:
+        lines.extend(req_lines)
     if glossary_links:
         lines.append('<h2 id="glossary-related-term-graphs">Glossary related-term graphs</h2>')
         lines.append("")
