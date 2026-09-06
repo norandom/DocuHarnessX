@@ -292,7 +292,8 @@ def test_omitted_question_leaves_no_stub_page(tmp_path: Path) -> None:
     assert "coming soon" not in tree
     written = {path.name for path in docs.glob("*.md")}
     expected = {HOME_PAGE_PATH, *(page_filename(page.id) for page in pages)}
-    assert written == expected
+    assert expected <= written
+    assert page_filename(omitted_id) not in written
 
 
 def test_assembled_site_is_deployable_shape(tmp_path: Path) -> None:

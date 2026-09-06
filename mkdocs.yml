@@ -52,6 +52,7 @@ nav:
 - What does comprehension do?: component-comprehension-87225edb.md
 - What does javascripts do?: component-javascripts-2aa9650e.md
 - Glossary: glossary.md
+- Diagrams: diagrams.md
 - Compliance: compliance.md
 markdown_extensions:
 - md_in_html

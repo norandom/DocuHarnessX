@@ -17,7 +17,7 @@ from docuharnessx.planning.question_model import QuestionKind
 if TYPE_CHECKING:
     from docuharnessx.analysis.model import RepoAnalysis
 
-__all__ = ["render_home_diagrams", "render_page_diagrams"]
+__all__ = ["iter_page_diagrams", "render_home_diagrams", "render_page_diagrams"]
 
 _MAX_FILES = 8
 _MAX_RELATED = 6
@@ -271,6 +271,25 @@ def _evidence_flowchart(page: Page) -> str:
     return _fence("flowchart TB", lines)
 
 
+def iter_page_diagrams(
+    page: Page,
+    accepted: Sequence[Page],
+    analysis: "RepoAnalysis | None" = None,
+) -> tuple[tuple[str, str], ...]:
+    """Named Mermaid fences for one question page, in display order."""
+    blocks: list[tuple[str, str]] = []
+    glance = _glance_flowchart(page, accepted)
+    if glance:
+        blocks.append(("Question and files", glance))
+    kind_block = _kind_flowchart(page, analysis)
+    if kind_block and kind_block != glance:
+        blocks.append(("Structure", kind_block))
+    evidence = _evidence_flowchart(page)
+    if evidence:
+        blocks.append(("Files by directory", evidence))
+    return tuple(blocks)
+
+
 def render_page_diagrams(
     page: Page,
     accepted: Sequence[Page],
@@ -281,16 +300,7 @@ def render_page_diagrams(
     Always pictures-first: no heading before the first fence. Empty string only
     when the page has no related questions and no cited files.
     """
-    blocks: list[str] = []
-    glance = _glance_flowchart(page, accepted)
-    if glance:
-        blocks.append(glance)
-    kind_block = _kind_flowchart(page, analysis)
-    if kind_block and kind_block != glance:
-        blocks.append(kind_block)
-    evidence = _evidence_flowchart(page)
-    if evidence:
-        blocks.append(evidence)
+    blocks = [fence for _label, fence in iter_page_diagrams(page, accepted, analysis)]
     if not blocks:
         return ""
     return "\n".join(blocks) + "\n"

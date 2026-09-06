@@ -49,7 +49,13 @@ from docuharnessx.comprehension.glossary import (
     merge_glossary,
     seed_glossary,
 )
-from docuharnessx.comprehension.graphs import render_compliance_page, render_glossary_page
+from docuharnessx.comprehension.graphs import (
+    DIAGRAMS_PAGE_PATH,
+    collect_diagram_figures,
+    render_compliance_page,
+    render_diagrams_index,
+    render_glossary_page,
+)
 from docuharnessx.comprehension.signals import ComprehensionSignals, CoverageCounts
 from docuharnessx.pages.model import Page
 from docuharnessx.site_config import SitePresentation
@@ -156,6 +162,20 @@ def assemble_question_site(
             render_glossary_page(glossary, appearances),
         )
         extra_nav.append(("Glossary", "glossary.md"))
+    glossary_links = tuple(
+        (term.label, f"glossary.md#{term.id}")
+        for term in glossary.terms
+        if term.related
+    )
+    catalog = render_diagrams_index(
+        collect_diagram_figures(
+            accepted, analysis, live_signals, counts, identity
+        ),
+        glossary_links,
+    )
+    if catalog:
+        _write_text(docs_dir / DIAGRAMS_PAGE_PATH, catalog)
+        extra_nav.append(("Diagrams", DIAGRAMS_PAGE_PATH))
     selection = load_compliance(root) if root else ComplianceSelection()
     if selection.frameworks:
         cells = score_matrix(selection, analysis)
