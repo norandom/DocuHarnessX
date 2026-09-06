@@ -62,5 +62,5 @@ def test_readme_documents_adoption_interview() -> None:
     ):
         assert token in text, token
     assert "uvx" in text
-    assert "v3.2.0" in text
+    assert "v3.3.0" in text
     assert "not a variable" in text.lower() or "not a variable" in text
