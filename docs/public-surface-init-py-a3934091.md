@@ -40,22 +40,24 @@ flowchart TB
 ```
 
 ```mermaid
-flowchart LR
-  n0["__init__.py"]
-  n1["test_package_scaffold.py"]
-  n2["__init__.py"]
-  n3["__init__.py"]
-  n4["__init__.py"]
-  n5["__init__.py"]
-  n6["base.py"]
-  n7["_ontology.py"]
+flowchart TB
+  n0["How is the public surface used or exten…"]
+  n1["__version__"]
+  n2["AnalysisError"]
+  n3["AnalyzeError"]
+  n4["Artifact"]
+  n5["BuildFile"]
+  n6["CIWorkflow"]
+  n7["Component"]
+  n8["DEFAULT_EXCLUDED_DIRS"]
   n0 --> n1
-  n1 --> n2
-  n2 --> n3
-  n3 --> n4
-  n4 --> n5
-  n5 --> n6
-  n6 --> n7
+  n0 --> n2
+  n0 --> n3
+  n0 --> n4
+  n0 --> n5
+  n0 --> n6
+  n0 --> n7
+  n0 --> n8
 ```
 
 ```mermaid

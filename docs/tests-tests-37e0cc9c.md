@@ -45,6 +45,45 @@ flowchart TB
 
 ```mermaid
 flowchart TB
+  n0["How are tests organized?"]
+  n1["tests"]
+  n2["tests/ontology/test_errors.py"]
+  n3["tests/ontology/test_hardening.py"]
+  n4["tests/ontology/test_model.py"]
+  n5["tests/ontology/test_normalize_prefix.py"]
+  n6["tests/ontology/test_package_import.py"]
+  n7["tests/ontology/test_public_api.py"]
+  n8["tests/ontology/test_schema.py"]
+  n9["pytest"]
+  n10["pyproject.toml"]
+  n11["test_ontology_loader.py"]
+  n12["test_ontology_setup.py"]
+  n13["test_deploy_build_e2e_5_3.py"]
+  n14["test_package_import.py"]
+  n15["_fakes.py"]
+  n16["test_cli_e2e.py"]
+  n17["test_mcp_session.py"]
+  n0 --> n1
+  n0 --> n2
+  n0 --> n3
+  n0 --> n4
+  n0 --> n5
+  n0 --> n6
+  n0 --> n7
+  n0 --> n8
+  n0 --> n9
+  n0 --> n10
+  n0 --> n11
+  n0 --> n12
+  n0 --> n13
+  n0 --> n14
+  n0 --> n15
+  n0 --> n16
+  n0 --> n17
+```
+
+```mermaid
+flowchart TB
   page["How are tests organized?"]
   subgraph d0["repo root"]
     e0["pyproject.toml"]

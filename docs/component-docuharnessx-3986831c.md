@@ -33,6 +33,26 @@ flowchart TB
 
 ```mermaid
 flowchart TB
+  n0["What does docuharnessx do?"]
+  n1["docuharnessx"]
+  n2["__init__.py"]
+  n3["_ontology.py"]
+  n4["adoption.py"]
+  n5["blueprint.py"]
+  n6["bundle.py"]
+  n7["pyproject.toml"]
+  n0 --> n1
+  n1 --> n2
+  n1 --> n3
+  n1 --> n4
+  n1 --> n5
+  n1 --> n6
+  n0 --> n2
+  n0 --> n7
+```
+
+```mermaid
+flowchart TB
   page["What does docuharnessx do?"]
   subgraph d0["docuharnessx"]
     e0["__init__.py"]

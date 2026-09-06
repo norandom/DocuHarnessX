@@ -46,6 +46,35 @@ flowchart TB
   n0 --> n8
 ```
 
+```mermaid
+flowchart TB
+  n0["What does assembler do?"]
+  n1["assembler"]
+  n2["__init__.py"]
+  n3["depth.py"]
+  n4["graphs.py"]
+  n5["home.py"]
+  n6["identity.py"]
+  n7["writer.py"]
+  n8["pages.py"]
+  n9["roles.py"]
+  n10["mkdocs_config.py"]
+  n0 --> n1
+  n1 --> n2
+  n1 --> n3
+  n1 --> n4
+  n1 --> n5
+  n1 --> n6
+  n0 --> n2
+  n0 --> n6
+  n0 --> n7
+  n0 --> n8
+  n0 --> n9
+  n0 --> n5
+  n0 --> n4
+  n0 --> n10
+```
+
 </div>
 
 <div class="dhx-layer" data-min="5" markdown="1">

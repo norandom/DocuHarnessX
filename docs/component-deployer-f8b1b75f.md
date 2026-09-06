@@ -45,6 +45,34 @@ flowchart TB
 
 ```mermaid
 flowchart TB
+  n0["What does deployer do?"]
+  n1["deployer"]
+  n2["__init__.py"]
+  n3["commands.py"]
+  n4["deploy.py"]
+  n5["mode.py"]
+  n6["model.py"]
+  n7["deploy.py"]
+  n8["workflow.py"]
+  n9["tree.py"]
+  n0 --> n1
+  n1 --> n2
+  n1 --> n3
+  n1 --> n4
+  n1 --> n5
+  n1 --> n6
+  n0 --> n2
+  n0 --> n7
+  n0 --> n4
+  n0 --> n6
+  n0 --> n5
+  n0 --> n8
+  n0 --> n9
+  n0 --> n3
+```
+
+```mermaid
+flowchart TB
   page["What does deployer do?"]
   subgraph d0["docuharnessx/deployer"]
     e0["__init__.py"]

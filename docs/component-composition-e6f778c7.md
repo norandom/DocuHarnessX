@@ -46,6 +46,37 @@ flowchart TB
 
 ```mermaid
 flowchart TB
+  n0["What does composition do?"]
+  n1["composition"]
+  n2["__init__.py"]
+  n3["agent.py"]
+  n4["blueprint.py"]
+  n5["budgets.py"]
+  n6["explore_writer.py"]
+  n7["write.py"]
+  n8["model.py"]
+  n9["prompt.py"]
+  n10["prose.py"]
+  n11["fallback.py"]
+  n12["wiring.py"]
+  n0 --> n1
+  n1 --> n2
+  n1 --> n3
+  n1 --> n4
+  n1 --> n5
+  n1 --> n6
+  n0 --> n2
+  n0 --> n7
+  n0 --> n4
+  n0 --> n8
+  n0 --> n9
+  n0 --> n10
+  n0 --> n11
+  n0 --> n12
+```
+
+```mermaid
+flowchart TB
   page["What does composition do?"]
   subgraph d0["docuharnessx/composition"]
     e0["__init__.py"]

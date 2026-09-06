@@ -43,19 +43,29 @@ flowchart TB
 flowchart LR
   n0["How is this project built and verified?"]
   n1["pyproject.toml"]
-  n2["cli.py"]
-  n3["pyproject.toml"]
-  n4["test_deployer_pyproject_deps.py"]
-  n5["test_mcp_pyproject_dep.py"]
-  n6["test_fixture_agentic_repo.py"]
-  n7["README.md"]
+  n2["pyproject.toml"]
+  n3["adopt.yml"]
+  n4["dhx.yml"]
+  n5["docs.yml"]
+  n6["pyproject.toml"]
+  n7["cli.py"]
+  n8["pyproject.toml"]
+  n9["test_deployer_pyproject_deps.py"]
+  n10["test_mcp_pyproject_dep.py"]
+  n11["test_fixture_agentic_repo.py"]
+  n12["README.md"]
   n0 --> n1
-  n0 --> n2
+  n1 --> n2
   n0 --> n3
   n0 --> n4
   n0 --> n5
   n0 --> n6
   n0 --> n7
+  n0 --> n8
+  n0 --> n9
+  n0 --> n10
+  n0 --> n11
+  n0 --> n12
 ```
 
 ```mermaid

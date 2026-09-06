@@ -38,6 +38,34 @@ flowchart TB
   n0 --> n8
 ```
 
+```mermaid
+flowchart TB
+  n0["What does analysis do?"]
+  n1["analysis"]
+  n2["__init__.py"]
+  n3["analyzer.py"]
+  n4["detectors.py"]
+  n5["enrich.py"]
+  n6["errors.py"]
+  n7["scanner.py"]
+  n8["languages.py"]
+  n9["model.py"]
+  n0 --> n1
+  n1 --> n2
+  n1 --> n3
+  n1 --> n4
+  n1 --> n5
+  n1 --> n6
+  n0 --> n2
+  n0 --> n3
+  n0 --> n7
+  n0 --> n8
+  n0 --> n9
+  n0 --> n4
+  n0 --> n5
+  n0 --> n6
+```
+
 </div>
 
 <div class="dhx-layer" data-min="5" markdown="1">

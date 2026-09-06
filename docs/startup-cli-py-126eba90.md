@@ -36,13 +36,14 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-  n0["pyproject.toml"]
-  n1["cli.py"]
+  n0["cli.py"]
+  n1["pyproject.toml"]
   n2["ontology_loader.py"]
   n3["config.py"]
   n4["run.py"]
   n0 --> n1
-  n1 --> n2
+  n1 --> n0
+  n0 --> n2
   n2 --> n3
   n3 --> n4
 ```
