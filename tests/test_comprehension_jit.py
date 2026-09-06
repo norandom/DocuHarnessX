@@ -86,7 +86,7 @@ def test_conceptual_tree_is_byte_stable_and_system_rooted() -> None:
     assert "Interface" in names or "CLI" in names
     html = render_conceptual_hypertree(model)
     assert "dhx-jit-conceptual" in html
-    assert "application/json" in html
+    assert "dhx-jit__data" in html
     assert "agentic_repo" in html
     assert render_conceptual_hypertree(None) == ""
 

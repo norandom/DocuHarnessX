@@ -130,25 +130,30 @@ def render_question_home(
     spine_ids = {page.id for page in spine}
     rest = [page for page in ordered if page.id not in spine_ids]
 
+    from docuharnessx.comprehension.graphs import render_home_extras
+
+    extras = render_home_extras(
+        ordered, analysis, signals, counts, identity=identity
+    )
+    jit_blocks = [block for _depth, block in extras if "dhx-jit" in block]
+    other = [(depth, block) for depth, block in extras if "dhx-jit" not in block]
+
     lines: list[str] = [
         f"# {identity.site_name}",
         "",
         wrap_layer(1, _lede(identity, ordered)).rstrip("\n"),
         "",
     ]
+    for block in jit_blocks:
+        lines.append(wrap_layer(1, block).rstrip("\n"))
+        lines.append("")
     if spine:
         lines.append(wrap_layer(1, _numbered_links(spine)).rstrip("\n"))
         lines.append("")
     if rest:
         lines.append(wrap_layer(1, _bullet_links(rest)).rstrip("\n"))
         lines.append("")
-
-    from docuharnessx.comprehension.graphs import render_home_extras
-
-    extras = render_home_extras(
-        ordered, analysis, signals, counts, identity=identity
-    )
-    for depth, block in extras:
+    for depth, block in other:
         lines.append(wrap_layer(max(depth, 2), block).rstrip("\n"))
         lines.append("")
     return "\n".join(lines) + "\n"

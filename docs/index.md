@@ -10,6 +10,16 @@ Read the numbered list first. Later questions cover individual modules.
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
+<div class="dhx-jit" markdown="0">
+<p class="dhx-jit__hint">Click a node to recenter the map.</p>
+<textarea class="dhx-jit__data" hidden readonly>{"children": [{"children": [{"children": [], "data": {"kind": "actor", "level": "context"}, "id": "actor:operator", "name": "Operator"}], "data": {"kind": "group"}, "id": "group:people", "name": "People"}, {"children": [{"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:CLI", "name": "CLI"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:mcp", "name": "mcp"}], "data": {"kind": "band"}, "id": "band:interface", "name": "Interface"}, {"children": [{"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:assembler", "name": "assembler"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:composition", "name": "composition"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:deployer", "name": "deployer"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:pipeline", "name": "pipeline"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:planning", "name": "planning"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:review", "name": "review"}], "data": {"kind": "band"}, "id": "band:application", "name": "Application"}, {"children": [{"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:analysis", "name": "analysis"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:comprehension", "name": "comprehension"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:ontology", "name": "ontology"}], "data": {"kind": "band"}, "id": "band:domain", "name": "Domain"}, {"children": [{"children": [], "data": {"kind": "external", "level": "context"}, "id": "external:ci", "name": "GitHub Actions"}, {"children": [], "data": {"kind": "store", "level": "context"}, "id": "external:docs", "name": "Documentation site"}, {"children": [], "data": {"kind": "store", "level": "context"}, "id": "external:repo", "name": "norandom/DocuHarnessX"}], "data": {"kind": "group"}, "id": "group:external", "name": "External"}], "data": {"kind": "system"}, "id": "system", "name": "DocuHarnessX"}</textarea>
+<div id="dhx-jit-conceptual" class="dhx-jit__stage"></div>
+</div>
+
+</div>
+
+<div class="dhx-layer" data-min="1" markdown="1">
+
 ## Read in this order
 
 1. [How does this program start?](startup-cli-py-126eba90.md)
@@ -28,7 +38,9 @@ Read the numbered list first. Later questions cover individual modules.
 - [What does assembler do?](component-assembler-d9228a8c.md)
 - [What does composition do?](component-composition-e6f778c7.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
+- [What does deployer do?](component-deployer-f8b1b75f.md)
 - [What does javascripts do?](component-javascripts-2aa9650e.md)
+- [What does mcp do?](component-mcp-bdf519de.md)
 
 </div>
 
@@ -62,18 +74,8 @@ flowchart LR
 ```mermaid
 pie showData
  title Documentation coverage
- "Accepted pages" : 10
+ "Accepted pages" : 12
 ```
-
-</div>
-
-<div class="dhx-layer" data-min="2" markdown="1">
-
-<div class="dhx-jit" markdown="0">
-<p class="dhx-jit__hint">Click a node to center it.</p>
-<div id="dhx-jit-conceptual" class="dhx-jit__stage"></div>
-<script type="application/json" id="dhx-jit-conceptual-data">{"children": [{"children": [{"children": [], "data": {"kind": "actor", "level": "context"}, "id": "actor:operator", "name": "Operator"}], "data": {"kind": "group"}, "id": "group:people", "name": "People"}, {"children": [{"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:CLI", "name": "CLI"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:mcp", "name": "mcp"}], "data": {"kind": "band"}, "id": "band:interface", "name": "Interface"}, {"children": [{"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:assembler", "name": "assembler"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:composition", "name": "composition"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:deployer", "name": "deployer"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:pipeline", "name": "pipeline"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:planning", "name": "planning"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:review", "name": "review"}], "data": {"kind": "band"}, "id": "band:application", "name": "Application"}, {"children": [{"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:analysis", "name": "analysis"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:comprehension", "name": "comprehension"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:ontology", "name": "ontology"}], "data": {"kind": "band"}, "id": "band:domain", "name": "Domain"}, {"children": [{"children": [], "data": {"kind": "external", "level": "context"}, "id": "external:ci", "name": "GitHub Actions"}, {"children": [], "data": {"kind": "store", "level": "context"}, "id": "external:docs", "name": "Documentation site"}, {"children": [], "data": {"kind": "store", "level": "context"}, "id": "external:repo", "name": "norandom/DocuHarnessX"}], "data": {"kind": "group"}, "id": "group:external", "name": "External"}], "data": {"kind": "system"}, "id": "system", "name": "DocuHarnessX"}</script>
-</div>
 
 </div>
 
@@ -163,7 +165,9 @@ flowchart TB
  m1["What does assembler do?"]
  m2["What does composition do?"]
  m3["What does comprehension do?"]
- m4["What does javascripts do?"]
+ m4["What does deployer do?"]
+ m5["What does javascripts do?"]
+ m6["What does mcp do?"]
  end
  s4 -.-> m0
  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300

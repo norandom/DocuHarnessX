@@ -121,6 +121,7 @@ def test_home_depth_one_is_a_story_not_a_file_star(tmp_path: Path) -> None:
     depth_one = "\n".join(_depth_one_chunks(home))
     assert "Read in this order" in depth_one
     assert "How does this program start?" in depth_one
+    assert "dhx-jit" in depth_one
     assert "```mermaid" not in depth_one
     assert 'n0["' not in depth_one
 
@@ -138,9 +139,10 @@ def test_package_page_depth_one_has_model_view_not_file_star(tmp_path: Path) -> 
         site.docs_dir, page_filename(pages[1].id)
     ).read_text(encoding="utf-8")
     depth_one = "\n".join(_depth_one_chunks(package))
+    assert "dhx-jit" in depth_one
     assert "Operator" in depth_one
-    assert "This system" in depth_one
     assert "agentic_repo" in depth_one
+    assert "This system" in package
     assert "Engine loads config" in depth_one
     assert 'n0["' not in depth_one
     assert "engine.py" not in depth_one

@@ -864,7 +864,7 @@ def render_page_extras(
             blocks.append((1, conceptual))
         context = view_context(model) or render_c4_context(analysis, identity)
         if context:
-            blocks.append((1, context))
+            blocks.append((2, context))
         else:
             mind = render_mindmap(analysis)
             if mind:
@@ -924,7 +924,7 @@ def render_home_extras(
     counts: CoverageCounts | None,
     identity: "SiteIdentity | None" = None,
 ) -> list[tuple[int, str]]:
-    """Home pictures. Depth 1 is prose (the reading path); maps start at 2."""
+    """Home pictures. Hypertree is depth 1; Mermaid maps start at 2."""
     blocks: list[tuple[int, str]] = []
     from docuharnessx.assembler.story import story_spine
 
@@ -939,7 +939,7 @@ def render_home_extras(
 
     conceptual = render_conceptual_hypertree(model)
     if conceptual:
-        blocks.append((2, conceptual))
+        blocks.append((1, conceptual))
     styles = list(model.styles if model is not None else ())
     if not styles and signals is not None:
         styles = [item for item in signals.architectures if item.id in _STRUCTURAL_IDS]
@@ -1046,7 +1046,7 @@ def collect_diagram_figures(
         add("Conceptual map", "Architecture", src_title, href, 1, conceptual)
     context = view_context(model) or render_c4_context(analysis, identity) or render_mindmap(analysis)
     if context:
-        add("System context", "Architecture", src_title, href, 1, context)
+        add("System context", "Architecture", src_title, href, 2, context)
     styles = list(model.styles if model is not None else live.architectures)
     drawn_style = False
     for style in styles:
@@ -1246,6 +1246,21 @@ def render_diagrams_index(
         ),
     )
     req_lines = _requirements_lines(requirements, model)
+    lead = [item for item in ordered if item.heading == "Conceptual map"]
+    rest = [item for item in ordered if item.heading != "Conceptual map"]
+    for item in lead:
+        lines.append(f'<h2 id="{item.slug}">{item.heading}</h2>')
+        lines.append("")
+        location = (
+            f"On [{item.source_title}]({item.source_href}) "
+            f"at depth {item.min_depth}."
+        )
+        if item.note:
+            location = location + " " + item.note + "."
+        lines.append(location)
+        lines.append("")
+        lines.append(item.mermaid.rstrip("\n"))
+        lines.append("")
     if ordered:
         lines.append("## Contents")
         lines.append("")
@@ -1268,7 +1283,7 @@ def render_diagrams_index(
         lines.append("")
         current_section = ""
         requirements_emitted = False
-        for figure in ordered:
+        for figure in rest:
             if figure.section != current_section:
                 if current_section == "Architecture" and req_lines:
                     lines.extend(req_lines)

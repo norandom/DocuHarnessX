@@ -2,6 +2,16 @@
 
 Every picture this site assembled, in one catalog. Each also lives on the linked page, often behind the depth slider.
 
+<h2 id="conceptual-map">Conceptual map</h2>
+
+On [What does docuharnessx do?](component-docuharnessx-3986831c.md) at depth 1.
+
+<div class="dhx-jit" markdown="0">
+<p class="dhx-jit__hint">Click a node to recenter the map.</p>
+<textarea class="dhx-jit__data" hidden readonly>{"children": [{"children": [{"children": [], "data": {"kind": "actor", "level": "context"}, "id": "actor:operator", "name": "Operator"}], "data": {"kind": "group"}, "id": "group:people", "name": "People"}, {"children": [{"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:CLI", "name": "CLI"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:mcp", "name": "mcp"}], "data": {"kind": "band"}, "id": "band:interface", "name": "Interface"}, {"children": [{"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:assembler", "name": "assembler"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:composition", "name": "composition"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:deployer", "name": "deployer"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:pipeline", "name": "pipeline"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:planning", "name": "planning"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:review", "name": "review"}], "data": {"kind": "band"}, "id": "band:application", "name": "Application"}, {"children": [{"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:analysis", "name": "analysis"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:comprehension", "name": "comprehension"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:ontology", "name": "ontology"}], "data": {"kind": "band"}, "id": "band:domain", "name": "Domain"}, {"children": [{"children": [], "data": {"kind": "external", "level": "context"}, "id": "external:ci", "name": "GitHub Actions"}, {"children": [], "data": {"kind": "store", "level": "context"}, "id": "external:docs", "name": "Documentation site"}, {"children": [], "data": {"kind": "store", "level": "context"}, "id": "external:repo", "name": "norandom/DocuHarnessX"}], "data": {"kind": "group"}, "id": "group:external", "name": "External"}], "data": {"kind": "system"}, "id": "system", "name": "DocuHarnessX"}</textarea>
+<div id="dhx-jit-conceptual" class="dhx-jit__stage"></div>
+</div>
+
 ## Contents
 
 - [Conceptual map](#conceptual-map)
@@ -40,29 +50,24 @@ Every picture this site assembled, in one catalog. Each also lives on the linked
 - [What does comprehension do? · Files by directory](#what-does-comprehension-do-files-by-directory)
 - [What does comprehension do? · Question and files](#what-does-comprehension-do-question-and-files)
 - [What does comprehension do? · Structure](#what-does-comprehension-do-structure)
+- [What does deployer do? · Files by directory](#what-does-deployer-do-files-by-directory)
+- [What does deployer do? · Question and files](#what-does-deployer-do-question-and-files)
+- [What does deployer do? · Structure](#what-does-deployer-do-structure)
 - [What does docuharnessx do? · Files by directory](#what-does-docuharnessx-do-files-by-directory)
 - [What does docuharnessx do? · Question and files](#what-does-docuharnessx-do-question-and-files)
 - [What does docuharnessx do? · Structure](#what-does-docuharnessx-do-structure)
 - [What does javascripts do? · Files by directory](#what-does-javascripts-do-files-by-directory)
 - [What does javascripts do? · Question and files](#what-does-javascripts-do-question-and-files)
 - [What does javascripts do? · Structure](#what-does-javascripts-do-structure)
+- [What does mcp do? · Question and files](#what-does-mcp-do-question-and-files)
+- [What does mcp do? · Structure](#what-does-mcp-do-structure)
 - [Glossary related-term graphs](#glossary-related-term-graphs)
 
 ## Architecture
 
-<h3 id="conceptual-map">Conceptual map</h3>
-
-On [What does docuharnessx do?](component-docuharnessx-3986831c.md) at depth 1.
-
-<div class="dhx-jit" markdown="0">
-<p class="dhx-jit__hint">Click a node to center it.</p>
-<div id="dhx-jit-conceptual" class="dhx-jit__stage"></div>
-<script type="application/json" id="dhx-jit-conceptual-data">{"children": [{"children": [{"children": [], "data": {"kind": "actor", "level": "context"}, "id": "actor:operator", "name": "Operator"}], "data": {"kind": "group"}, "id": "group:people", "name": "People"}, {"children": [{"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:CLI", "name": "CLI"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:mcp", "name": "mcp"}], "data": {"kind": "band"}, "id": "band:interface", "name": "Interface"}, {"children": [{"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:assembler", "name": "assembler"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:composition", "name": "composition"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:deployer", "name": "deployer"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:pipeline", "name": "pipeline"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:planning", "name": "planning"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:review", "name": "review"}], "data": {"kind": "band"}, "id": "band:application", "name": "Application"}, {"children": [{"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:analysis", "name": "analysis"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:comprehension", "name": "comprehension"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:ontology", "name": "ontology"}], "data": {"kind": "band"}, "id": "band:domain", "name": "Domain"}, {"children": [{"children": [], "data": {"kind": "external", "level": "context"}, "id": "external:ci", "name": "GitHub Actions"}, {"children": [], "data": {"kind": "store", "level": "context"}, "id": "external:docs", "name": "Documentation site"}, {"children": [], "data": {"kind": "store", "level": "context"}, "id": "external:repo", "name": "norandom/DocuHarnessX"}], "data": {"kind": "group"}, "id": "group:external", "name": "External"}], "data": {"kind": "system"}, "id": "system", "name": "DocuHarnessX"}</script>
-</div>
-
 <h3 id="system-context">System context</h3>
 
-On [What does docuharnessx do?](component-docuharnessx-3986831c.md) at depth 1.
+On [What does docuharnessx do?](component-docuharnessx-3986831c.md) at depth 2.
 
 ```mermaid
 flowchart TB
@@ -452,7 +457,9 @@ flowchart TB
  m1["What does assembler do?"]
  m2["What does composition do?"]
  m3["What does comprehension do?"]
- m4["What does javascripts do?"]
+ m4["What does deployer do?"]
+ m5["What does javascripts do?"]
+ m6["What does mcp do?"]
  end
  s4 -.-> m0
  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
@@ -471,7 +478,7 @@ On [Home](index.md) at depth 2.
 ```mermaid
 pie showData
  title Documentation coverage
- "Accepted pages" : 10
+ "Accepted pages" : 12
 ```
 
 ## Per question
@@ -1104,6 +1111,92 @@ flowchart TB
  n0 --> n10
 ```
 
+<h3 id="what-does-deployer-do-files-by-directory">What does deployer do? · Files by directory</h3>
+
+On [What does deployer do?](component-deployer-f8b1b75f.md) at depth 5.
+
+```mermaid
+flowchart TB
+ page["What does deployer do?"]
+ subgraph d0["docuharnessx/deployer"]
+ e0["__init__.py"]
+ e1["deploy.py"]
+ e2["model.py"]
+ e3["mode.py"]
+ e4["workflow.py"]
+ e5["tree.py"]
+ e6["commands.py"]
+ end
+ subgraph d1["docuharnessx/stages"]
+ e7["deploy.py"]
+ end
+ page --> e0
+ page --> e1
+ page --> e2
+ page --> e3
+ page --> e4
+ page --> e5
+ page --> e6
+ page --> e7
+```
+
+<h3 id="what-does-deployer-do-question-and-files">What does deployer do? · Question and files</h3>
+
+On [What does deployer do?](component-deployer-f8b1b75f.md) at depth 5.
+
+```mermaid
+flowchart TB
+ n0["What does deployer do?"]
+ n1["__init__.py"]
+ n2["deploy.py"]
+ n3["deploy.py"]
+ n4["model.py"]
+ n5["mode.py"]
+ n6["workflow.py"]
+ n7["tree.py"]
+ n8["commands.py"]
+ n0 --> n1
+ n0 --> n2
+ n0 --> n3
+ n0 --> n4
+ n0 --> n5
+ n0 --> n6
+ n0 --> n7
+ n0 --> n8
+```
+
+<h3 id="what-does-deployer-do-structure">What does deployer do? · Structure</h3>
+
+On [What does deployer do?](component-deployer-f8b1b75f.md) at depth 5.
+
+```mermaid
+flowchart TB
+ n0["What does deployer do?"]
+ n1["deployer"]
+ n2["__init__.py"]
+ n3["commands.py"]
+ n4["deploy.py"]
+ n5["mode.py"]
+ n6["model.py"]
+ n7["deploy.py"]
+ n8["workflow.py"]
+ n9["tree.py"]
+ n0 --> n1
+ n1 --> n2
+ n1 --> n3
+ n1 --> n4
+ n1 --> n5
+ n1 --> n6
+ n0 --> n2
+ n0 --> n7
+ n0 --> n4
+ n0 --> n6
+ n0 --> n5
+ n0 --> n8
+ n0 --> n9
+ n0 --> n3
+```
+
 <h3 id="what-does-docuharnessx-do-files-by-directory">What does docuharnessx do? · Files by directory</h3>
 
 On [What does docuharnessx do?](component-docuharnessx-3986831c.md) at depth 5.
@@ -1252,6 +1345,56 @@ flowchart TB
  n0 --> n11
  n0 --> n12
  n0 --> n13
+```
+
+<h3 id="what-does-mcp-do-question-and-files">What does mcp do? · Question and files</h3>
+
+On [What does mcp do?](component-mcp-bdf519de.md) at depth 5.
+
+```mermaid
+flowchart TB
+ n0["What does mcp do?"]
+ n1["__init__.py"]
+ n2["server.py"]
+ n3["session.py"]
+ n4["schemas.py"]
+ n5["overview.py"]
+ n6["planned.py"]
+ n0 --> n1
+ n0 --> n2
+ n0 --> n3
+ n0 --> n4
+ n0 --> n5
+ n0 --> n6
+```
+
+<h3 id="what-does-mcp-do-structure">What does mcp do? · Structure</h3>
+
+On [What does mcp do?](component-mcp-bdf519de.md) at depth 5.
+
+```mermaid
+flowchart TB
+ n0["What does mcp do?"]
+ n1["mcp"]
+ n2["__init__.py"]
+ n3["handlers.py"]
+ n4["overview.py"]
+ n5["planned.py"]
+ n6["schemas.py"]
+ n7["server.py"]
+ n8["session.py"]
+ n0 --> n1
+ n1 --> n2
+ n1 --> n3
+ n1 --> n4
+ n1 --> n5
+ n1 --> n6
+ n0 --> n2
+ n0 --> n7
+ n0 --> n8
+ n0 --> n6
+ n0 --> n4
+ n0 --> n5
 ```
 
 <h2 id="glossary-related-term-graphs">Glossary related-term graphs</h2>

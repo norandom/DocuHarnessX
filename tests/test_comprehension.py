@@ -110,6 +110,23 @@ def test_autolink_skips_code() -> None:
     assert nested.count("href=") == 1
 
 
+def test_autolink_skips_hypertree_payload() -> None:
+    glossary = Glossary(terms=(GlossaryTerm(id="mcp", label="mcp"),))
+    text = (
+        '<div class="dhx-jit" markdown="0">\n'
+        '<textarea class="dhx-jit__data" hidden readonly>'
+        '{"id": "container:mcp", "name": "mcp"}'
+        "</textarea>\n"
+        "</div>\n"
+        "The mcp package refines docs.\n"
+    )
+    out = autolink_markdown(text, glossary)
+    inner = out.split("<textarea", 1)[1].split("</textarea>", 1)[0]
+    assert "<a " not in inner
+    assert '"name": "mcp"' in inner
+    assert 'href="glossary.md#mcp"' in out
+
+
 def test_glossary_page_links_related_and_appearances() -> None:
     glossary = Glossary(
         terms=(

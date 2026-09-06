@@ -6,6 +6,7 @@ Built only from the architecture model. Empty model → no tree.
 
 from __future__ import annotations
 
+import html
 import json
 
 from docuharnessx.comprehension.signals import (
@@ -103,12 +104,14 @@ def render_conceptual_hypertree(model: ArchitectureModel | None) -> str:
     tree = conceptual_tree(model)
     if tree is None:
         return ""
-    payload = json.dumps(tree, sort_keys=True, ensure_ascii=True)
+    payload = html.escape(
+        json.dumps(tree, sort_keys=True, ensure_ascii=True), quote=False
+    )
     return (
         '<div class="dhx-jit" markdown="0">\n'
-        '<p class="dhx-jit__hint">Click a node to center it.</p>\n'
+        '<p class="dhx-jit__hint">Click a node to recenter the map.</p>\n'
+        '<textarea class="dhx-jit__data" hidden readonly>'
+        f"{payload}</textarea>\n"
         '<div id="dhx-jit-conceptual" class="dhx-jit__stage"></div>\n'
-        '<script type="application/json" id="dhx-jit-conceptual-data">'
-        f"{payload}</script>\n"
         "</div>\n"
     )
