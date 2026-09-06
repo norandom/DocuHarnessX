@@ -151,7 +151,6 @@ Appears on:
 - [How are tests organized?](tests-tests-37e0cc9c.md)
 - [What does assembler do?](component-assembler-d9228a8c.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
-- [What does deployer do?](component-deployer-f8b1b75f.md)
 - [What does javascripts do?](component-javascripts-2aa9650e.md)
 - [DocuHarnessX](index.md)
 
@@ -197,7 +196,6 @@ Appears on:
 - [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
 - [What does analysis do?](component-analysis-5fb37dc2.md)
 - [What does composition do?](component-composition-e6f778c7.md)
-- [What does mcp do?](component-mcp-bdf519de.md)
 - [DocuHarnessX](index.md)
 
 Sources: `component:docuharnessx/composition`
@@ -339,8 +337,6 @@ flowchart LR
 Appears on:
 
 - [How are tests organized?](tests-tests-37e0cc9c.md)
-- [What does deployer do?](component-deployer-f8b1b75f.md)
-- [DocuHarnessX](index.md)
 
 Sources: `component:docuharnessx/deployer`
 
@@ -382,9 +378,8 @@ Appears on:
 - [What does assembler do?](component-assembler-d9228a8c.md)
 - [What does composition do?](component-composition-e6f778c7.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
-- [What does deployer do?](component-deployer-f8b1b75f.md)
 - [What does javascripts do?](component-javascripts-2aa9650e.md)
-- [What does mcp do?](component-mcp-bdf519de.md)
+- [DocuHarnessX](index.md)
 
 Sources: `component:docuharnessx`
 
@@ -614,7 +609,7 @@ Sources: `surface:docuharnessx/cli.py`
 
 _No definition in the repository yet._
 
-Related: [analysis](#analysis), [assembler](#assembler), [composition](#composition), [comprehension](#comprehension), [deployer](#deployer), [docuharnessx](#docuharnessx), [mcp](#mcp)
+Related: [analysis](#analysis), [assembler](#assembler), [composition](#composition), [comprehension](#comprehension), [docuharnessx](#docuharnessx)
 
 ```mermaid
 flowchart LR
@@ -627,12 +622,8 @@ flowchart LR
  here --> r2
  r3["comprehension"]
  here --> r3
- r4["deployer"]
+ r4["docuharnessx"]
  here --> r4
- r5["docuharnessx"]
- here --> r5
- r6["mcp"]
- here --> r6
 ```
 
 Appears on:
@@ -677,7 +668,6 @@ Appears on:
 - [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
 - [What does analysis do?](component-analysis-5fb37dc2.md)
 - [What does composition do?](component-composition-e6f778c7.md)
-- [What does deployer do?](component-deployer-f8b1b75f.md)
 
 Sources: `surface:docuharnessx/cli.py`
 
@@ -721,8 +711,6 @@ Appears on:
 - [How is this project built and verified?](build-pyproject-toml-a625bf0a.md)
 - [How are tests organized?](tests-tests-37e0cc9c.md)
 - [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
-- [What does mcp do?](component-mcp-bdf519de.md)
-- [DocuHarnessX](index.md)
 
 Sources: `component:docuharnessx/mcp`, `surface:docuharnessx/cli.py`
 
@@ -838,7 +826,6 @@ Appears on:
 - [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [What does assembler do?](component-assembler-d9228a8c.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
-- [What does deployer do?](component-deployer-f8b1b75f.md)
 
 Sources: `component:docuharnessx/pages`
 
@@ -879,7 +866,6 @@ Appears on:
 - [What does analysis do?](component-analysis-5fb37dc2.md)
 - [What does composition do?](component-composition-e6f778c7.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
-- [What does deployer do?](component-deployer-f8b1b75f.md)
 
 Sources: `component:docuharnessx/pipeline`
 
@@ -1013,8 +999,6 @@ Appears on:
 - [How are tests organized?](tests-tests-37e0cc9c.md)
 - [What does assembler do?](component-assembler-d9228a8c.md)
 - [What does composition do?](component-composition-e6f778c7.md)
-- [What does deployer do?](component-deployer-f8b1b75f.md)
-- [What does mcp do?](component-mcp-bdf519de.md)
 
 Sources: `surface:docuharnessx/cli.py`, `surface:tests/test_analysis_detectors_components_surface.py`
 
@@ -1089,7 +1073,6 @@ Appears on:
 - [What does analysis do?](component-analysis-5fb37dc2.md)
 - [What does composition do?](component-composition-e6f778c7.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
-- [What does deployer do?](component-deployer-f8b1b75f.md)
 
 Sources: `component:docuharnessx/stages`
 
@@ -1126,7 +1109,6 @@ Appears on:
 - [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [How is this project built and verified?](build-pyproject-toml-a625bf0a.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
-- [What does deployer do?](component-deployer-f8b1b75f.md)
 
 Sources: `surface:docuharnessx/cli.py`
 

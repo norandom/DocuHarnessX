@@ -2,7 +2,7 @@
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
-This site walks through 12 questions about [`norandom/DocuHarnessX`](https://github.com/norandom/DocuHarnessX), in the order you would actually learn the project.
+This site walks through 10 questions about [`norandom/DocuHarnessX`](https://github.com/norandom/DocuHarnessX), in the order you would actually learn the project.
 
 Read the numbered list first. Later questions cover individual modules.
 
@@ -28,9 +28,7 @@ Read the numbered list first. Later questions cover individual modules.
 - [What does assembler do?](component-assembler-d9228a8c.md)
 - [What does composition do?](component-composition-e6f778c7.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
-- [What does deployer do?](component-deployer-f8b1b75f.md)
 - [What does javascripts do?](component-javascripts-2aa9650e.md)
-- [What does mcp do?](component-mcp-bdf519de.md)
 
 </div>
 
@@ -64,7 +62,7 @@ flowchart LR
 ```mermaid
 pie showData
  title Documentation coverage
- "Accepted pages" : 12
+ "Accepted pages" : 10
 ```
 
 </div>
@@ -155,9 +153,7 @@ flowchart TB
  m1["What does assembler do?"]
  m2["What does composition do?"]
  m3["What does comprehension do?"]
- m4["What does deployer do?"]
- m5["What does javascripts do?"]
- m6["What does mcp do?"]
+ m4["What does javascripts do?"]
  end
  s4 -.-> m0
  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
