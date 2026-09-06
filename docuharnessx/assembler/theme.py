@@ -68,8 +68,19 @@ a.dhx-term, a[href*="glossary.md"] {
   text-align: center;
   padding: 0.6rem 0;
 }
-/* Mermaid dark theme greys out near-black fills. Keep node chips
-   mid-lightness so Operator is not grey-on-black. */
+/* Dual-theme mermaid: light chips, dark ink. Mermaid's slate theme
+   paints labels black; a dark-blue fill then becomes unreadable. */
+.md-typeset .mermaid .cluster rect {
+  fill: color-mix(in srgb, var(--md-default-bg-color) 88%, var(--md-default-fg-color)) !important;
+  stroke: var(--md-default-fg-color--light) !important;
+}
+.md-typeset .mermaid .cluster-label,
+.md-typeset .mermaid .cluster-label text,
+.md-typeset .mermaid .cluster-label span,
+.md-typeset .mermaid .cluster-label foreignObject div {
+  fill: var(--md-typeset-color) !important;
+  color: var(--md-typeset-color) !important;
+}
 .md-typeset .mermaid .node.person rect,
 .md-typeset .mermaid .node.person polygon,
 .md-typeset .mermaid .node.person circle,
@@ -77,10 +88,65 @@ a.dhx-term, a[href*="glossary.md"] {
   fill: #E8B923 !important;
   stroke: #7A5100 !important;
 }
+.md-typeset .mermaid .node.system rect,
+.md-typeset .mermaid .node.system polygon,
+.md-typeset .mermaid .node.system circle,
+.md-typeset .mermaid .node.system path {
+  fill: #A8C8FF !important;
+  stroke: #1E4BB8 !important;
+}
+.md-typeset .mermaid .node.container rect,
+.md-typeset .mermaid .node.container polygon,
+.md-typeset .mermaid .node.container circle,
+.md-typeset .mermaid .node.container path {
+  fill: #B9D4FE !important;
+  stroke: #2F62C4 !important;
+}
+.md-typeset .mermaid .node.external rect,
+.md-typeset .mermaid .node.external polygon,
+.md-typeset .mermaid .node.external circle,
+.md-typeset .mermaid .node.external path {
+  fill: #D5DCE6 !important;
+  stroke: #4A5568 !important;
+}
+.md-typeset .mermaid .node.store rect,
+.md-typeset .mermaid .node.store polygon,
+.md-typeset .mermaid .node.store circle,
+.md-typeset .mermaid .node.store path {
+  fill: #7ED4C0 !important;
+  stroke: #0F766E !important;
+}
+.md-typeset .mermaid .node.person text,
 .md-typeset .mermaid .node.person .label,
 .md-typeset .mermaid .node.person span,
 .md-typeset .mermaid .node.person foreignObject div {
+  fill: #1A1300 !important;
   color: #1A1300 !important;
+}
+.md-typeset .mermaid .node.system text,
+.md-typeset .mermaid .node.system .label,
+.md-typeset .mermaid .node.system span,
+.md-typeset .mermaid .node.system foreignObject div,
+.md-typeset .mermaid .node.container text,
+.md-typeset .mermaid .node.container .label,
+.md-typeset .mermaid .node.container span,
+.md-typeset .mermaid .node.container foreignObject div {
+  fill: #0B1F4A !important;
+  color: #0B1F4A !important;
+}
+.md-typeset .mermaid .node.external text,
+.md-typeset .mermaid .node.external .label,
+.md-typeset .mermaid .node.external span,
+.md-typeset .mermaid .node.external foreignObject div {
+  fill: #1A202C !important;
+  color: #1A202C !important;
+}
+.md-typeset .mermaid .node.store text,
+.md-typeset .mermaid .node.store .label,
+.md-typeset .mermaid .node.store span,
+.md-typeset .mermaid .node.store foreignObject div {
+  fill: #042F2E !important;
+  color: #042F2E !important;
 }
 """
 

@@ -44,7 +44,7 @@ flowchart TB
   class repo,docs store
   class ci external
   classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
-  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
   classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
   classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
   classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
@@ -77,7 +77,7 @@ flowchart TB
   b1 -->|"depends on"| b2
   class b0m0,b0m1,b1m0,b1m1,b1m2,b1m3,b1m4,b1m5,b2m0,b2m1,b2m2 container
   classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
-  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
   classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
   classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
   classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E

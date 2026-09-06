@@ -68,7 +68,7 @@ flowchart LR
   n1 --> n7
   n7 --> n3
   classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
-  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
   classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
   classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
   classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
@@ -87,7 +87,7 @@ flowchart LR
   docs --> evolve
   class docs,evolve container
   classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
-  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
   classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
   classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
   classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
@@ -106,7 +106,7 @@ flowchart LR
   docs --> evolve
   class docs,evolve container
   classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
-  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
   classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
   classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
   classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E

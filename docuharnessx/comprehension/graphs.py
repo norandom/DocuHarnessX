@@ -70,11 +70,11 @@ _CI_LABELS = {
     "circleci": "CircleCI",
     "dagger": "Dagger",
 }
-# Mid-lightness hues so nodes stay visible on both white and slate canvases.
-# Near-black fills (#0F172A) collapse into Material dark mode.
+# Light fills + dark ink. White-on-navy fails when Mermaid dark theme
+# forces label fill to black. Ink stays readable if the chip is light.
 _STYLE_LINES = (
     "  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300",
-    "  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF",
+    "  classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A",
     "  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A",
     "  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C",
     "  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E",

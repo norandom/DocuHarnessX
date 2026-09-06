@@ -188,6 +188,8 @@ def test_context_is_c4_shaped_not_a_star() -> None:
     assert "javascripts" not in text
     assert "-->" in text and "|" in text
     assert "classDef person" in text
+    assert "classDef system fill:#A8C8FF" in text
+    assert "color:#FFFFFF" not in text
     assert "#0F172A" not in text
     assert "class actor person" in text
 
