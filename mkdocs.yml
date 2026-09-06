@@ -36,6 +36,8 @@ theme:
 extra_css:
 - stylesheets/extra.css
 extra_javascript:
+- javascripts/mermaid.min.js
+- javascripts/mermaid-boot.js
 - javascripts/jit.js
 - javascripts/conceptual.js
 - javascripts/depth.js

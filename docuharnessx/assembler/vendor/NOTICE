@@ -2,3 +2,11 @@ JavaScript InfoVis Toolkit 2.0.1 (jit-yc.js)
 Copyright (c) 2011 Sencha Inc. — Author: Nicolas Garcia Belmonte
 https://philogb.github.io/jit/
 License: MIT (see the copyright header in jit-yc.js)
+
+Mermaid 11.17.2 (mermaid.min.js)
+Copyright (c) Knut Sveidqvist and mermaid-js contributors
+https://github.com/mermaid-js/mermaid
+License: MIT
+Source: https://unpkg.com/mermaid@11.17.2/dist/mermaid.min.js
+SHA-256: 581ed7d74bd9048d0e3a91363927d72ef22942d7722546b27f7cc29e35390eb8
+This is the UMD build Material 9.7.7 would otherwise load from unpkg at runtime.

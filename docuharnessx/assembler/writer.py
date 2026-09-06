@@ -61,6 +61,7 @@ from docuharnessx.assembler.model import (
 )
 from docuharnessx.assembler.pages import page_filename, render_segment_page
 from docuharnessx.assembler.roles import render_role_landing_page, role_page_path
+from docuharnessx.assembler.mermaid import write_mermaid_javascript
 from docuharnessx.assembler.theme import (
     EXTRA_CSS_PATH,
     EXTRA_JS_PATH,
@@ -240,6 +241,7 @@ def assemble_site(
 
     look = presentation or SitePresentation()
     _write_text(docs_dir / EXTRA_CSS_PATH, render_extra_css(look.theme))
+    write_mermaid_javascript(docs_dir)
     _write_text(docs_dir / EXTRA_JS_PATH, render_depth_js(look.depth))
 
     # Step 5: the mkdocs.yml (Material theme + tags plugin + per-target identity + nav).
