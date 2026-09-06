@@ -9,6 +9,14 @@ related: []
 ---
 # What does analysis do?
 
+<div class="dhx-layer" data-min="1" markdown="1">
+
+The five evidence files plus the directly-referenced `model.py`, `scanner.py`, and `languages.py` give a complete picture. Here is the finished Markdown body.
+
+</div>
+
+<div class="dhx-layer" data-min="3" markdown="1">
+
 ```mermaid
 flowchart TB
   n0["What does analysis do?"]
@@ -30,34 +38,9 @@ flowchart TB
   n0 --> n8
 ```
 
-```mermaid
-flowchart TB
-  n0["What does analysis do?"]
-  n1["analysis"]
-  n2["__init__.py"]
-  n3["analyzer.py"]
-  n4["detectors.py"]
-  n5["enrich.py"]
-  n6["errors.py"]
-  n7["scanner.py"]
-  n8["languages.py"]
-  n9["model.py"]
-  n0 --> n1
-  n1 --> n2
-  n1 --> n3
-  n1 --> n4
-  n1 --> n5
-  n1 --> n6
-  n0 --> n2
-  n0 --> n3
-  n0 --> n7
-  n0 --> n8
-  n0 --> n9
-  n0 --> n4
-  n0 --> n5
-  n0 --> n6
-```
+</div>
 
+<div class="dhx-layer" data-min="5" markdown="1">
 
 The five evidence files plus the directly-referenced `model.py`, `scanner.py`, and `languages.py` give a complete picture. Here is the finished Markdown body.
 
@@ -109,3 +92,20 @@ The package treats reproducibility as the core property. `analyzer.py`'s docstri
 The package owns a deliberately separate, stage-scoped error hierarchy rooted at `AnalysisError` (`docuharnessx/analysis/errors.py:50`), independent of the skeleton-wide errors so the core stays harness-free. Its fatal leaves are `IngestError` (invalid/missing target repository slot, `docuharnessx/analysis/errors.py:60`), `AnalyzeError` (missing file-inventory slot, `docuharnessx/analysis/errors.py:70`), and `RepoAnalysisVersionError` (unsupported `schema_version` in `from_dict`, `docuharnessx/analysis/errors.py:80`). Recoverable in-scan conditions are deliberately *not* error types — they are absorbed into `ScanStats.notes`/counters instead (`docuharnessx/analysis/errors.py:17-20`).
 
 In short: analysis turns a local repository into one frozen, versioned, fully pre-sorted `RepoAnalysis` value object — languages/LOC, structure, entrypoints, build files, CI, tests, dependencies, components, public surface, docs, artifacts, and scan stats — with no model calls and no network access, and an optional LLM layer that is strictly additive to that core.
+
+</div>
+
+<div class="dhx-layer" data-min="7" markdown="1">
+
+## Grounding
+
+- `docuharnessx/analysis/__init__.py`
+- `docuharnessx/analysis/analyzer.py`
+- `docuharnessx/analysis/scanner.py`
+- `docuharnessx/analysis/languages.py`
+- `docuharnessx/analysis/model.py`
+- `docuharnessx/analysis/detectors.py`
+- `docuharnessx/analysis/enrich.py`
+- `docuharnessx/analysis/errors.py`
+
+</div>

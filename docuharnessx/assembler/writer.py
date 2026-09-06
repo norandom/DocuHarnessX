@@ -61,7 +61,12 @@ from docuharnessx.assembler.model import (
 )
 from docuharnessx.assembler.pages import page_filename, render_segment_page
 from docuharnessx.assembler.roles import render_role_landing_page, role_page_path
-from docuharnessx.assembler.theme import EXTRA_CSS_PATH, render_extra_css
+from docuharnessx.assembler.theme import (
+    EXTRA_CSS_PATH,
+    EXTRA_JS_PATH,
+    render_depth_js,
+    render_extra_css,
+)
 from docuharnessx.ontology import (
     AxisTerm,
     InMemorySegmentStore,
@@ -69,6 +74,7 @@ from docuharnessx.ontology import (
     build_role_view,
 )
 from docuharnessx.review.model import ReviewReport
+from docuharnessx.site_config import SitePresentation
 
 if TYPE_CHECKING:  # optional site-identity context, consumed read-only (Req 2.5).
     from docuharnessx.analysis.model import RepoAnalysis
@@ -146,6 +152,7 @@ def assemble_site(
     analysis: "RepoAnalysis | None",
     out_dir: str,
     identity: SiteIdentity,
+    presentation: SitePresentation | None = None,
 ) -> AssembledSite:
     """Assemble the Material for MkDocs source tree and return the frozen seam (task 4.1).
 
@@ -231,11 +238,14 @@ def assemble_site(
     # role pages the nav carries, in the same order.
     _write_text(docs_dir / HOME_PAGE_PATH, render_home_page(identity, role_pages))
 
-    # Step 4c: the deepwiki-inspired theme stylesheet referenced from mkdocs.yml extra_css.
-    _write_text(docs_dir / EXTRA_CSS_PATH, render_extra_css())
+    look = presentation or SitePresentation()
+    _write_text(docs_dir / EXTRA_CSS_PATH, render_extra_css(look.theme))
+    _write_text(docs_dir / EXTRA_JS_PATH, render_depth_js(look.depth))
 
     # Step 5: the mkdocs.yml (Material theme + tags plugin + per-target identity + nav).
-    mkdocs_yml = build_mkdocs_yaml(identity, role_pages, vocab, segments_by_role)
+    mkdocs_yml = build_mkdocs_yaml(
+        identity, role_pages, vocab, segments_by_role, presentation=look
+    )
     mkdocs_yml_path = site_dir / _MKDOCS_YML
     _write_text(mkdocs_yml_path, mkdocs_yml)
 

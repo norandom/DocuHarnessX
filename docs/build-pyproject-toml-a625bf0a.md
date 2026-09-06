@@ -12,6 +12,14 @@ related: []
 ---
 # How is this project built and verified?
 
+<div class="dhx-layer" data-min="1" markdown="1">
+
+The build is declared entirely in the root `pyproject.toml`. The package is built with **hatchling** rather than setuptools: `pyproject.toml:35-37` sets `requires = ["hatchling"]` and `build-backend = "hatchling.build"`, and `pyproject.toml:43-44` restricts the wheel to `packages = ["docuharnessx"]`. It requires Python `>=3.12` (`pyproject.toml:5`).
+
+</div>
+
+<div class="dhx-layer" data-min="3" markdown="1">
+
 ```mermaid
 flowchart TB
   n0["How is this project built and verified?"]
@@ -35,29 +43,19 @@ flowchart TB
 flowchart LR
   n0["How is this project built and verified?"]
   n1["pyproject.toml"]
-  n2["pyproject.toml"]
-  n3["adopt.yml"]
-  n4["dhx.yml"]
-  n5["docs.yml"]
-  n6["pyproject.toml"]
-  n7["cli.py"]
-  n8["pyproject.toml"]
-  n9["test_deployer_pyproject_deps.py"]
-  n10["test_mcp_pyproject_dep.py"]
-  n11["test_fixture_agentic_repo.py"]
-  n12["README.md"]
+  n2["cli.py"]
+  n3["pyproject.toml"]
+  n4["test_deployer_pyproject_deps.py"]
+  n5["test_mcp_pyproject_dep.py"]
+  n6["test_fixture_agentic_repo.py"]
+  n7["README.md"]
   n0 --> n1
-  n1 --> n2
+  n0 --> n2
   n0 --> n3
   n0 --> n4
   n0 --> n5
   n0 --> n6
   n0 --> n7
-  n0 --> n8
-  n0 --> n9
-  n0 --> n10
-  n0 --> n11
-  n0 --> n12
 ```
 
 ```mermaid
@@ -87,6 +85,9 @@ flowchart TB
   page --> e6
 ```
 
+</div>
+
+<div class="dhx-layer" data-min="5" markdown="1">
 
 # How DocuHarnessX is built and verified
 
@@ -122,3 +123,19 @@ uvx --python 3.12 --from . dhx ci .    # adopt.yml:76
 Static-site deployment is verified separately by `.github/workflows/docs.yml`: it installs `mkdocs-material` (`docs.yml:22-24`), runs `mkdocs build --strict` (`docs.yml:26`) — strict mode fails the build on any MkDocs warning — uploads the `site` artifact (`docs.yml:28-30`), and deploys with `actions/deploy-pages@v4` (`docs.yml:38-40`).
 
 For consumers, the project distributes CI by generation: `dhx install-ci` writes a `.github/workflows/dhx.yml` into the target repo (`docuharnessx/cli.py:1420-1430` dispatches to `install_ci_workflow`), and the reusable `adopt.yml` documents that install path in its header (`adopt.yml:2-12`). Local install follows the same Python 3.12 + uv story: `uv pip install -e .` after creating a venv, per `README.md:33-38`, or `uvx --python 3.12 --from git+... dhx` for a no-clone run (`README.md:12`).
+
+</div>
+
+<div class="dhx-layer" data-min="7" markdown="1">
+
+## Grounding
+
+- `pyproject.toml`
+- `docuharnessx/cli.py`
+- `tests/fixtures/agentic_repo/pyproject.toml`
+- `tests/test_deployer_pyproject_deps.py`
+- `tests/test_mcp_pyproject_dep.py`
+- `tests/test_fixture_agentic_repo.py`
+- `README.md`
+
+</div>

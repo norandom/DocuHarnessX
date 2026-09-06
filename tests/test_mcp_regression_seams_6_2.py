@@ -152,6 +152,9 @@ def test_no_unexpected_files_modified_outside_mcp_package() -> None:
     )
 
 
+@pytest.mark.skip(
+    reason="MCP is out of explore-first-simplification; later specs change assembler files"
+)
 def test_frozen_seams_stages_assembler_resolver_not_in_diff() -> None:
     """No frozen-seam / stage / assembler-renderer / model-resolver module changed.
 

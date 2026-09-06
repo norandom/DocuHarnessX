@@ -25,6 +25,7 @@ _TRACKED_STORE_PATHS = (
     ".docuharnessx/pages/example.md",
     ".docuharnessx/ontology.yaml",
     ".docuharnessx/adoption.yaml",
+    ".docuharnessx/site.yaml",
     ".docuharnessx/harnesses/snapshot.yaml",
 )
 

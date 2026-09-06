@@ -889,7 +889,14 @@ def reassemble_site(session: "RefineSession") -> dict[str, Any]:
         identity = resolve_site_identity(
             session.target_repo, read_origin_remote(session.target_repo), {}
         )
-        assemble_question_site(pages, identity, session.out_dir)
+        from docuharnessx.site_config import load_site_presentation
+
+        assemble_question_site(
+            pages,
+            identity,
+            session.out_dir,
+            presentation=load_site_presentation(session.target_repo),
+        )
         return {
             "assembled": True,
             "page_count": len(pages),

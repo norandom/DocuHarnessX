@@ -10,6 +10,14 @@ related: []
 ---
 # How is the public surface used or extended?
 
+<div class="dhx-layer" data-min="1" markdown="1">
+
+The package keeps the root `__init__.py` deliberately thin and pushes the real public surface down into subpackage `__init__.py` modules, which act as single namespaces whose `__all__` is treated as an authoritative, test-policed contract.
+
+</div>
+
+<div class="dhx-layer" data-min="3" markdown="1">
+
 ```mermaid
 flowchart TB
   n0["How is the public surface used or exten…"]
@@ -32,24 +40,22 @@ flowchart TB
 ```
 
 ```mermaid
-flowchart TB
-  n0["How is the public surface used or exten…"]
-  n1["__version__"]
-  n2["AnalysisError"]
-  n3["AnalyzeError"]
-  n4["Artifact"]
-  n5["BuildFile"]
-  n6["CIWorkflow"]
-  n7["Component"]
-  n8["DEFAULT_EXCLUDED_DIRS"]
+flowchart LR
+  n0["__init__.py"]
+  n1["test_package_scaffold.py"]
+  n2["__init__.py"]
+  n3["__init__.py"]
+  n4["__init__.py"]
+  n5["__init__.py"]
+  n6["base.py"]
+  n7["_ontology.py"]
   n0 --> n1
-  n0 --> n2
-  n0 --> n3
-  n0 --> n4
-  n0 --> n5
-  n0 --> n6
-  n0 --> n7
-  n0 --> n8
+  n1 --> n2
+  n2 --> n3
+  n3 --> n4
+  n4 --> n5
+  n5 --> n6
+  n6 --> n7
 ```
 
 ```mermaid
@@ -87,6 +93,9 @@ flowchart TB
   page --> e7
 ```
 
+</div>
+
+<div class="dhx-layer" data-min="5" markdown="1">
 
 The package keeps the root `__init__.py` deliberately thin and pushes the real public surface down into subpackage `__init__.py` modules, which act as single namespaces whose `__all__` is treated as an authoritative, test-policed contract.
 
@@ -107,3 +116,24 @@ Two kinds of extension appear in the source. First, additive re-export: the `__i
 Second, `docuharnessx/stages/__init__.py` is a package root that *executes* rather than just re-exports: it defines `STAGES` as an ordered `(StageName, factory)` list in canonical pipeline order (`stages/__init__.py:60-69`), `register_stages(builder)` which appends each stage's processor onto `PIPELINE_HOOK` with strictly positive `order` — "append-don't-replace," leaving any pre-existing hook processors ahead of the stages (`stages/__init__.py:108-132`) — and `stages_builder()` as a stages-only builder meant for `|` composition (`stages/__init__.py:135-148`). That behavior surface is consumed at the composition seam: `bundle.py:53` imports `from docuharnessx.stages import stages_builder`, and `make_docgen` composes `builder: HarnessBuilder = control | stages_builder()` (`bundle.py:131`). Extension-by-swap is explicitly modeled in `tests/_fakes.py`, whose `ReplacementStage`/`make_replacement_stage` are "a genuine, importable alternative stage processor (and its factory) a later spec could drop into `docuharnessx.stages.STAGES` in place of one no-op stub" (`tests/_fakes.py:20-27`, `:87-117`).
 
 One further extension wrinkle is documented in `docuharnessx/_ontology.py:17-25`: because a top-level module can never shadow a same-named package, `import docuharnessx.ontology` "always loads the package's `__init__.py`"; the skeleton therefore keeps `_ontology.py` as a separate contract-level re-export shim so its own imports cannot collide with the ontology package root. In short, the public surface is consumed as a version constant and as per-package namespaces, and it is extended by editing each `__init__.py`'s re-export list/`__all__`, by behavior added inside `stages/__init__.py`, and by tests that freeze the contract (identity equality, star-import equality, and `__all__` self-consistency).
+
+</div>
+
+<div class="dhx-layer" data-min="7" markdown="1">
+
+## Grounding
+
+- `docuharnessx/__init__.py`
+- `tests/test_package_scaffold.py`
+- `docuharnessx/mcp/__init__.py`
+- `docuharnessx/analysis/__init__.py`
+- `docuharnessx/ontology/__init__.py`
+- `docuharnessx/planning/__init__.py`
+- `docuharnessx/stages/base.py`
+- `docuharnessx/_ontology.py`
+- `tests/test_planning_package_surface.py`
+- `tests/test_mcp_launcher.py`
+- `tests/test_analysis_detectors_components_surface.py`
+- `tests/_fakes.py`
+
+</div>

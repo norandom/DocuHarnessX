@@ -15,6 +15,14 @@ related: []
 ---
 # What does composition do?
 
+<div class="dhx-layer" data-min="1" markdown="1">
+
+`docuharnessx/composition` is the documentation **writing core** of DocuHarnessX. Its package docstring calls it "the pure, model-free COBESY composition core": it turns each `PlannedSegment` of the frozen `CoveragePlan` into a COBESY-structured composition blueprint *before* any prose, and then renders an ontology `Segment` (`docuharnessx/composition/__init__.py:1-9`). The key architectural claim, repeated throughout the modules, is that **all structural work is deterministic and model-free**; only one gated prose step touches a model. `WriteStage` in `docuharnessx/stages/write.py` is described as a "thin HarnessX adapter" over this core (`docuharnessx/stages/write.py:6-9`).
+
+</div>
+
+<div class="dhx-layer" data-min="3" markdown="1">
+
 ```mermaid
 flowchart TB
   n0["What does composition do?"]
@@ -34,37 +42,6 @@ flowchart TB
   n0 --> n6
   n0 --> n7
   n0 --> n8
-```
-
-```mermaid
-flowchart TB
-  n0["What does composition do?"]
-  n1["composition"]
-  n2["__init__.py"]
-  n3["agent.py"]
-  n4["blueprint.py"]
-  n5["budgets.py"]
-  n6["explore_writer.py"]
-  n7["write.py"]
-  n8["model.py"]
-  n9["prompt.py"]
-  n10["prose.py"]
-  n11["fallback.py"]
-  n12["wiring.py"]
-  n0 --> n1
-  n1 --> n2
-  n1 --> n3
-  n1 --> n4
-  n1 --> n5
-  n1 --> n6
-  n0 --> n2
-  n0 --> n7
-  n0 --> n4
-  n0 --> n8
-  n0 --> n9
-  n0 --> n10
-  n0 --> n11
-  n0 --> n12
 ```
 
 ```mermaid
@@ -92,6 +69,9 @@ flowchart TB
   page --> e7
 ```
 
+</div>
+
+<div class="dhx-layer" data-min="5" markdown="1">
 
 # What `docuharnessx.composition` does
 
@@ -134,3 +114,24 @@ The package also defines the frozen output seam the review gate consumes: `Prose
 Finally, `docuharnessx/composition/explore_writer.py` reuses the same machinery in a question-oriented mode: `write_questions` drives the read-only writer harness once per planned `Question` via `build_question_task` and `validate_page_body`, returning either an accepted `Page` or a closed-set `Omission` (`docuharnessx/composition/explore_writer.py:31-70`); ungrounded results are omitted rather than replaced with an invented outline body (`docuharnessx/composition/explore_writer.py:1-8`).
 
 In short: **composition is the deterministic writer core** — it builds a per-segment COBESY structure from the planner's `PlannedSegment` and the loaded `Vocabulary`, turns that blueprint into a model request or a model-free fallback body, wires the result into an ontology `Segment` where the model only ever contributes `body`/`summary`, and publishes the written set through a frozen `WrittenSegments` seam — with `AgenticProseRunner`/`AgentRunStats` added as a bounded, gated per-segment model surface and `write_questions` as the per-question adaptation of the same harness.
+
+</div>
+
+<div class="dhx-layer" data-min="7" markdown="1">
+
+## Grounding
+
+- `docuharnessx/composition/__init__.py`
+- `docuharnessx/stages/write.py`
+- `docuharnessx/composition/blueprint.py`
+- `docuharnessx/composition/model.py`
+- `docuharnessx/composition/prompt.py`
+- `docuharnessx/composition/prose.py`
+- `docuharnessx/composition/fallback.py`
+- `docuharnessx/composition/wiring.py`
+- `docuharnessx/composition/agent.py`
+- `docuharnessx/composition/budgets.py`
+- `docuharnessx/composition/harness_factory.py`
+- `docuharnessx/composition/explore_writer.py`
+
+</div>

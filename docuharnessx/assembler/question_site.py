@@ -25,8 +25,14 @@ from docuharnessx.assembler.model import (
     SiteIdentity,
 )
 from docuharnessx.assembler.pages import page_filename, render_question_page
-from docuharnessx.assembler.theme import EXTRA_CSS_PATH, render_extra_css
+from docuharnessx.assembler.theme import (
+    EXTRA_CSS_PATH,
+    EXTRA_JS_PATH,
+    render_depth_js,
+    render_extra_css,
+)
 from docuharnessx.pages.model import Page
+from docuharnessx.site_config import SitePresentation
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from docuharnessx.analysis.model import RepoAnalysis
@@ -50,6 +56,7 @@ def assemble_question_site(
     identity: SiteIdentity,
     out_dir: str,
     analysis: "RepoAnalysis | None" = None,
+    presentation: SitePresentation | None = None,
 ) -> AssembledSite | None:
     """Assemble a question-organised site from accepted pages, or skip.
 
@@ -61,6 +68,7 @@ def assemble_question_site(
         analysis: Optional frozen ``RepoAnalysis`` used to enrich per-page
             Mermaid companions (entrypoints, components, public surface). The
             site still builds when this is ``None``.
+        presentation: Theme and default engineering depth. ``None`` uses black / 5.
 
     Returns:
         A frozen :class:`AssembledSite` with ``role_page_count == 0`` when at
@@ -70,6 +78,7 @@ def assemble_question_site(
     if not pages:
         return None
 
+    look = presentation or SitePresentation()
     accepted = tuple(pages)
     site_dir = Path(out_dir) / _SITE_SUBDIR
     docs_dir = site_dir / _DOCS_SUBDIR
@@ -82,11 +91,15 @@ def assemble_question_site(
         _write_text(docs_dir / rel_path, content)
 
     _write_text(docs_dir / HOME_PAGE_PATH, render_question_home(identity, accepted))
-    _write_text(docs_dir / EXTRA_CSS_PATH, render_extra_css())
+    _write_text(docs_dir / EXTRA_CSS_PATH, render_extra_css(look.theme))
+    _write_text(docs_dir / EXTRA_JS_PATH, render_depth_js(look.depth))
 
     nav_pages = tuple((page.title, page_filename(page.id)) for page in accepted)
     mkdocs_yml_path = site_dir / _MKDOCS_YML
-    _write_text(mkdocs_yml_path, build_question_mkdocs_yaml(identity, nav_pages))
+    _write_text(
+        mkdocs_yml_path,
+        build_question_mkdocs_yaml(identity, nav_pages, presentation=look),
+    )
 
     return AssembledSite(
         schema_version=ASSEMBLED_SITE_SCHEMA_VERSION,

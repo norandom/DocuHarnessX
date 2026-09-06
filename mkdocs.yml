@@ -19,18 +19,24 @@ theme:
   - search.highlight
   palette:
   - scheme: default
+    primary: black
+    accent: black
     toggle:
       icon: material/weather-night
       name: Switch to dark mode
   - scheme: slate
+    primary: black
+    accent: black
     toggle:
       icon: material/weather-sunny
       name: Switch to light mode
   font:
-    text: Noto Sans JP
+    text: Roboto
     code: Roboto Mono
 extra_css:
 - stylesheets/extra.css
+extra_javascript:
+- javascripts/depth.js
 plugins:
 - search
 nav:
@@ -46,6 +52,7 @@ nav:
 - How does this program start?: startup-cli-py-126eba90.md
 - How are tests organized?: tests-tests-37e0cc9c.md
 markdown_extensions:
+- md_in_html
 - pymdownx.superfences:
     custom_fences:
     - name: mermaid

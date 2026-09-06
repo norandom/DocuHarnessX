@@ -11,6 +11,14 @@ related: []
 ---
 # How does this program start?
 
+<div class="dhx-layer" data-min="1" markdown="1">
+
+The `dhx` program starts in `docuharnessx/cli.py`, whose `main()` is the console-script entry point, and the startup path is: entry point → env loading → argparse construction → argv normalization → dispatch to a subcommand handler (defaulting to `run`).
+
+</div>
+
+<div class="dhx-layer" data-min="3" markdown="1">
+
 ```mermaid
 flowchart TB
   n0["How does this program start?"]
@@ -28,14 +36,13 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-  n0["cli.py"]
-  n1["pyproject.toml"]
+  n0["pyproject.toml"]
+  n1["cli.py"]
   n2["ontology_loader.py"]
   n3["config.py"]
   n4["run.py"]
   n0 --> n1
-  n1 --> n0
-  n0 --> n2
+  n1 --> n2
   n2 --> n3
   n3 --> n4
 ```
@@ -61,6 +68,9 @@ flowchart TB
   page --> e4
 ```
 
+</div>
+
+<div class="dhx-layer" data-min="5" markdown="1">
 
 # How does this program start?
 
@@ -119,3 +129,17 @@ The actual documentation work happens in `run_pipeline` (`docuharnessx/pipeline/
 - `dhx init` → `_init_command` (`cli.py:1044-1180`): refuses an existing ontology without `--force` with `EXIT_INIT_FAILED` (`cli.py:1091-1100`), picks `--default` vs. interactive (TTY/`input_fn`) modes (`cli.py:1103-1140`), and delegates to `docuharnessx.ontology_setup.run_init` (`cli.py:1143-1148`).
 
 Exit-code convention is defined at the module top: `EXIT_OK = 0` (`cli.py:537`), `EXIT_RUN_FAILED = 1` (`cli.py:542`), and `exit_code_for_reason` maps only the `"done"` terminal reason to 0 (`cli.py:545-555`).
+
+</div>
+
+<div class="dhx-layer" data-min="7" markdown="1">
+
+## Grounding
+
+- `pyproject.toml`
+- `docuharnessx/cli.py`
+- `docuharnessx/ontology_loader.py`
+- `docuharnessx/config.py`
+- `docuharnessx/pipeline/run.py`
+
+</div>

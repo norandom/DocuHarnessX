@@ -14,6 +14,14 @@ related: []
 ---
 # What does deployer do?
 
+<div class="dhx-layer" data-min="1" markdown="1">
+
+`docuharnessx/deployer` is the **pure, model-free MkDocs deploy core** behind the pipeline's Deploy stage (the "finale" of DocuHarnessX's Ingest → … → Assemble → Deploy run). Its own docstring calls it "the deterministic, harness-free deploy core behind the thin `DeployStage` adapter" (`docuharnessx/deployer/__init__.py:1`), and the adapter describes it as the place where all the real work — mode resolution, workflow rendering, target-tree writing, build validation, and the isolated `gh-deploy` push — lives (`docuharnessx/stages/deploy.py:5`).
+
+</div>
+
+<div class="dhx-layer" data-min="3" markdown="1">
+
 ```mermaid
 flowchart TB
   n0["What does deployer do?"]
@@ -33,34 +41,6 @@ flowchart TB
   n0 --> n6
   n0 --> n7
   n0 --> n8
-```
-
-```mermaid
-flowchart TB
-  n0["What does deployer do?"]
-  n1["deployer"]
-  n2["__init__.py"]
-  n3["commands.py"]
-  n4["deploy.py"]
-  n5["mode.py"]
-  n6["model.py"]
-  n7["deploy.py"]
-  n8["workflow.py"]
-  n9["tree.py"]
-  n0 --> n1
-  n1 --> n2
-  n1 --> n3
-  n1 --> n4
-  n1 --> n5
-  n1 --> n6
-  n0 --> n2
-  n0 --> n7
-  n0 --> n4
-  n0 --> n6
-  n0 --> n5
-  n0 --> n8
-  n0 --> n9
-  n0 --> n3
 ```
 
 ```mermaid
@@ -88,6 +68,9 @@ flowchart TB
   page --> e7
 ```
 
+</div>
+
+<div class="dhx-layer" data-min="5" markdown="1">
 
 # What `deployer` does
 
@@ -120,3 +103,20 @@ The mode set is a `Literal` in `model.py`: `"emit-ci-workflow"` (default), `"gh-
 `__init__.py` is the single public namespace re-exporting `deploy_site`, `resolve_deploy_mode`, `render_pages_workflow`, `write_target_tree`, the command-runner symbols, and the model types (`docuharnessx/deployer/__init__.py:77`). The `DeployStage` adapter (`STAGE_NAME = "deploy"`) captures the run `State` on `on_task_start`, and on `on_step_end` reads `SLOT_ASSEMBLED_SITE` / `SLOT_OUTPUT_DIR` / `SLOT_TARGET_REPO`, pins `ASSEMBLED_SITE_SCHEMA_VERSION`, resolves the mode via `resolve_deploy_mode(self._deploy_mode_value())`, runs `deploy_site(...)` through an injected or default `CommandRunner`, publishes the result with `run_context.set_deploy_result(result)` into `SLOT_DEPLOY_RESULT`, and journals only a bounded scalar summary (`docuharnessx/stages/deploy.py:145`, `:184`).
 
 In short: given an already-assembled MkDocs site, `deployer` deterministically either equips the target repo to self-publish to GitHub Pages on push (the default), merely validates a `mkdocs build`, or performs the single network `gh-deploy` push — recording a frozen `DeployResult` as the seam for the rest of the run.
+
+</div>
+
+<div class="dhx-layer" data-min="7" markdown="1">
+
+## Grounding
+
+- `docuharnessx/deployer/__init__.py`
+- `docuharnessx/stages/deploy.py`
+- `docuharnessx/deployer/deploy.py`
+- `docuharnessx/deployer/model.py`
+- `docuharnessx/deployer/mode.py`
+- `docuharnessx/deployer/workflow.py`
+- `docuharnessx/deployer/tree.py`
+- `docuharnessx/deployer/commands.py`
+
+</div>

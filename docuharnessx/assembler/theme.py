@@ -1,28 +1,24 @@
-"""The site theme stylesheet — a deepwiki-open-inspired skin for Material for MkDocs.
+"""Site theme stylesheet and engineering-depth slider script.
 
-The assembled site is **Material for MkDocs**; this module supplies the one extra stylesheet
-(:data:`EXTRA_CSS_PATH`, referenced from ``mkdocs.yml`` ``extra_css``) that re-skins Material
-to match the look of deepwiki-open: a warm "washi paper" light theme and a charcoal dark
-theme, a soft-purple accent, a subtle paper texture, and gently rounded, shadowed content
-blocks. It does this purely by overriding Material's documented CSS custom properties per
-colour scheme (``[data-md-color-scheme="default"]`` / ``"slate"``), so it layers on top of the
-stock theme without forking it.
-
-The palette values are taken from deepwiki-open's own ``globals.css`` (the "Japanese
-aesthetic" palette). :func:`render_extra_css` is deterministic and byte-stable; the writer
-emits its output verbatim to ``docs/<EXTRA_CSS_PATH>``.
+Default look is Material for MkDocs **black/white** (``primary: black``). The
+optional ``deepwiki`` theme keeps the older washi-paper + violet skin.
+Both themes ship the depth-slider CSS; :data:`EXTRA_JS_PATH` is the slider.
 """
 
 from __future__ import annotations
 
-__all__ = ["EXTRA_CSS_PATH", "render_extra_css"]
+from docuharnessx.site_config import DEFAULT_DEPTH, DEFAULT_THEME, parse_depth, parse_theme
 
-#: Docs-relative path of the extra stylesheet (Material's conventional ``stylesheets/`` dir).
-#: Referenced from ``mkdocs.yml`` ``extra_css`` and emitted here by the writer.
+__all__ = [
+    "EXTRA_CSS_PATH",
+    "EXTRA_JS_PATH",
+    "render_depth_js",
+    "render_extra_css",
+]
+
 EXTRA_CSS_PATH: str = "stylesheets/extra.css"
+EXTRA_JS_PATH: str = "javascripts/depth.js"
 
-#: The washi-paper texture deepwiki-open uses on its light background (an inline SVG so the
-#: site needs no external asset). Kept as a module constant for byte-stability.
 _PAPER_TEXTURE_SVG: str = (
     "url(\"data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' "
     "xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7"
@@ -33,24 +29,48 @@ _PAPER_TEXTURE_SVG: str = (
     "fill='%23e0d8c8' fill-opacity='0.18' fill-rule='evenodd'/%3E%3C/svg%3E\")"
 )
 
+_SLIDER_CSS: str = """
+/* Engineering-depth slider in the header. */
+.dhx-depth {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-left: 0.75rem;
+  color: var(--md-primary-bg-color);
+  font-size: 0.65rem;
+  white-space: nowrap;
+}
+.dhx-depth__range {
+  width: 7rem;
+  accent-color: var(--md-primary-bg-color);
+}
+.dhx-depth__value {
+  min-width: 7.5rem;
+}
+.dhx-layer[hidden] {
+  display: none !important;
+}
 
-def render_extra_css() -> str:
-    """Return the deepwiki-inspired Material override stylesheet (deterministic, byte-stable).
+.md-typeset pre,
+.md-typeset .admonition,
+.md-typeset details,
+.md-typeset .mermaid {
+  border-radius: 8px;
+}
+.md-typeset .mermaid {
+  text-align: center;
+  padding: 0.6rem 0;
+}
+"""
 
-    Overrides Material's per-scheme CSS custom properties only — background/foreground,
-    primary/accent, link and code colours — for the light (``default``) and dark (``slate``)
-    schemes, then adds the paper texture and softly rounded, shadowed content blocks. No
-    Material internals are forked; equal calls return an equal string.
-    """
-    return _CSS
+_BLACK_CSS: str = """\
+/* DocuHarnessX default theme — Material black/white. */
 
+""" + _SLIDER_CSS
 
-_CSS: str = """\
-/* DocuHarnessX site theme — deepwiki-open-inspired skin for Material for MkDocs.
-   Washi-paper light + charcoal dark, soft-purple accent. Overrides documented Material
-   CSS custom properties per colour scheme; does not fork the stock theme. */
+_DEEPWIKI_CSS: str = """\
+/* DocuHarnessX optional theme — deepwiki-open washi paper + violet. */
 
-/* ---- Light scheme ("default"): warm washi paper ---- */
 [data-md-color-scheme="default"] {
   --md-default-bg-color: #f8f4e6;
   --md-default-fg-color: #333333;
@@ -68,7 +88,6 @@ _CSS: str = """\
   --md-code-fg-color: #5a4a6a;
 }
 
-/* ---- Dark scheme ("slate"): deep charcoal ---- */
 [data-md-color-scheme="slate"] {
   --md-default-bg-color: #1a1a1a;
   --md-default-bg-color--light: #222222;
@@ -86,27 +105,10 @@ _CSS: str = """\
   --md-code-fg-color: #d7c4bb;
 }
 
-/* Subtle washi paper texture behind the content (light scheme only). */
 [data-md-color-scheme="default"] .md-main {
   background-image: %PAPER%;
 }
 
-/* Softly rounded, gently shadowed content blocks (the deepwiki "card" feel). */
-.md-typeset pre,
-.md-typeset .admonition,
-.md-typeset details,
-.md-typeset .mermaid {
-  border-radius: 8px;
-  box-shadow: 0 4px 10px -4px rgba(0, 0, 0, 0.12);
-}
-
-/* Center rendered Mermaid diagrams with a little breathing room. */
-.md-typeset .mermaid {
-  text-align: center;
-  padding: 0.6rem 0;
-}
-
-/* Sidebar: a slightly tighter, wiki-like tree with an accented section title. */
 .md-nav {
   font-size: 0.72rem;
 }
@@ -117,8 +119,73 @@ _CSS: str = """\
 .md-nav__item .md-nav__link--active {
   font-weight: 700;
 }
+""" + _SLIDER_CSS
+
+_DEEPWIKI_CSS = _DEEPWIKI_CSS.replace("%PAPER%", _PAPER_TEXTURE_SVG)
+
+_DEPTH_JS: str = """\
+(function () {
+  var DEFAULT_DEPTH = %DEPTH%;
+  var STORAGE_KEY = "dhx-depth";
+  var LABELS = {
+    1: "Adopter",
+    2: "Evaluator",
+    3: "Operator",
+    4: "Integrator",
+    5: "Programmer",
+    6: "Maintainer",
+    7: "Internals"
+  };
+
+  function apply(depth) {
+    var n = Math.min(7, Math.max(1, depth));
+    document.documentElement.setAttribute("data-dhx-depth", String(n));
+    document.querySelectorAll(".dhx-layer").forEach(function (el) {
+      var min = Number(el.getAttribute("data-min") || "1");
+      el.hidden = min > n;
+    });
+    var out = document.getElementById("dhx-depth-label");
+    if (out) out.textContent = n + "/7 " + (LABELS[n] || "");
+    try { localStorage.setItem(STORAGE_KEY, String(n)); } catch (err) {}
+  }
+
+  function mount() {
+    var header = document.querySelector(".md-header__inner");
+    if (!header || document.getElementById("dhx-depth")) return;
+    var wrap = document.createElement("div");
+    wrap.id = "dhx-depth";
+    wrap.className = "dhx-depth";
+    wrap.innerHTML =
+      '<label class="dhx-depth__label" for="dhx-depth-range">Depth</label>' +
+      '<input id="dhx-depth-range" class="dhx-depth__range" type="range" min="1" max="7" step="1">' +
+      '<span id="dhx-depth-label" class="dhx-depth__value"></span>';
+    header.appendChild(wrap);
+    var input = wrap.querySelector("input");
+    var start = DEFAULT_DEPTH;
+    try {
+      var saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) start = Number(saved);
+    } catch (err) {}
+    input.value = String(start);
+    input.addEventListener("input", function () { apply(Number(input.value)); });
+    apply(start);
+  }
+
+  document.addEventListener("DOMContentLoaded", mount);
+  if (typeof document$ !== "undefined" && document$.subscribe) {
+    document$.subscribe(mount);
+  }
+})();
 """
 
 
-# Inline the paper texture once (kept out of the f-string above for readability).
-_CSS = _CSS.replace("%PAPER%", _PAPER_TEXTURE_SVG)
+def render_extra_css(theme: str = DEFAULT_THEME) -> str:
+    """Return the extra stylesheet for ``theme`` (deterministic)."""
+    if parse_theme(theme) == "deepwiki":
+        return _DEEPWIKI_CSS
+    return _BLACK_CSS
+
+
+def render_depth_js(depth: int = DEFAULT_DEPTH) -> str:
+    """Return the header depth-slider script with the project default baked in."""
+    return _DEPTH_JS.replace("%DEPTH%", str(parse_depth(depth)))

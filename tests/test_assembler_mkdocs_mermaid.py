@@ -156,6 +156,7 @@ def test_all_previously_emitted_keys_unchanged() -> None:
         "use_directory_urls",
         "theme",
         "extra_css",
+        "extra_javascript",
         "plugins",
         "nav",
     }

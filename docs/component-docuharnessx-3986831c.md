@@ -14,6 +14,14 @@ related: []
 ---
 # What does docuharnessx do?
 
+<div class="dhx-layer" data-min="1" markdown="1">
+
+DocuHarnessX is a Python package — version `2.0.0` (`docuharnessx/__init__.py:5`) — whose own docstring describes it as a tool to "generate grounded developer documentation from a software repository" (`docuharnessx/__init__.py:1`). In practice it is a CLI-driven pipeline that scans a target repo, decides which software questions deserve documentation, runs bounded model agents to write those pages, and assembles the accepted ones into an MkDocs site. Its pyproject entry point is the console script `dhx = "docuharnessx.cli:main"` (`pyproject.toml:33`).
+
+</div>
+
+<div class="dhx-layer" data-min="3" markdown="1">
+
 ```mermaid
 flowchart TB
   n0["What does docuharnessx do?"]
@@ -21,26 +29,6 @@ flowchart TB
   n2["pyproject.toml"]
   n0 --> n1
   n0 --> n2
-```
-
-```mermaid
-flowchart TB
-  n0["What does docuharnessx do?"]
-  n1["docuharnessx"]
-  n2["__init__.py"]
-  n3["_ontology.py"]
-  n4["adoption.py"]
-  n5["blueprint.py"]
-  n6["bundle.py"]
-  n7["pyproject.toml"]
-  n0 --> n1
-  n1 --> n2
-  n1 --> n3
-  n1 --> n4
-  n1 --> n5
-  n1 --> n6
-  n0 --> n2
-  n0 --> n7
 ```
 
 ```mermaid
@@ -56,6 +44,9 @@ flowchart TB
   page --> e1
 ```
 
+</div>
+
+<div class="dhx-layer" data-min="5" markdown="1">
 
 # What does DocuHarnessX do?
 
@@ -92,3 +83,14 @@ The adoption record is a separate file, `.docuharnessx/adoption.yaml` (`ADOPTION
 After at least one accepted page, `_publish_if_accepted` invokes `deploy_site` with a resolved deploy mode — `emit-ci-workflow` (default), `gh-deploy`, or `build-only` (`cli.py:247-258, 687-743`). `dhx init` also installs the fail-open pre-commit hook and CI wiring via `install_onboarding` (`cli.py:1176-1179`), and `dhx hook` / `dhx ci` are the incremental entry points that skip bot `[dhx]` commits and runs without credentials (`cli.py:1257-1290`; `hooks.py`, `ci_policy.py`). `dhx evolve` is the meta loop: it reads traces from `.docuharnessx/journals/`, only accepts candidates that keep the `substance_gate`, and writes the evolved processor set to `.docuharnessx/harnesses/current.yaml`, recording the snapshot on the adoption record (`evolve.py:27-60`). Finally, `dhx mcp` launches a stdio MCP server (`cli.py:885-945`) built on `docuharnessx.mcp`, letting an MCP client refine generated docs segment-by-segment through tools such as `open_workspace`.
 
 In one sentence: DocuHarnessX turns a repository into a question-organized, gate-checked, human-readable living documentation site under `.docuharnessx/`, keeps that documentation in sync through git hooks and CI, and can adapt its own generation harness from run journals — with the actual document writing delegated to per-question model agents on the HarnessX runtime.
+
+</div>
+
+<div class="dhx-layer" data-min="7" markdown="1">
+
+## Grounding
+
+- `docuharnessx/__init__.py`
+- `pyproject.toml`
+
+</div>

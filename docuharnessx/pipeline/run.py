@@ -26,6 +26,7 @@ from docuharnessx.pages.model import Page
 from docuharnessx.pages.store import FilesystemLivingPageStore
 from docuharnessx.pipeline.report import RunReport, write_run_report
 from docuharnessx.planning.questions import plan_questions
+from docuharnessx.site_config import load_site_presentation
 
 __all__ = ["RunOutcome", "run_pipeline"]
 
@@ -75,7 +76,13 @@ def _assemble_if_accepted(
     identity = resolve_site_identity(
         repo_path, read_origin_remote(repo_path), {}
     )
-    assemble_question_site(pages, identity, out_dir, analysis=analysis)
+    assemble_question_site(
+        pages,
+        identity,
+        out_dir,
+        analysis=analysis,
+        presentation=load_site_presentation(repo_path),
+    )
     _log.info(
         "assembled question site under %s/site (accepted=%s, deploy_mode=%s)",
         out_dir,

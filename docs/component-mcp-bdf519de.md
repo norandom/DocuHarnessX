@@ -11,6 +11,14 @@ related: []
 ---
 # What does mcp do?
 
+<div class="dhx-layer" data-min="1" markdown="1">
+
+`docuharnessx.mcp` is a **Model Context Protocol (MCP) server package that lets a human conversationally refine already-generated documentation**. It is described in its own docstring as "the stdio MCP refine server" (`docuharnessx/mcp/__init__.py:1`) and is the single public namespace for that interactive document-refinement service.
+
+</div>
+
+<div class="dhx-layer" data-min="3" markdown="1">
+
 ```mermaid
 flowchart TB
   n0["What does mcp do?"]
@@ -28,31 +36,9 @@ flowchart TB
   n0 --> n6
 ```
 
-```mermaid
-flowchart TB
-  n0["What does mcp do?"]
-  n1["mcp"]
-  n2["__init__.py"]
-  n3["handlers.py"]
-  n4["overview.py"]
-  n5["planned.py"]
-  n6["schemas.py"]
-  n7["server.py"]
-  n8["session.py"]
-  n0 --> n1
-  n1 --> n2
-  n1 --> n3
-  n1 --> n4
-  n1 --> n5
-  n1 --> n6
-  n0 --> n2
-  n0 --> n7
-  n0 --> n8
-  n0 --> n6
-  n0 --> n4
-  n0 --> n5
-```
+</div>
 
+<div class="dhx-layer" data-min="5" markdown="1">
 
 `docuharnessx.mcp` is a **Model Context Protocol (MCP) server package that lets a human conversationally refine already-generated documentation**. It is described in its own docstring as "the stdio MCP refine server" (`docuharnessx/mcp/__init__.py:1`) and is the single public namespace for that interactive document-refinement service.
 
@@ -84,3 +70,18 @@ A `RefineSession` dataclass holds the per-target state: `out_dir`, `target_repo`
 `docuharnessx/mcp/planned.py` exists because the `FilesystemSegmentStore` has no `update` method and `put` rejects an existing id — so a rewrite must reproduce the stored id exactly. `planned_from_segment` re-derives the planner's deterministic `segment_key` of the form `"<roles-joined>__<intent>__<subjects-digest>"` from fields that are persisted on the `Segment`, guaranteeing `segment_id(planned_from_segment(seg)) == seg.id` so the same `<id>.md` is re-serialised in place (`docuharnessx/mcp/planned.py:12-23`, `planned.py:102-141`).
 
 In short: `mcp` turns the artifacts of a `dhx run` into a live, per-target refinement surface for MCP clients — reading stored segments, validating their structure, rewriting or drafting them through the reused bounded agentic writer plus structure gate, and deterministically reassembling the themed Material site — all while avoiding any second generation engine.
+
+</div>
+
+<div class="dhx-layer" data-min="7" markdown="1">
+
+## Grounding
+
+- `docuharnessx/mcp/__init__.py`
+- `docuharnessx/mcp/server.py`
+- `docuharnessx/mcp/session.py`
+- `docuharnessx/mcp/schemas.py`
+- `docuharnessx/mcp/overview.py`
+- `docuharnessx/mcp/planned.py`
+
+</div>

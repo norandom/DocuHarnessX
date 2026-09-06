@@ -51,8 +51,9 @@ import yaml
 from pymdownx import superfences
 
 from docuharnessx.assembler.model import SiteIdentity
-from docuharnessx.assembler.theme import EXTRA_CSS_PATH
+from docuharnessx.assembler.theme import EXTRA_CSS_PATH, EXTRA_JS_PATH
 from docuharnessx.ontology import Vocabulary
+from docuharnessx.site_config import DEFAULT_THEME, SitePresentation
 
 __all__ = ["build_mkdocs_yaml", "build_question_mkdocs_yaml", "TAGS_INDEX_PATH"]
 
@@ -92,29 +93,35 @@ _THEME_FEATURES: tuple[str, ...] = (
     "search.highlight",
 )
 
-#: The colour-scheme palette: a light/dark toggle. The concrete deepwiki-open colours are
-#: applied per scheme by the extra stylesheet (:data:`docuharnessx.assembler.theme.EXTRA_CSS_PATH`)
-#: overriding Material's CSS custom properties; here we only wire the two schemes + the toggle.
-_PALETTE: tuple[dict, ...] = (
-    {
-        "scheme": "default",
-        "toggle": {
-            "icon": "material/weather-night",
-            "name": "Switch to dark mode",
+def _palette(theme: str) -> list[dict]:
+    """Light/dark toggle. Black/white is Material ``primary: black``."""
+    entry_extra: dict = {}
+    if theme != "deepwiki":
+        entry_extra = {"primary": "black", "accent": "black"}
+    return [
+        {
+            "scheme": "default",
+            **entry_extra,
+            "toggle": {
+                "icon": "material/weather-night",
+                "name": "Switch to dark mode",
+            },
         },
-    },
-    {
-        "scheme": "slate",
-        "toggle": {
-            "icon": "material/weather-sunny",
-            "name": "Switch to light mode",
+        {
+            "scheme": "slate",
+            **entry_extra,
+            "toggle": {
+                "icon": "material/weather-sunny",
+                "name": "Switch to light mode",
+            },
         },
-    },
-)
+    ]
 
-#: The typeface, matching deepwiki-open's Noto Sans JP body font (a clean monospace for code).
-#: Material loads these from Google Fonts automatically.
-_FONT: dict = {"text": "Noto Sans JP", "code": "Roboto Mono"}
+
+def _font(theme: str) -> dict:
+    if theme == "deepwiki":
+        return {"text": "Noto Sans JP", "code": "Roboto Mono"}
+    return {"text": "Roboto", "code": "Roboto Mono"}
 
 
 class _MkDocsYamlDumper(yaml.SafeDumper):
@@ -155,6 +162,7 @@ def _markdown_extensions() -> list:
     (Req 10.2). Order and content are fixed for byte-stability.
     """
     return [
+        "md_in_html",
         {
             "pymdownx.superfences": {
                 "custom_fences": [
@@ -169,19 +177,14 @@ def _markdown_extensions() -> list:
     ]
 
 
-def _theme() -> dict:
-    """Return the Material theme block (Req 6.4).
-
-    Emitted as a mapping (not the bare ``"material"`` string) so the deepwiki-inspired
-    features, the light/dark palette toggle, and the Noto Sans JP font can be attached. The
-    concrete colours are applied by the extra stylesheet; this only wires the schemes.
-    Deterministic.
-    """
+def _theme(presentation: SitePresentation | None = None) -> dict:
+    """Return the Material theme block (Req 6.4)."""
+    theme = (presentation.theme if presentation else DEFAULT_THEME)
     return {
         "name": "material",
         "features": list(_THEME_FEATURES),
-        "palette": [dict(entry) for entry in _PALETTE],
-        "font": dict(_FONT),
+        "palette": _palette(theme),
+        "font": _font(theme),
     }
 
 
@@ -233,6 +236,7 @@ def build_mkdocs_yaml(
     role_pages: tuple[tuple[str, str], ...],
     vocab: Vocabulary,
     segments_by_role: "dict[str, tuple[tuple[str, str], ...]] | None" = None,
+    presentation: SitePresentation | None = None,
 ) -> str:
     """Build the ``mkdocs.yml`` string for the assembled site (Req 3.3, 6.1, 6.2, 6.4).
 
@@ -280,10 +284,9 @@ def build_mkdocs_yaml(
     # /<repo>/ Pages subpath (Req 3.3). Always set, deterministically.
     config["use_directory_urls"] = True
 
-    config["theme"] = _theme()
-    # The deepwiki-inspired skin: a single extra stylesheet overriding Material's CSS custom
-    # properties (the writer emits it at the same docs-relative path).
+    config["theme"] = _theme(presentation)
     config["extra_css"] = [EXTRA_CSS_PATH]
+    config["extra_javascript"] = [EXTRA_JS_PATH]
     config["plugins"] = _plugins()
     config["nav"] = _nav(role_pages, segments_by_role)
 
@@ -308,6 +311,7 @@ def build_mkdocs_yaml(
 def build_question_mkdocs_yaml(
     identity: SiteIdentity,
     pages: tuple[tuple[str, str], ...],
+    presentation: SitePresentation | None = None,
 ) -> str:
     """Build ``mkdocs.yml`` for a question-organised site (Req 8.1, 8.2).
 
@@ -324,8 +328,9 @@ def build_question_mkdocs_yaml(
     if identity.edit_uri:
         config["edit_uri"] = identity.edit_uri
     config["use_directory_urls"] = True
-    config["theme"] = _theme()
+    config["theme"] = _theme(presentation)
     config["extra_css"] = [EXTRA_CSS_PATH]
+    config["extra_javascript"] = [EXTRA_JS_PATH]
     config["plugins"] = ["search"]
     nav: list = [{HOME_NAV_TITLE: HOME_PAGE_PATH}]
     for title, path in pages:

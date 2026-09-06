@@ -17,6 +17,14 @@ related: []
 ---
 # What does assembler do?
 
+<div class="dhx-layer" data-min="1" markdown="1">
+
+`docuharnessx.assembler` is DocuHarnessX's **MkDocs site-assembly core** — the "pure, model-free" stage that turns quality-gated content into a publishable **Material for MkDocs** source tree. Its own docstring names it the deterministic, harness-free core behind the thin `AssembleStage` adapter: it consumes the accepted ontology `Segment` set from the frozen `ReviewReport`, the loaded project `Vocabulary`, and an optional `RepoAnalysis`, then "emits a Material for MkDocs source tree under the run's output directory: one `docs/*.md` page per accepted segment, per-role landing pages with COBESY-structured intent-ordered agendas, a tags index, and a `mkdocs.yml`" (`docuharnessx/assembler/__init__.py:1-13`). Everything downstream imports from this one public namespace rather than the submodules (`docuharnessx/assembler/__init__.py:15-18`).
+
+</div>
+
+<div class="dhx-layer" data-min="3" markdown="1">
+
 ```mermaid
 flowchart TB
   n0["What does assembler do?"]
@@ -38,34 +46,9 @@ flowchart TB
   n0 --> n8
 ```
 
-```mermaid
-flowchart TB
-  n0["What does assembler do?"]
-  n1["assembler"]
-  n2["__init__.py"]
-  n3["graphs.py"]
-  n4["home.py"]
-  n5["identity.py"]
-  n6["mkdocs_config.py"]
-  n7["writer.py"]
-  n8["pages.py"]
-  n9["roles.py"]
-  n0 --> n1
-  n1 --> n2
-  n1 --> n3
-  n1 --> n4
-  n1 --> n5
-  n1 --> n6
-  n0 --> n2
-  n0 --> n5
-  n0 --> n7
-  n0 --> n8
-  n0 --> n9
-  n0 --> n4
-  n0 --> n3
-  n0 --> n6
-```
+</div>
 
+<div class="dhx-layer" data-min="5" markdown="1">
 
 # What `docuharnessx.assembler` does
 
@@ -110,3 +93,22 @@ The renderers are pure, model-free, byte-stable transforms:
 Separately, `assemble_question_site(pages, identity, out_dir, analysis)` is the explore-first, question-organised entry point: it writes a Material tree from accepted question `Page` values only — home lists question titles, nav is home + pages, no per-role landings — and returns `None` (writing nothing under `site/`) when no pages are accepted so callers skip deploy (`docuharnessx/assembler/question_site.py:48-99`).
 
 In short: assembler is the deterministic "renderer + writer" core that takes the frozen review output and vocabulary, resolves the target project's site identity from its git remote, renders per-segment pages, per-role COBESY landing pages, a home page, tags index, extra CSS, and Mermaid diagrams, generates a byte-stable `mkdocs.yml`, writes the entire Material-for-MkDocs tree under `<out_dir>/site`, and returns an immutable `AssembledSite` seam for the deploy stage — with an alternate question-organised writer (`assemble_question_site`) as the explore-first path.
+
+</div>
+
+<div class="dhx-layer" data-min="7" markdown="1">
+
+## Grounding
+
+- `docuharnessx/assembler/__init__.py`
+- `docuharnessx/assembler/identity.py`
+- `docuharnessx/assembler/writer.py`
+- `docuharnessx/assembler/pages.py`
+- `docuharnessx/assembler/roles.py`
+- `docuharnessx/assembler/home.py`
+- `docuharnessx/assembler/graphs.py`
+- `docuharnessx/assembler/mkdocs_config.py`
+- `docuharnessx/assembler/model.py`
+- `docuharnessx/assembler/question_site.py`
+
+</div>

@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING
 
 import yaml
 
+from docuharnessx.assembler.depth import wrap_layer
 from docuharnessx.assembler.graphs import render_page_diagrams
 from docuharnessx.ontology import Segment, Vocabulary, emit_tags
 from docuharnessx.pages.model import Page
@@ -214,16 +215,24 @@ def render_question_page(
     trailing newline.
     """
     parts: list[str] = [_question_frontmatter(page), f"# {page.title}\n"]
+    summary = page.summary.strip()
+    if summary:
+        parts.append("\n" + wrap_layer(1, summary))
     if include_diagrams:
         diagrams = render_page_diagrams(page, accepted, analysis)
         if diagrams:
-            parts.append("\n" + diagrams)
+            parts.append("\n" + wrap_layer(3, diagrams))
     body = page.body
     if body:
-        parts.append("\n" + body if not body.startswith("\n") else body)
+        parts.append("\n" + wrap_layer(5, body))
+    if page.cited_files:
+        grounding = "## Grounding\n\n" + "\n".join(
+            f"- `{path}`" for path in page.cited_files
+        )
+        parts.append("\n" + wrap_layer(7, grounding))
     related = _question_related_links(page, accepted)
     if related:
-        parts.append("\n## Related\n\n" + "\n".join(related) + "\n")
+        parts.append("\n" + wrap_layer(5, "## Related\n\n" + "\n".join(related) + "\n"))
     content = "".join(parts)
     if not content.endswith("\n"):
         content += "\n"
