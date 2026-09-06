@@ -857,6 +857,11 @@ def render_page_extras(
 
     model = signals.model if signals is not None else None
     if is_system_overview(page, accepted, identity):
+        from docuharnessx.comprehension.jit import render_conceptual_hypertree
+
+        conceptual = render_conceptual_hypertree(model)
+        if conceptual:
+            blocks.append((1, conceptual))
         context = view_context(model) or render_c4_context(analysis, identity)
         if context:
             blocks.append((1, context))
@@ -930,6 +935,11 @@ def render_home_extras(
     if pie:
         blocks.append((2, pie))
     model = signals.model if signals is not None else None
+    from docuharnessx.comprehension.jit import render_conceptual_hypertree
+
+    conceptual = render_conceptual_hypertree(model)
+    if conceptual:
+        blocks.append((2, conceptual))
     styles = list(model.styles if model is not None else ())
     if not styles and signals is not None:
         styles = [item for item in signals.architectures if item.id in _STRUCTURAL_IDS]
@@ -1029,6 +1039,11 @@ def collect_diagram_figures(
         page_filename(primary.id) if primary is not None else HOME_PAGE_PATH
     )
     src_title = primary.title if primary is not None else "Home"
+    from docuharnessx.comprehension.jit import render_conceptual_hypertree
+
+    conceptual = render_conceptual_hypertree(model)
+    if conceptual:
+        add("Conceptual map", "Architecture", src_title, href, 1, conceptual)
     context = view_context(model) or render_c4_context(analysis, identity) or render_mindmap(analysis)
     if context:
         add("System context", "Architecture", src_title, href, 1, context)
@@ -1197,21 +1212,22 @@ def render_diagrams_index(
         "Per question": 3,
     }
     architecture_rank = {
-        "System context": 0,
-        "Containers": 1,
-        "Layered architecture": 2,
-        "Services": 3,
-        "Ports and adapters": 4,
-        "Client / server": 5,
-        "Processing pipeline": 6,
-        "Typical run": 7,
-        "Use cases": 8,
-        "Deployment": 9,
-        "Schema": 10,
-        "Public surface": 11,
-        "Lineage": 12,
-        "Pipeline": 13,
-        "Pipeline (detailed)": 14,
+        "Conceptual map": 0,
+        "System context": 1,
+        "Containers": 2,
+        "Layered architecture": 3,
+        "Services": 4,
+        "Ports and adapters": 5,
+        "Client / server": 6,
+        "Processing pipeline": 7,
+        "Typical run": 8,
+        "Use cases": 9,
+        "Deployment": 10,
+        "Schema": 11,
+        "Public surface": 12,
+        "Lineage": 13,
+        "Pipeline": 14,
+        "Pipeline (detailed)": 15,
     }
     reading_rank = {
         "Start-here path": 0,

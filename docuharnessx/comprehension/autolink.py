@@ -9,7 +9,7 @@ from docuharnessx.comprehension.glossary import Glossary, GlossaryTerm
 __all__ = ["appearances_for_pages", "autolink_markdown", "relate_cooccurring"]
 
 _FENCE = re.compile(
-    r"(```[\s\S]*?```|`[^`]+`|\[[^\]]*\]\([^)]+\)|<[^>]+>)"
+    r"(```[\s\S]*?```|`[^`]+`|\[[^\]]*\]\([^)]+\)|<script[\s\S]*?</script>|<[^>]+>)"
 )
 _FRONTMATTER = re.compile(r"\A---\n.*?\n---\n?", re.DOTALL)
 

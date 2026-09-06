@@ -123,7 +123,7 @@ Sources: `surface:tests/test_analysis_detectors_components_surface.py`
 
 _No definition in the repository yet._
 
-Related: [analysis](#analysis), [analyze](#analyze), [composition](#composition), [deployer](#deployer), [docuharnessx](#docuharnessx), [mcp](#mcp), [ontology](#ontology), [pipeline](#pipeline)
+Related: [analysis](#analysis), [analyze](#analyze), [composition](#composition), [comprehension](#comprehension), [--config](#config), [deployer](#deployer), [docuharnessx](#docuharnessx), [--force](#force)
 
 ```mermaid
 flowchart LR
@@ -134,23 +134,25 @@ flowchart LR
  here --> r1
  r2["composition"]
  here --> r2
- r3["deployer"]
+ r3["comprehension"]
  here --> r3
- r4["docuharnessx"]
+ r4["--config"]
  here --> r4
- r5["mcp"]
+ r5["deployer"]
  here --> r5
- r6["ontology"]
+ r6["docuharnessx"]
  here --> r6
- r7["pipeline"]
+ r7["--force"]
  here --> r7
 ```
 
 Appears on:
 
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [How are tests organized?](tests-tests-37e0cc9c.md)
 - [What does assembler do?](component-assembler-d9228a8c.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
+- [What does deployer do?](component-deployer-f8b1b75f.md)
 - [What does javascripts do?](component-javascripts-2aa9650e.md)
 - [DocuHarnessX](index.md)
 
@@ -196,6 +198,7 @@ Appears on:
 - [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
 - [What does analysis do?](component-analysis-5fb37dc2.md)
 - [What does composition do?](component-composition-e6f778c7.md)
+- [What does mcp do?](component-mcp-bdf519de.md)
 - [DocuHarnessX](index.md)
 
 Sources: `component:docuharnessx/composition`
@@ -204,31 +207,32 @@ Sources: `component:docuharnessx/composition`
 
 _No definition in the repository yet._
 
-Related: [analysis](#analysis), [assembler](#assembler), [docuharnessx](#docuharnessx), [ontology](#ontology), [pages](#pages), [pipeline](#pipeline), [stages](#stages), [status](#status)
+Related: [analysis](#analysis), [analyze](#analyze), [assembler](#assembler), [composition](#composition), [--config](#config), [deployer](#deployer), [docuharnessx](#docuharnessx), [--force](#force)
 
 ```mermaid
 flowchart LR
  here["comprehension"]
  r0["analysis"]
  here --> r0
- r1["assembler"]
+ r1["analyze"]
  here --> r1
- r2["docuharnessx"]
+ r2["assembler"]
  here --> r2
- r3["ontology"]
+ r3["composition"]
  here --> r3
- r4["pages"]
+ r4["--config"]
  here --> r4
- r5["pipeline"]
+ r5["deployer"]
  here --> r5
- r6["stages"]
+ r6["docuharnessx"]
  here --> r6
- r7["status"]
+ r7["--force"]
  here --> r7
 ```
 
 Appears on:
 
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
 - [DocuHarnessX](index.md)
 
@@ -311,7 +315,7 @@ Sources: `surface:docuharnessx/cli.py`
 
 _No definition in the repository yet._
 
-Related: [analysis](#analysis), [analyze](#analyze), [assembler](#assembler), [composition](#composition), [docuharnessx](#docuharnessx), [mcp](#mcp), [ontology](#ontology), [pipeline](#pipeline)
+Related: [analysis](#analysis), [analyze](#analyze), [assembler](#assembler), [composition](#composition), [comprehension](#comprehension), [--config](#config), [docuharnessx](#docuharnessx), [--force](#force)
 
 ```mermaid
 flowchart LR
@@ -324,19 +328,22 @@ flowchart LR
  here --> r2
  r3["composition"]
  here --> r3
- r4["docuharnessx"]
+ r4["comprehension"]
  here --> r4
- r5["mcp"]
+ r5["--config"]
  here --> r5
- r6["ontology"]
+ r6["docuharnessx"]
  here --> r6
- r7["pipeline"]
+ r7["--force"]
  here --> r7
 ```
 
 Appears on:
 
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [How are tests organized?](tests-tests-37e0cc9c.md)
+- [What does deployer do?](component-deployer-f8b1b75f.md)
+- [DocuHarnessX](index.md)
 
 Sources: `component:docuharnessx/deployer`
 
@@ -378,8 +385,9 @@ Appears on:
 - [What does assembler do?](component-assembler-d9228a8c.md)
 - [What does composition do?](component-composition-e6f778c7.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
+- [What does deployer do?](component-deployer-f8b1b75f.md)
 - [What does javascripts do?](component-javascripts-2aa9650e.md)
-- [DocuHarnessX](index.md)
+- [What does mcp do?](component-mcp-bdf519de.md)
 
 Sources: `component:docuharnessx`
 
@@ -609,7 +617,7 @@ Sources: `surface:docuharnessx/cli.py`
 
 _No definition in the repository yet._
 
-Related: [analysis](#analysis), [assembler](#assembler), [composition](#composition), [comprehension](#comprehension), [docuharnessx](#docuharnessx)
+Related: [analysis](#analysis), [assembler](#assembler), [composition](#composition), [comprehension](#comprehension), [deployer](#deployer), [docuharnessx](#docuharnessx), [mcp](#mcp), [ontology](#ontology)
 
 ```mermaid
 flowchart LR
@@ -622,8 +630,14 @@ flowchart LR
  here --> r2
  r3["comprehension"]
  here --> r3
- r4["docuharnessx"]
+ r4["deployer"]
  here --> r4
+ r5["docuharnessx"]
+ here --> r5
+ r6["mcp"]
+ here --> r6
+ r7["ontology"]
+ here --> r7
 ```
 
 Appears on:
@@ -668,6 +682,7 @@ Appears on:
 - [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
 - [What does analysis do?](component-analysis-5fb37dc2.md)
 - [What does composition do?](component-composition-e6f778c7.md)
+- [What does deployer do?](component-deployer-f8b1b75f.md)
 
 Sources: `surface:docuharnessx/cli.py`
 
@@ -711,6 +726,8 @@ Appears on:
 - [How is this project built and verified?](build-pyproject-toml-a625bf0a.md)
 - [How are tests organized?](tests-tests-37e0cc9c.md)
 - [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
+- [What does mcp do?](component-mcp-bdf519de.md)
+- [DocuHarnessX](index.md)
 
 Sources: `component:docuharnessx/mcp`, `surface:docuharnessx/cli.py`
 
@@ -756,6 +773,7 @@ Appears on:
 - [What does assembler do?](component-assembler-d9228a8c.md)
 - [What does composition do?](component-composition-e6f778c7.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
+- [DocuHarnessX](index.md)
 
 Sources: `component:docuharnessx/ontology`
 
@@ -826,6 +844,7 @@ Appears on:
 - [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [What does assembler do?](component-assembler-d9228a8c.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
+- [What does deployer do?](component-deployer-f8b1b75f.md)
 
 Sources: `component:docuharnessx/pages`
 
@@ -866,6 +885,8 @@ Appears on:
 - [What does analysis do?](component-analysis-5fb37dc2.md)
 - [What does composition do?](component-composition-e6f778c7.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
+- [What does deployer do?](component-deployer-f8b1b75f.md)
+- [DocuHarnessX](index.md)
 
 Sources: `component:docuharnessx/pipeline`
 
@@ -873,7 +894,7 @@ Sources: `component:docuharnessx/pipeline`
 
 _No definition in the repository yet._
 
-Related: [analysis](#analysis), [analyze](#analyze), [composition](#composition), [--config](#config), [docuharnessx](#docuharnessx), [--force](#force), [hook](#hook), [init](#init)
+Related: [analysis](#analysis), [analyze](#analyze), [assembler](#assembler), [composition](#composition), [comprehension](#comprehension), [--config](#config), [deployer](#deployer), [docuharnessx](#docuharnessx)
 
 ```mermaid
 flowchart LR
@@ -882,17 +903,17 @@ flowchart LR
  here --> r0
  r1["analyze"]
  here --> r1
- r2["composition"]
+ r2["assembler"]
  here --> r2
- r3["--config"]
+ r3["composition"]
  here --> r3
- r4["docuharnessx"]
+ r4["comprehension"]
  here --> r4
- r5["--force"]
+ r5["--config"]
  here --> r5
- r6["hook"]
+ r6["deployer"]
  here --> r6
- r7["init"]
+ r7["docuharnessx"]
  here --> r7
 ```
 
@@ -901,6 +922,7 @@ Appears on:
 - [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [How are tests organized?](tests-tests-37e0cc9c.md)
 - [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
+- [DocuHarnessX](index.md)
 
 Sources: `component:docuharnessx/planning`
 
@@ -926,7 +948,7 @@ Sources: `surface:docuharnessx/cli.py`
 
 _No definition in the repository yet._
 
-Related: [analysis](#analysis), [analyze](#analyze), [composition](#composition), [--config](#config), [docuharnessx](#docuharnessx), [--force](#force), [hook](#hook), [init](#init)
+Related: [analysis](#analysis), [analyze](#analyze), [assembler](#assembler), [composition](#composition), [comprehension](#comprehension), [--config](#config), [deployer](#deployer), [docuharnessx](#docuharnessx)
 
 ```mermaid
 flowchart LR
@@ -935,17 +957,17 @@ flowchart LR
  here --> r0
  r1["analyze"]
  here --> r1
- r2["composition"]
+ r2["assembler"]
  here --> r2
- r3["--config"]
+ r3["composition"]
  here --> r3
- r4["docuharnessx"]
+ r4["comprehension"]
  here --> r4
- r5["--force"]
+ r5["--config"]
  here --> r5
- r6["hook"]
+ r6["deployer"]
  here --> r6
- r7["init"]
+ r7["docuharnessx"]
  here --> r7
 ```
 
@@ -955,6 +977,7 @@ Appears on:
 - [How are tests organized?](tests-tests-37e0cc9c.md)
 - [What does assembler do?](component-assembler-d9228a8c.md)
 - [What does composition do?](component-composition-e6f778c7.md)
+- [DocuHarnessX](index.md)
 
 Sources: `component:docuharnessx/review`
 
@@ -999,6 +1022,8 @@ Appears on:
 - [How are tests organized?](tests-tests-37e0cc9c.md)
 - [What does assembler do?](component-assembler-d9228a8c.md)
 - [What does composition do?](component-composition-e6f778c7.md)
+- [What does deployer do?](component-deployer-f8b1b75f.md)
+- [What does mcp do?](component-mcp-bdf519de.md)
 
 Sources: `surface:docuharnessx/cli.py`, `surface:tests/test_analysis_detectors_components_surface.py`
 
@@ -1073,6 +1098,7 @@ Appears on:
 - [What does analysis do?](component-analysis-5fb37dc2.md)
 - [What does composition do?](component-composition-e6f778c7.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
+- [What does deployer do?](component-deployer-f8b1b75f.md)
 
 Sources: `component:docuharnessx/stages`
 
@@ -1109,6 +1135,7 @@ Appears on:
 - [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [How is this project built and verified?](build-pyproject-toml-a625bf0a.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
+- [What does deployer do?](component-deployer-f8b1b75f.md)
 
 Sources: `surface:docuharnessx/cli.py`
 

@@ -51,6 +51,7 @@ import yaml
 from pymdownx import superfences
 
 from docuharnessx.assembler.model import SiteIdentity
+from docuharnessx.assembler.jit import CONCEPTUAL_JS_PATH, JIT_JS_PATH
 from docuharnessx.assembler.theme import EXTRA_CSS_PATH, EXTRA_JS_PATH
 from docuharnessx.ontology import Vocabulary
 from docuharnessx.site_config import DEFAULT_THEME, SitePresentation
@@ -331,7 +332,7 @@ def build_question_mkdocs_yaml(
     config["use_directory_urls"] = True
     config["theme"] = _theme(presentation)
     config["extra_css"] = [EXTRA_CSS_PATH]
-    config["extra_javascript"] = [EXTRA_JS_PATH]
+    config["extra_javascript"] = [JIT_JS_PATH, CONCEPTUAL_JS_PATH, EXTRA_JS_PATH]
     config["plugins"] = ["search"]
     nav: list = [{HOME_NAV_TITLE: HOME_PAGE_PATH}]
     for title, path in pages:

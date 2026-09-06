@@ -19,6 +19,16 @@ abstraction: container
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
+<div class="dhx-jit" markdown="0">
+<p class="dhx-jit__hint">Click a node to center it.</p>
+<div id="dhx-jit-conceptual" class="dhx-jit__stage"></div>
+<script type="application/json" id="dhx-jit-conceptual-data">{"children": [{"children": [{"children": [], "data": {"kind": "actor", "level": "context"}, "id": "actor:operator", "name": "Operator"}], "data": {"kind": "group"}, "id": "group:people", "name": "People"}, {"children": [{"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:CLI", "name": "CLI"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:mcp", "name": "mcp"}], "data": {"kind": "band"}, "id": "band:interface", "name": "Interface"}, {"children": [{"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:assembler", "name": "assembler"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:composition", "name": "composition"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:deployer", "name": "deployer"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:pipeline", "name": "pipeline"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:planning", "name": "planning"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:review", "name": "review"}], "data": {"kind": "band"}, "id": "band:application", "name": "Application"}, {"children": [{"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:analysis", "name": "analysis"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:comprehension", "name": "comprehension"}, {"children": [], "data": {"kind": "container", "level": "container"}, "id": "container:ontology", "name": "ontology"}], "data": {"kind": "band"}, "id": "band:domain", "name": "Domain"}, {"children": [{"children": [], "data": {"kind": "external", "level": "context"}, "id": "external:ci", "name": "GitHub Actions"}, {"children": [], "data": {"kind": "store", "level": "context"}, "id": "external:docs", "name": "Documentation site"}, {"children": [], "data": {"kind": "store", "level": "context"}, "id": "external:repo", "name": "norandom/DocuHarnessX"}], "data": {"kind": "group"}, "id": "group:external", "name": "External"}], "data": {"kind": "system"}, "id": "system", "name": "DocuHarnessX"}</script>
+</div>
+
+</div>
+
+<div class="dhx-layer" data-min="1" markdown="1">
+
 ```mermaid
 flowchart TB
  subgraph people["People"]

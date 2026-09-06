@@ -28,6 +28,12 @@ from docuharnessx.assembler.model import (
     SiteIdentity,
 )
 from docuharnessx.assembler.pages import page_filename, render_question_page
+from docuharnessx.assembler.jit import (
+    CONCEPTUAL_JS_PATH,
+    JIT_JS_PATH,
+    load_jit_javascript,
+    render_conceptual_js,
+)
 from docuharnessx.assembler.theme import (
     EXTRA_CSS_PATH,
     EXTRA_JS_PATH,
@@ -171,6 +177,8 @@ def assemble_question_site(
     for rel_path, _title, content in rendered:
         _write_markdown(docs_dir / rel_path, autolink_markdown(content, glossary))
     _write_text(docs_dir / EXTRA_CSS_PATH, render_extra_css(look.theme))
+    _write_text(docs_dir / JIT_JS_PATH, load_jit_javascript())
+    _write_text(docs_dir / CONCEPTUAL_JS_PATH, render_conceptual_js())
     _write_text(docs_dir / EXTRA_JS_PATH, render_depth_js(look.depth))
 
     extra_nav: list[tuple[str, str]] = []

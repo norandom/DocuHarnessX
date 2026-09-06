@@ -68,6 +68,26 @@ a.dhx-term, a[href*="glossary.md"] {
   text-align: center;
   padding: 0.6rem 0;
 }
+.dhx-jit {
+  margin: 0.5rem 0 1rem;
+}
+.dhx-jit__hint {
+  font-size: 0.8rem;
+  color: var(--md-default-fg-color--light);
+  margin: 0 0 0.4rem;
+}
+.dhx-jit__stage {
+  position: relative;
+  width: 100%;
+  height: 24rem;
+  overflow: hidden;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 8px;
+}
+.dhx-jit__stage .node {
+  background: transparent;
+  font-family: var(--md-text-font-family, Roboto, sans-serif);
+}
 /* Dual-theme mermaid: light chips, dark ink. Mermaid's slate theme
    paints labels black; a dark-blue fill then becomes unreadable. */
 .md-typeset .mermaid .cluster rect {
