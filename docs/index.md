@@ -2,7 +2,7 @@
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
-This site walks through 10 questions about [`norandom/DocuHarnessX`](https://github.com/norandom/DocuHarnessX), in the order you would actually learn the project.
+This site walks through 12 questions about [`norandom/DocuHarnessX`](https://github.com/norandom/DocuHarnessX), in the order you would actually learn the project.
 
 Read the numbered list first. Later questions cover individual modules.
 
@@ -28,7 +28,9 @@ Read the numbered list first. Later questions cover individual modules.
 - [What does assembler do?](component-assembler-d9228a8c.md)
 - [What does composition do?](component-composition-e6f778c7.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
+- [What does deployer do?](component-deployer-f8b1b75f.md)
 - [What does javascripts do?](component-javascripts-2aa9650e.md)
+- [What does mcp do?](component-mcp-bdf519de.md)
 
 </div>
 
@@ -48,11 +50,11 @@ flowchart LR
   p1 -->|"then"| p2
   p2 -->|"then"| p3
   p3 -->|"then"| p4
-  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
-  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
-  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
-  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
-  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -62,7 +64,7 @@ flowchart LR
 ```mermaid
 pie showData
   title Documentation coverage
-  "Accepted pages" : 10
+  "Accepted pages" : 12
 ```
 
 </div>
@@ -91,11 +93,11 @@ flowchart TB
   b0 -->|"depends on"| b1
   b1 -->|"depends on"| b2
   class b0m0,b0m1,b1m0,b1m1,b1m2,b1m3,b1m4,b1m5,b2m0,b2m1,b2m2 container
-  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
-  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
-  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
-  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
-  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -119,15 +121,15 @@ flowchart TB
   sys -->|"reads and cites"| repo
   ci -->|"runs in"| sys
   sys -->|"publishes"| docs
-  class actor actor
+  class actor person
   class sys system
   class repo,docs store
   class ci external
-  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
-  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
-  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
-  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
-  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -152,14 +154,16 @@ flowchart TB
     m1["What does assembler do?"]
     m2["What does composition do?"]
     m3["What does comprehension do?"]
-    m4["What does javascripts do?"]
+    m4["What does deployer do?"]
+    m5["What does javascripts do?"]
+    m6["What does mcp do?"]
   end
   s4 -.-> m0
-  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
-  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
-  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
-  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
-  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -193,11 +197,11 @@ flowchart LR
   n6 --> n3
   n1 --> n7
   n7 --> n3
-  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
-  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
-  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
-  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
-  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -231,11 +235,11 @@ flowchart LR
   n6 --> n3
   n1 --> n7
   n7 --> n3
-  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
-  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
-  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
-  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
-  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -250,11 +254,11 @@ flowchart LR
   end
   docs --> evolve
   class docs,evolve container
-  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
-  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
-  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
-  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
-  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -269,11 +273,11 @@ flowchart LR
   end
   docs --> evolve
   class docs,evolve container
-  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
-  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
-  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
-  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
-  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>

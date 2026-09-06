@@ -187,7 +187,9 @@ def test_context_is_c4_shaped_not_a_star() -> None:
     assert "External" in text
     assert "javascripts" not in text
     assert "-->" in text and "|" in text
-    assert "classDef actor" in text
+    assert "classDef person" in text
+    assert "#0F172A" not in text
+    assert "class actor person" in text
 
 
 def test_coverage_is_a_pie() -> None:

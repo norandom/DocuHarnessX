@@ -39,3 +39,17 @@ a.dhx-term, a[href*="glossary.md"] {
   text-align: center;
   padding: 0.6rem 0;
 }
+/* Mermaid dark theme greys out near-black fills. Keep node chips
+   mid-lightness so Operator is not grey-on-black. */
+.md-typeset .mermaid .node.person rect,
+.md-typeset .mermaid .node.person polygon,
+.md-typeset .mermaid .node.person circle,
+.md-typeset .mermaid .node.person path {
+  fill: #E8B923 !important;
+  stroke: #7A5100 !important;
+}
+.md-typeset .mermaid .node.person .label,
+.md-typeset .mermaid .node.person span,
+.md-typeset .mermaid .node.person foreignObject div {
+  color: #1A1300 !important;
+}

@@ -39,15 +39,15 @@ flowchart TB
   sys -->|"reads and cites"| repo
   ci -->|"runs in"| sys
   sys -->|"publishes"| docs
-  class actor actor
+  class actor person
   class sys system
   class repo,docs store
   class ci external
-  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
-  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
-  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
-  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
-  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -76,11 +76,11 @@ flowchart TB
   b0 -->|"depends on"| b1
   b1 -->|"depends on"| b2
   class b0m0,b0m1,b1m0,b1m1,b1m2,b1m3,b1m4,b1m5,b2m0,b2m1,b2m2 container
-  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
-  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
-  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
-  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
-  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>

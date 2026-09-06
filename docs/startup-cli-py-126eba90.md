@@ -67,11 +67,11 @@ flowchart LR
   n6 --> n3
   n1 --> n7
   n7 --> n3
-  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
-  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
-  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
-  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
-  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -86,11 +86,11 @@ flowchart LR
   end
   docs --> evolve
   class docs,evolve container
-  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
-  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
-  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
-  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
-  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>
@@ -105,11 +105,11 @@ flowchart LR
   end
   docs --> evolve
   class docs,evolve container
-  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
-  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
-  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
-  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
-  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 </div>

@@ -70,12 +70,14 @@ _CI_LABELS = {
     "circleci": "CircleCI",
     "dagger": "Dagger",
 }
+# Mid-lightness hues so nodes stay visible on both white and slate canvases.
+# Near-black fills (#0F172A) collapse into Material dark mode.
 _STYLE_LINES = (
-    "  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF",
-    "  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF",
-    "  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A",
-    "  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A",
-    "  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A",
+    "  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300",
+    "  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF",
+    "  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A",
+    "  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C",
+    "  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E",
 )
 
 
@@ -228,7 +230,7 @@ def render_c4_context(
             lines.append(f'  ci -->|"{_label(verb, 24)}"| sys')
         else:
             lines.append(f'  sys -->|"{_label(verb, 24)}"| {nid}')
-    lines.append("  class actor actor")
+    lines.append("  class actor person")
     lines.append("  class sys system")
     classed = [nid for nid, kind, _verb in externals if kind == "store"]
     if classed:
@@ -277,7 +279,7 @@ def render_architecture(style: ArchitectureStyle) -> str:
             lines.append(f'  actor --> b{index}m0')
         if len(style.bands) > 1:
             lines.append("  b0m0 -.-> b1m0")
-        lines.append("  class actor actor")
+        lines.append("  class actor person")
     elif style.id == "hexagonal" and len(style.bands) >= 2:
         # Ports/adapters sit around domain: connect neighbors toward domain.
         domain_index = next(
@@ -333,7 +335,7 @@ def render_c4_container(
     if analysis.entrypoints:
         lines.append(f'  actor(["{_label(_actor_label(analysis))}"])')
         lines.append(f'  actor -->|"{_label("runs " + _cli_name(analysis), 24)}"| cli')
-        lines.append("  class actor actor")
+        lines.append("  class actor person")
     dag_edges: list[tuple[str, str]] = []
     if signals and signals.pipelines:
         label_to_id = {component.name: f"c{index}" for index, component in enumerate(components)}

@@ -38,9 +38,14 @@ Every picture this site assembled, in one catalog. Each also lives on the linked
 - [What does comprehension do? · Question and files](#what-does-comprehension-do-question-and-files)
 - [What does comprehension do? · Structure](#what-does-comprehension-do-structure)
 - [What does comprehension do? · Files by directory](#what-does-comprehension-do-files-by-directory)
+- [What does deployer do? · Question and files](#what-does-deployer-do-question-and-files)
+- [What does deployer do? · Structure](#what-does-deployer-do-structure)
+- [What does deployer do? · Files by directory](#what-does-deployer-do-files-by-directory)
 - [What does javascripts do? · Question and files](#what-does-javascripts-do-question-and-files)
 - [What does javascripts do? · Structure](#what-does-javascripts-do-structure)
 - [What does javascripts do? · Files by directory](#what-does-javascripts-do-files-by-directory)
+- [What does mcp do? · Question and files](#what-does-mcp-do-question-and-files)
+- [What does mcp do? · Structure](#what-does-mcp-do-structure)
 - [Glossary related-term graphs](#glossary-related-term-graphs)
 
 ## System
@@ -66,15 +71,15 @@ flowchart TB
   sys -->|"reads and cites"| repo
   ci -->|"runs in"| sys
   sys -->|"publishes"| docs
-  class actor actor
+  class actor person
   class sys system
   class repo,docs store
   class ci external
-  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
-  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
-  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
-  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
-  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 ## Architecture
@@ -105,11 +110,11 @@ flowchart TB
   b0 -->|"depends on"| b1
   b1 -->|"depends on"| b2
   class b0m0,b0m1,b1m0,b1m1,b1m2,b1m3,b1m4,b1m5,b2m0,b2m1,b2m2 container
-  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
-  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
-  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
-  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
-  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 ## System
@@ -155,11 +160,11 @@ flowchart LR
   p1 -->|"then"| p2
   p2 -->|"then"| p3
   p3 -->|"then"| p4
-  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
-  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
-  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
-  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
-  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 ## Coverage
@@ -171,7 +176,7 @@ On [Home](index.md) at depth 2.
 ```mermaid
 pie showData
   title Documentation coverage
-  "Accepted pages" : 10
+  "Accepted pages" : 12
 ```
 
 ## Reading path
@@ -198,14 +203,16 @@ flowchart TB
     m1["What does assembler do?"]
     m2["What does composition do?"]
     m3["What does comprehension do?"]
-    m4["What does javascripts do?"]
+    m4["What does deployer do?"]
+    m5["What does javascripts do?"]
+    m6["What does mcp do?"]
   end
   s4 -.-> m0
-  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
-  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
-  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
-  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
-  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 ## Lineage
@@ -241,11 +248,11 @@ flowchart LR
   n6 --> n3
   n1 --> n7
   n7 --> n3
-  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
-  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
-  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
-  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
-  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 ## Pipeline
@@ -262,11 +269,11 @@ flowchart LR
   end
   docs --> evolve
   class docs,evolve container
-  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
-  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
-  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
-  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
-  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+  classDef system fill:#3D7AEC,stroke:#1E4BB8,color:#FFFFFF
+  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
 ```
 
 ## Public surface
@@ -1002,6 +1009,92 @@ flowchart TB
   page --> e7
 ```
 
+<h3 id="what-does-deployer-do-question-and-files">What does deployer do? · Question and files</h3>
+
+On [What does deployer do?](component-deployer-f8b1b75f.md) at depth 5.
+
+```mermaid
+flowchart TB
+  n0["What does deployer do?"]
+  n1["__init__.py"]
+  n2["deploy.py"]
+  n3["deploy.py"]
+  n4["model.py"]
+  n5["mode.py"]
+  n6["workflow.py"]
+  n7["tree.py"]
+  n8["commands.py"]
+  n0 --> n1
+  n0 --> n2
+  n0 --> n3
+  n0 --> n4
+  n0 --> n5
+  n0 --> n6
+  n0 --> n7
+  n0 --> n8
+```
+
+<h3 id="what-does-deployer-do-structure">What does deployer do? · Structure</h3>
+
+On [What does deployer do?](component-deployer-f8b1b75f.md) at depth 5.
+
+```mermaid
+flowchart TB
+  n0["What does deployer do?"]
+  n1["deployer"]
+  n2["__init__.py"]
+  n3["commands.py"]
+  n4["deploy.py"]
+  n5["mode.py"]
+  n6["model.py"]
+  n7["deploy.py"]
+  n8["workflow.py"]
+  n9["tree.py"]
+  n0 --> n1
+  n1 --> n2
+  n1 --> n3
+  n1 --> n4
+  n1 --> n5
+  n1 --> n6
+  n0 --> n2
+  n0 --> n7
+  n0 --> n4
+  n0 --> n6
+  n0 --> n5
+  n0 --> n8
+  n0 --> n9
+  n0 --> n3
+```
+
+<h3 id="what-does-deployer-do-files-by-directory">What does deployer do? · Files by directory</h3>
+
+On [What does deployer do?](component-deployer-f8b1b75f.md) at depth 5.
+
+```mermaid
+flowchart TB
+  page["What does deployer do?"]
+  subgraph d0["docuharnessx/deployer"]
+    e0["__init__.py"]
+    e1["deploy.py"]
+    e2["model.py"]
+    e3["mode.py"]
+    e4["workflow.py"]
+    e5["tree.py"]
+    e6["commands.py"]
+  end
+  subgraph d1["docuharnessx/stages"]
+    e7["deploy.py"]
+  end
+  page --> e0
+  page --> e1
+  page --> e2
+  page --> e3
+  page --> e4
+  page --> e5
+  page --> e6
+  page --> e7
+```
+
 <h3 id="what-does-javascripts-do-question-and-files">What does javascripts do? · Question and files</h3>
 
 On [What does javascripts do?](component-javascripts-2aa9650e.md) at depth 5.
@@ -1088,6 +1181,56 @@ flowchart TB
   page --> e5
   page --> e6
   page --> e7
+```
+
+<h3 id="what-does-mcp-do-question-and-files">What does mcp do? · Question and files</h3>
+
+On [What does mcp do?](component-mcp-bdf519de.md) at depth 5.
+
+```mermaid
+flowchart TB
+  n0["What does mcp do?"]
+  n1["__init__.py"]
+  n2["server.py"]
+  n3["session.py"]
+  n4["schemas.py"]
+  n5["overview.py"]
+  n6["planned.py"]
+  n0 --> n1
+  n0 --> n2
+  n0 --> n3
+  n0 --> n4
+  n0 --> n5
+  n0 --> n6
+```
+
+<h3 id="what-does-mcp-do-structure">What does mcp do? · Structure</h3>
+
+On [What does mcp do?](component-mcp-bdf519de.md) at depth 5.
+
+```mermaid
+flowchart TB
+  n0["What does mcp do?"]
+  n1["mcp"]
+  n2["__init__.py"]
+  n3["handlers.py"]
+  n4["overview.py"]
+  n5["planned.py"]
+  n6["schemas.py"]
+  n7["server.py"]
+  n8["session.py"]
+  n0 --> n1
+  n1 --> n2
+  n1 --> n3
+  n1 --> n4
+  n1 --> n5
+  n1 --> n6
+  n0 --> n2
+  n0 --> n7
+  n0 --> n8
+  n0 --> n6
+  n0 --> n4
+  n0 --> n5
 ```
 
 <h2 id="glossary-related-term-graphs">Glossary related-term graphs</h2>

@@ -38,6 +38,8 @@ def test_default_extra_css_is_black_not_violet() -> None:
     assert "#9b7cb9" not in css
     assert "#9370db" not in css
     assert ".dhx-depth" in css
+    assert "#E8B923" in css
+    assert ".node.person" in css
 
 
 def test_deepwiki_extra_css_keeps_violet_palette() -> None:
