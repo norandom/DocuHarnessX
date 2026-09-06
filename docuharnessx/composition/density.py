@@ -98,16 +98,20 @@ def _first_sentences(text: str, limit: int) -> str:
         start = index + 1
         if len(found) >= limit:
             break
-    if len(found) < limit:
-        tail = cleaned[start:].strip()
-        if tail:
-            found.append(tail)
+    if not found:
+        return cleaned
     return " ".join(found[:limit])
 
 
 def _cap(text: str, limit: int) -> str:
     if len(text) <= limit:
         return text
+    last_end = -1
+    for index in range(min(limit, len(text))):
+        if _is_sentence_end(text, index):
+            last_end = index
+    if last_end >= 0:
+        return text[: last_end + 1].strip()
     cut = text[:limit].rstrip()
     if " " in cut:
         cut = cut.rsplit(" ", 1)[0]

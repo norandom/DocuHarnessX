@@ -5,8 +5,6 @@ subjects:
 - comprehension
 summary: In DocuHarnessX, `comprehension` is the `docuharnessx.comprehension` package
  — its own docstring is "Depth-assigned visuals, glossary, and compliance self-assessment.".
- It turns a parsed `RepoAnalysis` plus the raw repo path into the *extra* material
- that makes an assembled
 related: []
 abstraction: component
 ---
@@ -14,7 +12,7 @@ abstraction: component
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
-In <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>, `comprehension` is the `docuharnessx.comprehension` package — its own docstring is "Depth-assigned visuals, glossary, and compliance self-assessment.". It turns a parsed `RepoAnalysis` plus the raw repo path into the *extra* material that makes an assembled
+In <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>, `comprehension` is the `docuharnessx.comprehension` package — its own docstring is "Depth-assigned visuals, glossary, and compliance self-assessment.".
 
 </div>
 

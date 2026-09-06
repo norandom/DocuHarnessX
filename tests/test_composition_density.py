@@ -42,6 +42,28 @@ def test_short_summary_is_unchanged() -> None:
     assert trim_page(page).note == ""
 
 
+def test_char_cap_keeps_a_complete_sentence() -> None:
+    first = (
+        "DocuHarnessX is a Python package — version 2.0.0 — whose own docstring "
+        'describes it as a tool to "generate grounded developer documentation '
+        'from a software repository".'
+    )
+    second = (
+        "In practice it is a CLI-driven pipeline that scans a target repo, "
+        "decides which software questions deserve documentation, runs bounded "
+        "model agents to write those pages, and assembles the accepted ones "
+        "into an MkDocs site."
+    )
+    assert len(first) <= 280
+    assert len(first) + 1 + len(second) > 280
+    page = _page(summary=first + " " + second + " Extra dump continues. " * 10)
+    trimmed = trim_summary(page)
+    assert trimmed.summary == first
+    assert trimmed.summary.endswith(".")
+    assert "deserve" not in trimmed.summary
+    assert len(trimmed.summary) <= 280
+
+
 def test_long_cited_summary_trims_to_two_sentences_without_path_line() -> None:
     dump = (
         "Engine loads config and runs a cycle. "

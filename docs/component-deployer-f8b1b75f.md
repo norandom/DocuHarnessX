@@ -5,8 +5,7 @@ subjects:
 - deployer
 summary: '`docuharnessx/deployer` is the **pure, model-free MkDocs deploy core** behind
  the pipeline''s Deploy stage (the "finale" of DocuHarnessX''s Ingest → … → Assemble
- → Deploy run). Its own docstring calls it "the deterministic, harness-free deploy
- core behind the thin `DeployStage`'
+ → Deploy run).'
 related: []
 abstraction: component
 ---
@@ -14,7 +13,7 @@ abstraction: component
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
-`docuharnessx/deployer` is the **pure, model-free MkDocs deploy core** behind the <a class="dhx-term" href="glossary.md#pipeline">pipeline</a>'s Deploy stage (the "finale" of <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>'s Ingest → … → Assemble → Deploy <a class="dhx-term" href="glossary.md#run">run</a>). Its own docstring calls it "the deterministic, harness-free deploy core behind the thin `DeployStage`
+`docuharnessx/deployer` is the **pure, model-free MkDocs deploy core** behind the <a class="dhx-term" href="glossary.md#pipeline">pipeline</a>'s Deploy stage (the "finale" of <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>'s Ingest → … → Assemble → Deploy <a class="dhx-term" href="glossary.md#run">run</a>).
 
 </div>
 

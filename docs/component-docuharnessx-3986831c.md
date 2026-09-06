@@ -5,8 +5,7 @@ subjects:
 - docuharnessx
 summary: DocuHarnessX is a Python package — version `2.0.0` — whose own docstring
  describes it as a tool to "generate grounded developer documentation from a software
- repository". In practice it is a CLI-driven pipeline that scans a target repo, decides
- which software questions deserve
+ repository".
 related: []
 abstraction: container
 ---
@@ -14,7 +13,7 @@ abstraction: container
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
-<a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a> is a Python package — version `2.0.0` — whose own docstring describes it as a tool to "generate grounded developer documentation from a software repository". In practice it is a CLI-driven <a class="dhx-term" href="glossary.md#pipeline">pipeline</a> that scans a target repo, decides which software questions deserve
+<a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a> is a Python package — version `2.0.0` — whose own docstring describes it as a tool to "generate grounded developer documentation from a software repository".
 
 </div>
 

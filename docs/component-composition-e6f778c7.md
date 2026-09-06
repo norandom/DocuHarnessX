@@ -3,10 +3,7 @@ id: component:composition
 title: What does composition do?
 subjects:
 - composition
-summary: '`docuharnessx/composition` is the documentation **writing core** of DocuHarnessX.
- Its package docstring calls it "the pure, model-free composition core": it
- turns each `PlannedSegment` of the frozen `CoveragePlan` into a structured
- composition blueprint *before*'
+summary: '`docuharnessx/composition` is the documentation **writing core** of DocuHarnessX.'
 related: []
 abstraction: component
 ---
@@ -14,7 +11,7 @@ abstraction: component
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
-`docuharnessx/composition` is the documentation **writing core** of <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>. Its package docstring calls it "the pure, model-free <a class="dhx-term" href="glossary.md#composition">composition</a> core": it turns each `PlannedSegment` of the frozen `CoveragePlan` into a structured <a class="dhx-term" href="glossary.md#composition">composition</a> blueprint *before*
+`docuharnessx/composition` is the documentation **writing core** of <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>.
 
 </div>
 

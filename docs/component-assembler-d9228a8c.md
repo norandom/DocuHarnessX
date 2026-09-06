@@ -5,8 +5,7 @@ subjects:
 - assembler
 summary: '`docuharnessx.assembler` is DocuHarnessX''s **MkDocs site-assembly core**
  — the "pure, model-free" stage that turns quality-gated content into a publishable
- **Material for MkDocs** source tree. Its own docstring names it the deterministic,
- harness-free core behind the thin'
+ **Material for MkDocs** source tree.'
 related: []
 abstraction: component
 ---
@@ -14,7 +13,7 @@ abstraction: component
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
-`docuharnessx.assembler` is <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>'s **MkDocs site-assembly core** — the "pure, model-free" stage that turns quality-gated content into a publishable **Material for MkDocs** source tree. Its own docstring names it the deterministic, harness-free core behind the thin
+`docuharnessx.assembler` is <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>'s **MkDocs site-assembly core** — the "pure, model-free" stage that turns quality-gated content into a publishable **Material for MkDocs** source tree.
 
 </div>
 
