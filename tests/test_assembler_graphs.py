@@ -209,7 +209,7 @@ def test_persisted_page_can_omit_diagrams() -> None:
     assert page.body in markdown
 
 
-def test_home_diagram_lists_questions_before_index() -> None:
+def test_home_is_a_reading_path_not_a_map() -> None:
     pages = (
         _page(),
         _page(
@@ -221,9 +221,57 @@ def test_home_diagram_lists_questions_before_index() -> None:
     )
     home = render_question_home(_identity(), pages)
     assert home.startswith("# agentic_repo\n")
-    assert home.index("```mermaid") < home.index("## Questions")
+    assert "## Read in this order" in home
     assert "How does this program start?" in home
     assert "What does Engine do?" in home
+    assert home.index("How does this program start?") < home.index(
+        "What does Engine do?"
+    )
+    mermaid_at = home.find("```mermaid")
+    assert mermaid_at != -1
+    prefix = home[:mermaid_at]
+    assert 'data-min="1"' in prefix
+    last_min = prefix.rfind("data-min=")
+    assert last_min != -1
+    depth = int(prefix[last_min:].split('"', 2)[1])
+    assert depth >= 3
+    depth_one = home.split('data-min="1"')[1].split("</div>", 1)[0]
+    assert "```mermaid" not in depth_one
+
+
+def test_system_page_gets_context_picture_at_depth_one() -> None:
+    engine = _page(
+        kind=QuestionKind.COMPONENT,
+        slug="engine",
+        title="What does Engine do?",
+        cited=("engine.py",),
+    )
+    startup = _page()
+    analysis = _empty_analysis(
+        entrypoints=(
+            Entrypoint(path="app.py", kind="cli", name="app"),
+        ),
+        components=(
+            Component(
+                name="engine",
+                path="engine",
+                representative_files=("engine.py",),
+            ),
+        ),
+    )
+    _path, markdown = render_question_page(
+        engine, (startup, engine), analysis=analysis, identity=_identity()
+    )
+    assert 'data-min="1"' in markdown
+    assert "System" in markdown
+    home = render_question_home(
+        _identity(), (startup, engine), analysis=analysis
+    )
+    layers = home.split('class="dhx-layer"')
+    depth_one = [part for part in layers if 'data-min="1"' in part.split(">", 1)[0]]
+    assert depth_one
+    assert all("```mermaid" not in part.split("</div>", 1)[0] for part in depth_one)
+    assert "System" in home
 
 
 def test_home_diagrams_helper_is_deterministic() -> None:

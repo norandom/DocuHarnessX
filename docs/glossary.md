@@ -64,14 +64,14 @@ flowchart LR
 
 Appears on:
 
+- [How does this program start?](startup-cli-py-126eba90.md)
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
+- [How are tests organized?](tests-tests-37e0cc9c.md)
+- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
 - [What does analysis do?](component-analysis-5fb37dc2.md)
 - [What does assembler do?](component-assembler-d9228a8c.md)
 - [What does composition do?](component-composition-e6f778c7.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
-- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
-- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
-- [How does this program start?](startup-cli-py-126eba90.md)
-- [How are tests organized?](tests-tests-37e0cc9c.md)
 - [DocuHarnessX](index.md)
 
 Sources: `component:docuharnessx/analysis`
@@ -105,11 +105,11 @@ flowchart LR
 
 Appears on:
 
-- [What does analysis do?](component-analysis-5fb37dc2.md)
-- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
-- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
 - [How does this program start?](startup-cli-py-126eba90.md)
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [How are tests organized?](tests-tests-37e0cc9c.md)
+- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
+- [What does analysis do?](component-analysis-5fb37dc2.md)
 
 Sources: `surface:docuharnessx/analysis/__init__.py`, `surface:docuharnessx/analysis/analyzer.py`
 
@@ -123,24 +123,24 @@ Sources: `surface:tests/test_analysis_detectors_components_surface.py`
 
 _No definition in the repository yet._
 
-Related: [analysis](#analysis), [docuharnessx](#docuharnessx), [ontology](#ontology), [pages](#pages), [review](#review), [run](#run), [comprehension](#comprehension), [pipeline](#pipeline)
+Related: [analysis](#analysis), [analyze](#analyze), [composition](#composition), [deployer](#deployer), [docuharnessx](#docuharnessx), [mcp](#mcp), [ontology](#ontology), [pipeline](#pipeline)
 
 ```mermaid
 flowchart LR
   here["assembler"]
   r0["analysis"]
   here --> r0
-  r1["docuharnessx"]
+  r1["analyze"]
   here --> r1
-  r2["ontology"]
+  r2["composition"]
   here --> r2
-  r3["pages"]
+  r3["deployer"]
   here --> r3
-  r4["review"]
+  r4["docuharnessx"]
   here --> r4
-  r5["run"]
+  r5["mcp"]
   here --> r5
-  r6["comprehension"]
+  r6["ontology"]
   here --> r6
   r7["pipeline"]
   here --> r7
@@ -148,10 +148,11 @@ flowchart LR
 
 Appears on:
 
+- [How are tests organized?](tests-tests-37e0cc9c.md)
 - [What does assembler do?](component-assembler-d9228a8c.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
+- [What does deployer do?](component-deployer-f8b1b75f.md)
 - [What does javascripts do?](component-javascripts-2aa9650e.md)
-- [How are tests organized?](tests-tests-37e0cc9c.md)
 - [DocuHarnessX](index.md)
 
 Sources: `component:docuharnessx/assembler`
@@ -191,11 +192,12 @@ flowchart LR
 
 Appears on:
 
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
+- [How are tests organized?](tests-tests-37e0cc9c.md)
+- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
 - [What does analysis do?](component-analysis-5fb37dc2.md)
 - [What does composition do?](component-composition-e6f778c7.md)
-- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
-- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
-- [How are tests organized?](tests-tests-37e0cc9c.md)
+- [What does mcp do?](component-mcp-bdf519de.md)
 - [DocuHarnessX](index.md)
 
 Sources: `component:docuharnessx/composition`
@@ -238,7 +240,7 @@ Sources: `component:docuharnessx/comprehension`
 
 _No definition in the repository yet._
 
-Related: [analysis](#analysis), [analyze](#analyze), [composition](#composition), [docuharnessx](#docuharnessx), [--force](#force), [hook](#hook), [init](#init), [install-ci](#install-ci)
+Related: [analysis](#analysis), [analyze](#analyze), [--default](#default), [docuharnessx](#docuharnessx), [--force](#force), [hook](#hook), [init](#init), [install-ci](#install-ci)
 
 ```mermaid
 flowchart LR
@@ -247,7 +249,7 @@ flowchart LR
   here --> r0
   r1["analyze"]
   here --> r1
-  r2["composition"]
+  r2["--default"]
   here --> r2
   r3["docuharnessx"]
   here --> r3
@@ -263,8 +265,8 @@ flowchart LR
 
 Appears on:
 
-- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [How does this program start?](startup-cli-py-126eba90.md)
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 
 Sources: `surface:docuharnessx/cli.py`, `surface:tests/test_analysis_detectors_components_surface.py`
 
@@ -337,6 +339,8 @@ flowchart LR
 Appears on:
 
 - [How are tests organized?](tests-tests-37e0cc9c.md)
+- [What does deployer do?](component-deployer-f8b1b75f.md)
+- [DocuHarnessX](index.md)
 
 Sources: `component:docuharnessx/deployer`
 
@@ -369,17 +373,18 @@ flowchart LR
 
 Appears on:
 
+- [How does this program start?](startup-cli-py-126eba90.md)
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [How is this project built and verified?](build-pyproject-toml-a625bf0a.md)
+- [How are tests organized?](tests-tests-37e0cc9c.md)
+- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
 - [What does analysis do?](component-analysis-5fb37dc2.md)
 - [What does assembler do?](component-assembler-d9228a8c.md)
 - [What does composition do?](component-composition-e6f778c7.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
-- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
+- [What does deployer do?](component-deployer-f8b1b75f.md)
 - [What does javascripts do?](component-javascripts-2aa9650e.md)
-- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
-- [How does this program start?](startup-cli-py-126eba90.md)
-- [How are tests organized?](tests-tests-37e0cc9c.md)
-- [DocuHarnessX](index.md)
+- [What does mcp do?](component-mcp-bdf519de.md)
 
 Sources: `component:docuharnessx`
 
@@ -412,8 +417,8 @@ flowchart LR
 
 Appears on:
 
-- [What does analysis do?](component-analysis-5fb37dc2.md)
 - [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
+- [What does analysis do?](component-analysis-5fb37dc2.md)
 
 Sources: `surface:docuharnessx/analysis/__init__.py`, `surface:docuharnessx/analysis/enrich.py`
 
@@ -427,7 +432,7 @@ Sources: `surface:docuharnessx/cli.py`
 
 _No definition in the repository yet._
 
-Related: [analysis](#analysis), [analyze](#analyze), [composition](#composition), [--config](#config), [docuharnessx](#docuharnessx), [hook](#hook), [init](#init), [install-ci](#install-ci)
+Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [--default](#default), [docuharnessx](#docuharnessx), [hook](#hook), [init](#init), [install-ci](#install-ci)
 
 ```mermaid
 flowchart LR
@@ -436,9 +441,9 @@ flowchart LR
   here --> r0
   r1["analyze"]
   here --> r1
-  r2["composition"]
+  r2["--config"]
   here --> r2
-  r3["--config"]
+  r3["--default"]
   here --> r3
   r4["docuharnessx"]
   here --> r4
@@ -452,8 +457,8 @@ flowchart LR
 
 Appears on:
 
-- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [How does this program start?](startup-cli-py-126eba90.md)
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 
 Sources: `surface:docuharnessx/cli.py`
 
@@ -492,11 +497,11 @@ flowchart LR
 
 Appears on:
 
-- [How is this project built and verified?](build-pyproject-toml-a625bf0a.md)
-- [What does analysis do?](component-analysis-5fb37dc2.md)
-- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
-- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
 - [How does this program start?](startup-cli-py-126eba90.md)
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
+- [How is this project built and verified?](build-pyproject-toml-a625bf0a.md)
+- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
+- [What does analysis do?](component-analysis-5fb37dc2.md)
 
 Sources: `surface:docuharnessx/cli.py`
 
@@ -504,7 +509,7 @@ Sources: `surface:docuharnessx/cli.py`
 
 _No definition in the repository yet._
 
-Related: [analysis](#analysis), [analyze](#analyze), [composition](#composition), [--config](#config), [docuharnessx](#docuharnessx), [--force](#force), [hook](#hook), [install-ci](#install-ci)
+Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [--default](#default), [docuharnessx](#docuharnessx), [--force](#force), [hook](#hook), [install-ci](#install-ci)
 
 ```mermaid
 flowchart LR
@@ -513,9 +518,9 @@ flowchart LR
   here --> r0
   r1["analyze"]
   here --> r1
-  r2["composition"]
+  r2["--config"]
   here --> r2
-  r3["--config"]
+  r3["--default"]
   here --> r3
   r4["docuharnessx"]
   here --> r4
@@ -529,9 +534,9 @@ flowchart LR
 
 Appears on:
 
-- [How is this project built and verified?](build-pyproject-toml-a625bf0a.md)
-- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [How does this program start?](startup-cli-py-126eba90.md)
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
+- [How is this project built and verified?](build-pyproject-toml-a625bf0a.md)
 
 Sources: `surface:docuharnessx/cli.py`
 
@@ -539,7 +544,7 @@ Sources: `surface:docuharnessx/cli.py`
 
 _No definition in the repository yet._
 
-Related: [analysis](#analysis), [analyze](#analyze), [composition](#composition), [--config](#config), [docuharnessx](#docuharnessx), [--force](#force), [hook](#hook), [init](#init)
+Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [--default](#default), [docuharnessx](#docuharnessx), [--force](#force), [hook](#hook), [init](#init)
 
 ```mermaid
 flowchart LR
@@ -548,9 +553,9 @@ flowchart LR
   here --> r0
   r1["analyze"]
   here --> r1
-  r2["composition"]
+  r2["--config"]
   here --> r2
-  r3["--config"]
+  r3["--default"]
   here --> r3
   r4["docuharnessx"]
   here --> r4
@@ -564,9 +569,9 @@ flowchart LR
 
 Appears on:
 
-- [How is this project built and verified?](build-pyproject-toml-a625bf0a.md)
-- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [How does this program start?](startup-cli-py-126eba90.md)
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
+- [How is this project built and verified?](build-pyproject-toml-a625bf0a.md)
 
 Sources: `surface:docuharnessx/cli.py`
 
@@ -574,7 +579,7 @@ Sources: `surface:docuharnessx/cli.py`
 
 _No definition in the repository yet._
 
-Related: [analysis](#analysis), [analyze](#analyze), [composition](#composition), [--config](#config), [docuharnessx](#docuharnessx), [--force](#force), [hook](#hook), [init](#init)
+Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [--default](#default), [docuharnessx](#docuharnessx), [--force](#force), [hook](#hook), [init](#init)
 
 ```mermaid
 flowchart LR
@@ -583,9 +588,9 @@ flowchart LR
   here --> r0
   r1["analyze"]
   here --> r1
-  r2["composition"]
+  r2["--config"]
   here --> r2
-  r3["--config"]
+  r3["--default"]
   here --> r3
   r4["docuharnessx"]
   here --> r4
@@ -599,9 +604,9 @@ flowchart LR
 
 Appears on:
 
-- [How is this project built and verified?](build-pyproject-toml-a625bf0a.md)
-- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [How does this program start?](startup-cli-py-126eba90.md)
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
+- [How is this project built and verified?](build-pyproject-toml-a625bf0a.md)
 
 Sources: `surface:docuharnessx/cli.py`
 
@@ -609,7 +614,7 @@ Sources: `surface:docuharnessx/cli.py`
 
 _No definition in the repository yet._
 
-Related: [analysis](#analysis), [assembler](#assembler), [composition](#composition), [comprehension](#comprehension), [docuharnessx](#docuharnessx)
+Related: [analysis](#analysis), [assembler](#assembler), [composition](#composition), [comprehension](#comprehension), [deployer](#deployer), [docuharnessx](#docuharnessx), [mcp](#mcp)
 
 ```mermaid
 flowchart LR
@@ -622,8 +627,12 @@ flowchart LR
   here --> r2
   r3["comprehension"]
   here --> r3
-  r4["docuharnessx"]
+  r4["deployer"]
   here --> r4
+  r5["docuharnessx"]
+  here --> r5
+  r6["mcp"]
+  here --> r6
 ```
 
 Appears on:
@@ -662,12 +671,13 @@ flowchart LR
 
 Appears on:
 
+- [How does this program start?](startup-cli-py-126eba90.md)
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [How is this project built and verified?](build-pyproject-toml-a625bf0a.md)
+- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
 - [What does analysis do?](component-analysis-5fb37dc2.md)
 - [What does composition do?](component-composition-e6f778c7.md)
-- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
-- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
-- [How does this program start?](startup-cli-py-126eba90.md)
+- [What does deployer do?](component-deployer-f8b1b75f.md)
 
 Sources: `surface:docuharnessx/cli.py`
 
@@ -681,7 +691,7 @@ Sources: `surface:docuharnessx/cli.py`
 
 _No definition in the repository yet._
 
-Related: [analysis](#analysis), [analyze](#analyze), [composition](#composition), [--config](#config), [docuharnessx](#docuharnessx), [--force](#force), [hook](#hook), [init](#init)
+Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [--default](#default), [docuharnessx](#docuharnessx), [--force](#force), [hook](#hook), [init](#init)
 
 ```mermaid
 flowchart LR
@@ -690,9 +700,9 @@ flowchart LR
   here --> r0
   r1["analyze"]
   here --> r1
-  r2["composition"]
+  r2["--config"]
   here --> r2
-  r3["--config"]
+  r3["--default"]
   here --> r3
   r4["docuharnessx"]
   here --> r4
@@ -706,11 +716,13 @@ flowchart LR
 
 Appears on:
 
-- [How is this project built and verified?](build-pyproject-toml-a625bf0a.md)
-- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
-- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
 - [How does this program start?](startup-cli-py-126eba90.md)
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
+- [How is this project built and verified?](build-pyproject-toml-a625bf0a.md)
 - [How are tests organized?](tests-tests-37e0cc9c.md)
+- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
+- [What does mcp do?](component-mcp-bdf519de.md)
+- [DocuHarnessX](index.md)
 
 Sources: `component:docuharnessx/mcp`, `surface:docuharnessx/cli.py`
 
@@ -724,57 +736,18 @@ Sources: `surface:docuharnessx/cli.py`
 
 _No definition in the repository yet._
 
-Related: [analysis](#analysis), [assembler](#assembler), [docuharnessx](#docuharnessx), [pages](#pages), [review](#review), [run](#run), [composition](#composition), [main](#main)
+Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [--default](#default), [docuharnessx](#docuharnessx), [--force](#force), [hook](#hook), [init](#init)
 
 ```mermaid
 flowchart LR
   here["ontology"]
   r0["analysis"]
   here --> r0
-  r1["assembler"]
-  here --> r1
-  r2["docuharnessx"]
-  here --> r2
-  r3["pages"]
-  here --> r3
-  r4["review"]
-  here --> r4
-  r5["run"]
-  here --> r5
-  r6["composition"]
-  here --> r6
-  r7["main"]
-  here --> r7
-```
-
-Appears on:
-
-- [What does assembler do?](component-assembler-d9228a8c.md)
-- [What does composition do?](component-composition-e6f778c7.md)
-- [What does comprehension do?](component-comprehension-87225edb.md)
-- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
-- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
-- [How does this program start?](startup-cli-py-126eba90.md)
-- [How are tests organized?](tests-tests-37e0cc9c.md)
-
-Sources: `component:docuharnessx/ontology`
-
-<h2 id="out">--out</h2>
-
-_No definition in the repository yet._
-
-Related: [analysis](#analysis), [analyze](#analyze), [composition](#composition), [--config](#config), [docuharnessx](#docuharnessx), [--force](#force), [hook](#hook), [init](#init)
-
-```mermaid
-flowchart LR
-  here["--out"]
-  r0["analysis"]
-  here --> r0
   r1["analyze"]
   here --> r1
-  r2["composition"]
+  r2["--config"]
   here --> r2
-  r3["--config"]
+  r3["--default"]
   here --> r3
   r4["docuharnessx"]
   here --> r4
@@ -788,8 +761,47 @@ flowchart LR
 
 Appears on:
 
-- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [How does this program start?](startup-cli-py-126eba90.md)
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
+- [How are tests organized?](tests-tests-37e0cc9c.md)
+- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
+- [What does assembler do?](component-assembler-d9228a8c.md)
+- [What does composition do?](component-composition-e6f778c7.md)
+- [What does comprehension do?](component-comprehension-87225edb.md)
+
+Sources: `component:docuharnessx/ontology`
+
+<h2 id="out">--out</h2>
+
+_No definition in the repository yet._
+
+Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [--default](#default), [docuharnessx](#docuharnessx), [--force](#force), [hook](#hook), [init](#init)
+
+```mermaid
+flowchart LR
+  here["--out"]
+  r0["analysis"]
+  here --> r0
+  r1["analyze"]
+  here --> r1
+  r2["--config"]
+  here --> r2
+  r3["--default"]
+  here --> r3
+  r4["docuharnessx"]
+  here --> r4
+  r5["--force"]
+  here --> r5
+  r6["hook"]
+  here --> r6
+  r7["init"]
+  here --> r7
+```
+
+Appears on:
+
+- [How does this program start?](startup-cli-py-126eba90.md)
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 
 Sources: `surface:docuharnessx/cli.py`
 
@@ -797,35 +809,36 @@ Sources: `surface:docuharnessx/cli.py`
 
 _No definition in the repository yet._
 
-Related: [analysis](#analysis), [assembler](#assembler), [docuharnessx](#docuharnessx), [ontology](#ontology), [review](#review), [run](#run), [comprehension](#comprehension), [pipeline](#pipeline)
+Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [--default](#default), [docuharnessx](#docuharnessx), [--force](#force), [hook](#hook), [init](#init)
 
 ```mermaid
 flowchart LR
   here["pages"]
   r0["analysis"]
   here --> r0
-  r1["assembler"]
+  r1["analyze"]
   here --> r1
-  r2["docuharnessx"]
+  r2["--config"]
   here --> r2
-  r3["ontology"]
+  r3["--default"]
   here --> r3
-  r4["review"]
+  r4["docuharnessx"]
   here --> r4
-  r5["run"]
+  r5["--force"]
   here --> r5
-  r6["comprehension"]
+  r6["hook"]
   here --> r6
-  r7["pipeline"]
+  r7["init"]
   here --> r7
 ```
 
 Appears on:
 
+- [How does this program start?](startup-cli-py-126eba90.md)
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [What does assembler do?](component-assembler-d9228a8c.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
-- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
-- [How does this program start?](startup-cli-py-126eba90.md)
+- [What does deployer do?](component-deployer-f8b1b75f.md)
 
 Sources: `component:docuharnessx/pages`
 
@@ -858,14 +871,15 @@ flowchart LR
 
 Appears on:
 
+- [How does this program start?](startup-cli-py-126eba90.md)
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [How is this project built and verified?](build-pyproject-toml-a625bf0a.md)
+- [How are tests organized?](tests-tests-37e0cc9c.md)
+- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
 - [What does analysis do?](component-analysis-5fb37dc2.md)
 - [What does composition do?](component-composition-e6f778c7.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
-- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
-- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
-- [How does this program start?](startup-cli-py-126eba90.md)
-- [How are tests organized?](tests-tests-37e0cc9c.md)
+- [What does deployer do?](component-deployer-f8b1b75f.md)
 
 Sources: `component:docuharnessx/pipeline`
 
@@ -899,8 +913,8 @@ flowchart LR
 Appears on:
 
 - [What does docuharnessx do?](component-docuharnessx-3986831c.md)
-- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
 - [How are tests organized?](tests-tests-37e0cc9c.md)
+- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
 
 Sources: `component:docuharnessx/planning`
 
@@ -926,35 +940,35 @@ Sources: `surface:docuharnessx/cli.py`
 
 _No definition in the repository yet._
 
-Related: [analysis](#analysis), [assembler](#assembler), [docuharnessx](#docuharnessx), [ontology](#ontology), [pages](#pages), [run](#run), [composition](#composition), [main](#main)
+Related: [analysis](#analysis), [analyze](#analyze), [composition](#composition), [--config](#config), [docuharnessx](#docuharnessx), [--force](#force), [hook](#hook), [init](#init)
 
 ```mermaid
 flowchart LR
   here["review"]
   r0["analysis"]
   here --> r0
-  r1["assembler"]
+  r1["analyze"]
   here --> r1
-  r2["docuharnessx"]
+  r2["composition"]
   here --> r2
-  r3["ontology"]
+  r3["--config"]
   here --> r3
-  r4["pages"]
+  r4["docuharnessx"]
   here --> r4
-  r5["run"]
+  r5["--force"]
   here --> r5
-  r6["composition"]
+  r6["hook"]
   here --> r6
-  r7["main"]
+  r7["init"]
   here --> r7
 ```
 
 Appears on:
 
-- [What does assembler do?](component-assembler-d9228a8c.md)
-- [What does composition do?](component-composition-e6f778c7.md)
 - [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [How are tests organized?](tests-tests-37e0cc9c.md)
+- [What does assembler do?](component-assembler-d9228a8c.md)
+- [What does composition do?](component-composition-e6f778c7.md)
 
 Sources: `component:docuharnessx/review`
 
@@ -968,37 +982,39 @@ Sources: `surface:docuharnessx/cli.py`
 
 _No definition in the repository yet._
 
-Related: [analysis](#analysis), [assembler](#assembler), [docuharnessx](#docuharnessx), [ontology](#ontology), [pages](#pages), [review](#review), [composition](#composition), [main](#main)
+Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [--default](#default), [docuharnessx](#docuharnessx), [--force](#force), [hook](#hook), [init](#init)
 
 ```mermaid
 flowchart LR
   here["run"]
   r0["analysis"]
   here --> r0
-  r1["assembler"]
+  r1["analyze"]
   here --> r1
-  r2["docuharnessx"]
+  r2["--config"]
   here --> r2
-  r3["ontology"]
+  r3["--default"]
   here --> r3
-  r4["pages"]
+  r4["docuharnessx"]
   here --> r4
-  r5["review"]
+  r5["--force"]
   here --> r5
-  r6["composition"]
+  r6["hook"]
   here --> r6
-  r7["main"]
+  r7["init"]
   here --> r7
 ```
 
 Appears on:
 
+- [How does this program start?](startup-cli-py-126eba90.md)
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [How is this project built and verified?](build-pyproject-toml-a625bf0a.md)
+- [How are tests organized?](tests-tests-37e0cc9c.md)
 - [What does assembler do?](component-assembler-d9228a8c.md)
 - [What does composition do?](component-composition-e6f778c7.md)
-- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
-- [How does this program start?](startup-cli-py-126eba90.md)
-- [How are tests organized?](tests-tests-37e0cc9c.md)
+- [What does deployer do?](component-deployer-f8b1b75f.md)
+- [What does mcp do?](component-mcp-bdf519de.md)
 
 Sources: `surface:docuharnessx/cli.py`, `surface:tests/test_analysis_detectors_components_surface.py`
 
@@ -1031,11 +1047,11 @@ flowchart LR
 
 Appears on:
 
-- [What does analysis do?](component-analysis-5fb37dc2.md)
-- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
-- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
 - [How does this program start?](startup-cli-py-126eba90.md)
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [How are tests organized?](tests-tests-37e0cc9c.md)
+- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
+- [What does analysis do?](component-analysis-5fb37dc2.md)
 
 Sources: `surface:docuharnessx/analysis/__init__.py`, `surface:docuharnessx/analysis/scanner.py`
 
@@ -1068,11 +1084,12 @@ flowchart LR
 
 Appears on:
 
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
+- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
 - [What does analysis do?](component-analysis-5fb37dc2.md)
 - [What does composition do?](component-composition-e6f778c7.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
-- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
-- [How is the public surface used or extended?](public-surface-init-py-a3934091.md)
+- [What does deployer do?](component-deployer-f8b1b75f.md)
 
 Sources: `component:docuharnessx/stages`
 
@@ -1080,54 +1097,18 @@ Sources: `component:docuharnessx/stages`
 
 _No definition in the repository yet._
 
-Related: [analysis](#analysis), [assembler](#assembler), [comprehension](#comprehension), [docuharnessx](#docuharnessx), [ontology](#ontology), [pages](#pages), [pipeline](#pipeline), [stages](#stages)
+Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [--default](#default), [docuharnessx](#docuharnessx), [--force](#force), [hook](#hook), [init](#init)
 
 ```mermaid
 flowchart LR
   here["status"]
   r0["analysis"]
   here --> r0
-  r1["assembler"]
-  here --> r1
-  r2["comprehension"]
-  here --> r2
-  r3["docuharnessx"]
-  here --> r3
-  r4["ontology"]
-  here --> r4
-  r5["pages"]
-  here --> r5
-  r6["pipeline"]
-  here --> r6
-  r7["stages"]
-  here --> r7
-```
-
-Appears on:
-
-- [How is this project built and verified?](build-pyproject-toml-a625bf0a.md)
-- [What does comprehension do?](component-comprehension-87225edb.md)
-- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
-- [How does this program start?](startup-cli-py-126eba90.md)
-
-Sources: `surface:docuharnessx/cli.py`
-
-<h2 id="sufficient">sufficient</h2>
-
-_No definition in the repository yet._
-
-Related: [analysis](#analysis), [analyze](#analyze), [composition](#composition), [--config](#config), [docuharnessx](#docuharnessx), [--force](#force), [hook](#hook), [init](#init)
-
-```mermaid
-flowchart LR
-  here["sufficient"]
-  r0["analysis"]
-  here --> r0
   r1["analyze"]
   here --> r1
-  r2["composition"]
+  r2["--config"]
   here --> r2
-  r3["--config"]
+  r3["--default"]
   here --> r3
   r4["docuharnessx"]
   here --> r4
@@ -1141,9 +1122,46 @@ flowchart LR
 
 Appears on:
 
-- [How is this project built and verified?](build-pyproject-toml-a625bf0a.md)
-- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
 - [How does this program start?](startup-cli-py-126eba90.md)
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
+- [How is this project built and verified?](build-pyproject-toml-a625bf0a.md)
+- [What does comprehension do?](component-comprehension-87225edb.md)
+- [What does deployer do?](component-deployer-f8b1b75f.md)
+
+Sources: `surface:docuharnessx/cli.py`
+
+<h2 id="sufficient">sufficient</h2>
+
+_No definition in the repository yet._
+
+Related: [analysis](#analysis), [analyze](#analyze), [--config](#config), [--default](#default), [docuharnessx](#docuharnessx), [--force](#force), [hook](#hook), [init](#init)
+
+```mermaid
+flowchart LR
+  here["sufficient"]
+  r0["analysis"]
+  here --> r0
+  r1["analyze"]
+  here --> r1
+  r2["--config"]
+  here --> r2
+  r3["--default"]
+  here --> r3
+  r4["docuharnessx"]
+  here --> r4
+  r5["--force"]
+  here --> r5
+  r6["hook"]
+  here --> r6
+  r7["init"]
+  here --> r7
+```
+
+Appears on:
+
+- [How does this program start?](startup-cli-py-126eba90.md)
+- [What does docuharnessx do?](component-docuharnessx-3986831c.md)
+- [How is this project built and verified?](build-pyproject-toml-a625bf0a.md)
 
 Sources: `surface:docuharnessx/cli.py`
 

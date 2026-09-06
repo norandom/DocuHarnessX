@@ -20,6 +20,29 @@ related: []
 
 </div>
 
+<div class="dhx-layer" data-min="1" markdown="1">
+
+```mermaid
+flowchart TB
+  system["System"]
+  e0["docuharnessx/cli.py"]
+  e0 --> system
+  c0["javascripts"]
+  system --> c0
+  c1["docuharnessx"]
+  system --> c1
+  c2["analysis"]
+  system --> c2
+  c3["assembler"]
+  system --> c3
+  c4["composition"]
+  system --> c4
+  c5["comprehension"]
+  system --> c5
+```
+
+</div>
+
 <div class="dhx-layer" data-min="4" markdown="1">
 
 ```mermaid

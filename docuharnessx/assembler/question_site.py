@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 
 from docuharnessx.assembler.home import HOME_PAGE_PATH, render_question_home
 from docuharnessx.assembler.mkdocs_config import build_question_mkdocs_yaml
+from docuharnessx.assembler.story import story_order
 from docuharnessx.assembler.model import (
     ASSEMBLED_SITE_SCHEMA_VERSION,
     AssembledSite,
@@ -86,8 +87,10 @@ def assemble_question_site(
     """Assemble a question-organised site from accepted pages, or skip.
 
     Args:
-        pages: Accepted question pages in nav/home order. Omitted questions are
-            not passed in and leave no stub (Req 8.3).
+        pages: Accepted question pages. Nav and home use a deterministic reading
+            order (startup, what the system is, build, tests, public surface,
+            then the rest). Omitted questions are not passed in and leave no
+            stub (Req 8.3).
         identity: Resolved per-target :class:`SiteIdentity`.
         out_dir: Run output directory. The tree is written under ``<out_dir>/site``.
         analysis: Optional frozen ``RepoAnalysis`` used to enrich per-page
@@ -104,7 +107,7 @@ def assemble_question_site(
         return None
 
     look = presentation or SitePresentation()
-    accepted = tuple(pages)
+    accepted = story_order(tuple(pages), identity)
     root = project_dir or (analysis.repo_path if analysis is not None else None)
     live_signals = (
         signals
@@ -127,6 +130,7 @@ def assemble_question_site(
             accepted,
             analysis=analysis,
             signals=live_signals,
+            identity=identity,
         )
         rendered.append((rel_path, page.title, content))
     home = render_question_home(

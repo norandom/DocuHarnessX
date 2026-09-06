@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 from docuharnessx.analysis.model import RepoAnalysis
 from docuharnessx.comprehension.compliance import (
@@ -17,6 +18,9 @@ from docuharnessx.comprehension.signals import (
     PipelineDag,
 )
 from docuharnessx.pages.model import Page
+
+if TYPE_CHECKING:
+    from docuharnessx.assembler.model import SiteIdentity
 
 __all__ = [
     "render_compliance_page",
@@ -127,6 +131,16 @@ def render_public_surface(analysis: RepoAnalysis | None) -> str:
     return _fence_flow("TB", lines)
 
 
+def render_story_path(pages: Sequence[Page]) -> str:
+    """Small left-to-right path of the home reading list. Empty if under two pages."""
+    if len(pages) < 2:
+        return ""
+    lines = [f'  p{index}["{_label(page.title)}"]' for index, page in enumerate(pages)]
+    for index in range(len(pages) - 1):
+        lines.append(f"  p{index} --> p{index + 1}")
+    return _fence_flow("LR", lines)
+
+
 def render_coverage_pie(counts: CoverageCounts | None) -> str:
     if counts is None or counts.planned == 0:
         return ""
@@ -145,8 +159,19 @@ def render_page_extras(
     accepted: Sequence[Page],
     analysis: RepoAnalysis | None,
     signals: ComprehensionSignals | None,
+    identity: "SiteIdentity | None" = None,
 ) -> list[tuple[int, str]]:
     blocks: list[tuple[int, str]] = []
+    from docuharnessx.assembler.story import is_system_overview
+
+    if is_system_overview(page, accepted, identity):
+        context = render_c4_context(analysis)
+        if context:
+            blocks.append((1, context))
+        else:
+            mind = render_mindmap(analysis)
+            if mind:
+                blocks.append((1, mind))
     if analysis is not None and page.id.startswith("how:"):
         seq = render_sequence(analysis)
         if seq:
@@ -182,29 +207,36 @@ def render_home_extras(
     analysis: RepoAnalysis | None,
     signals: ComprehensionSignals | None,
     counts: CoverageCounts | None,
+    identity: "SiteIdentity | None" = None,
 ) -> list[tuple[int, str]]:
+    """Home pictures. Depth 1 is prose (the reading path); maps start at 2."""
     blocks: list[tuple[int, str]] = []
-    context = render_c4_context(analysis)
-    if context:
-        blocks.append((1, context))
-    else:
-        mind = render_mindmap(analysis)
-        if mind:
-            blocks.append((1, mind))
+    from docuharnessx.assembler.story import story_spine
+
+    path = render_story_path(story_spine(pages, identity))
+    if path:
+        blocks.append((3, path))
     pie = render_coverage_pie(counts)
     if pie:
         blocks.append((2, pie))
+    context = render_c4_context(analysis)
+    if context:
+        blocks.append((5, context))
+    else:
+        mind = render_mindmap(analysis)
+        if mind:
+            blocks.append((5, mind))
     from docuharnessx.assembler.graphs import render_home_diagrams
 
     home_map = render_home_diagrams(pages)
     if home_map:
-        blocks.append((3, home_map))
+        blocks.append((5, home_map))
     if signals and signals.lineage:
-        blocks.append((3, render_sankey(signals)))
+        blocks.append((5, render_sankey(signals)))
         blocks.append((7, render_sankey(signals)))
     if signals and signals.pipelines:
-        blocks.append((3, render_dag(signals.pipelines[0], detailed=False)))
-        blocks.append((5, render_dag(signals.pipelines[0], detailed=True)))
+        blocks.append((5, render_dag(signals.pipelines[0], detailed=False)))
+        blocks.append((7, render_dag(signals.pipelines[0], detailed=True)))
     return [(d, b) for d, b in blocks if b]
 
 

@@ -241,6 +241,16 @@ def test_two_pages_home_and_nav_have_no_role_directory_index(
     assert list(docs.glob("*/index.md")) == []
 
 
+def test_nav_follows_story_order_not_input_order(tmp_path: Path) -> None:
+    pages = (_engine_page(), _startup_page())
+    site = assemble_question_site(pages, _identity(), str(tmp_path))
+    assert site is not None
+    yml = Path(site.mkdocs_yml_path).read_text(encoding="utf-8")
+    startup = page_filename(pages[1].id)
+    engine = page_filename(pages[0].id)
+    assert yml.index(startup) < yml.index(engine)
+
+
 def test_two_pages_nav_is_home_plus_pages_only(tmp_path: Path) -> None:
     pages = _two_pages()
     site = assemble_question_site(pages, _identity(), str(tmp_path))

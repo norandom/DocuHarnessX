@@ -20,9 +20,9 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 from docuharnessx.assembler.depth import wrap_layer
-from docuharnessx.assembler.graphs import render_home_diagrams
 from docuharnessx.assembler.mkdocs_config import HOME_PAGE_PATH, TAGS_INDEX_PATH
 from docuharnessx.assembler.pages import page_filename
+from docuharnessx.assembler.story import story_order, story_spine
 from docuharnessx.comprehension.signals import ComprehensionSignals, CoverageCounts
 from docuharnessx.pages.model import Page
 
@@ -77,6 +77,41 @@ def render_home_page(
     return "\n".join(lines) + "\n"
 
 
+def _lede(identity: "SiteIdentity", pages: Sequence[Page]) -> str:
+    """Short SCQA-shaped intro. Does not name the authoring method."""
+    repo = identity.repo_name or identity.site_name
+    target = f"[`{repo}`]({identity.repo_url})" if identity.repo_url else f"`{repo}`"
+    if not pages:
+        return f"Documentation for {target}."
+    noun = "question" if len(pages) == 1 else "questions"
+    parts = [
+        f"This site walks through {len(pages)} {noun} about {target}, "
+        "in the order you would actually learn the project."
+    ]
+    spine = story_spine(pages, identity)
+    if len(pages) > len(spine):
+        parts.append(
+            "Read the numbered list first. Later questions cover individual modules."
+        )
+    else:
+        parts.append("Read the numbered list in order.")
+    return "\n\n".join(parts)
+
+
+def _numbered_links(pages: Sequence[Page]) -> str:
+    lines = ["## Read in this order", ""]
+    for index, page in enumerate(pages, 1):
+        lines.append(f"{index}. [{page.title}]({page_filename(page.id)})")
+    return "\n".join(lines)
+
+
+def _bullet_links(pages: Sequence[Page]) -> str:
+    lines = ["## More questions", ""]
+    for page in pages:
+        lines.append(f"- [{page.title}]({page_filename(page.id)})")
+    return "\n".join(lines)
+
+
 def render_question_home(
     identity: "SiteIdentity",
     pages: Sequence[Page],
@@ -87,31 +122,34 @@ def render_question_home(
 ) -> str:
     """Render the question-organised ``docs/index.md`` (Req 8.1, 8.2).
 
-    Heading is the target ``site_name``. The body lists accepted page titles as
-    Markdown links; it does not index reader roles. Ends in a single ``\\n``.
+    Heading is the target ``site_name``. Depth 1 is a short reading path, not a
+    system map. Titles are Markdown links; the page does not index reader roles.
+    Ends in a single ``\\n``.
     """
-    repo = identity.repo_name or identity.site_name
-    target = f"[`{repo}`]({identity.repo_url})" if identity.repo_url else f"`{repo}`"
+    ordered = story_order(pages, identity)
+    spine = story_spine(ordered, identity)
+    spine_ids = {page.id for page in spine}
+    rest = [page for page in ordered if page.id not in spine_ids]
 
     lines: list[str] = [
         f"# {identity.site_name}",
         "",
-        f"Documentation for {target}.",
+        wrap_layer(1, _lede(identity, ordered)).rstrip("\n"),
         "",
     ]
+    if spine:
+        lines.append(wrap_layer(1, _numbered_links(spine)).rstrip("\n"))
+        lines.append("")
+    if rest:
+        lines.append(wrap_layer(1, _bullet_links(rest)).rstrip("\n"))
+        lines.append("")
+
     from docuharnessx.comprehension.graphs import render_home_extras
 
-    extras = render_home_extras(pages, analysis, signals, counts)
-    if extras:
-        for depth, block in extras:
-            lines.append(wrap_layer(depth, block).rstrip("\n"))
-            lines.append("")
-    else:
-        diagrams = render_home_diagrams(pages)
-        if diagrams:
-            lines.append(diagrams.rstrip("\n"))
-            lines.append("")
-    lines.extend(["## Questions", ""])
-    for page in pages:
-        lines.append(f"- [{page.title}]({page_filename(page.id)})")
+    extras = render_home_extras(
+        ordered, analysis, signals, counts, identity=identity
+    )
+    for depth, block in extras:
+        lines.append(wrap_layer(max(depth, 2), block).rstrip("\n"))
+        lines.append("")
     return "\n".join(lines) + "\n"

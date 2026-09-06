@@ -40,6 +40,7 @@ from docuharnessx.pages.model import Page
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from docuharnessx.analysis.model import RepoAnalysis
+    from docuharnessx.assembler.model import SiteIdentity
 
 __all__ = ["page_filename", "render_segment_page", "render_question_page"]
 
@@ -206,6 +207,7 @@ def render_question_page(
     analysis: "RepoAnalysis | None" = None,
     include_diagrams: bool = True,
     signals: object | None = None,
+    identity: "SiteIdentity | None" = None,
 ) -> tuple[str, str]:
     """Render one accepted question ``page`` to ``(relative_docs_path, markdown)``.
 
@@ -222,7 +224,9 @@ def render_question_page(
     if include_diagrams:
         from docuharnessx.comprehension.graphs import render_page_extras
 
-        extras = render_page_extras(page, accepted, analysis, signals)
+        extras = render_page_extras(
+            page, accepted, analysis, signals, identity=identity
+        )
         if extras:
             for depth, block in extras:
                 parts.append("\n" + wrap_layer(depth, block))
