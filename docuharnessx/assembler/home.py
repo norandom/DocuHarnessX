@@ -78,17 +78,16 @@ def render_home_page(
 
 
 def _lede(identity: "SiteIdentity", pages: Sequence[Page]) -> str:
-    """Short SCQA-shaped intro. Does not name the authoring method."""
+    """Short opening for the numbered path. Does not advertise the planner cap."""
     repo = identity.repo_name or identity.site_name
     target = f"[`{repo}`]({identity.repo_url})" if identity.repo_url else f"`{repo}`"
     if not pages:
         return f"Documentation for {target}."
-    noun = "question" if len(pages) == 1 else "questions"
-    parts = [
-        f"This site walks through {len(pages)} {noun} about {target}, "
-        "in the order you would actually learn the project."
-    ]
     spine = story_spine(pages, identity)
+    parts = [
+        f"A short path through {target}, in the order you would actually "
+        "learn the project."
+    ]
     if len(pages) > len(spine):
         parts.append(
             "Read the numbered list first. Later questions cover individual modules."

@@ -209,6 +209,31 @@ def test_persisted_page_can_omit_diagrams() -> None:
     assert page.body in markdown
 
 
+def test_home_lede_does_not_count_the_planner_cap() -> None:
+    pages = (
+        _page(),
+        _page(
+            kind=QuestionKind.COMPONENT,
+            slug="engine",
+            title="What does Engine do?",
+            cited=("engine.py",),
+        ),
+        _page(
+            kind=QuestionKind.COMPONENT,
+            slug="assembler",
+            title="What does assembler do?",
+            cited=("assembler.py",),
+        ),
+    )
+    home = render_question_home(_identity(), pages)
+    assert "walks through" not in home
+    assert "12 questions" not in home
+    assert f"{len(pages)} questions" not in home
+    assert "A short path through" in home
+    assert "## Read in this order" in home
+    assert "## More questions" in home
+
+
 def test_home_is_a_reading_path_not_a_map() -> None:
     pages = (
         _page(),
