@@ -21,9 +21,9 @@ later.
 
 ## 3. COBESY writer adapter
 
-- [ ] 3.1 Deterministic `build_question_blueprint(question, model)` (governing idea, opening cues, ≤5 heads, density budget, abstraction). No Role × Intent. _Boundary:_ composition/blueprint_question.py. _Depends:_ 1.3.
-- [ ] 3.2 `build_question_task` includes the blueprint; citations go under Grounding; forbid SCQA/Minto/COBESY strings in published Markdown. _Boundary:_ question_task.py. _Depends:_ 3.1.
-- [ ] 3.3 Tests: equal inputs → equal blueprint and equal task description; description contains governing idea. _Depends:_ 3.2.
+- [x] 3.1 Deterministic `build_question_blueprint(question, model)` (governing idea, opening cues, ≤5 heads, density budget, abstraction). No Role × Intent. _Boundary:_ composition/blueprint_question.py. _Depends:_ 1.3.
+- [x] 3.2 `build_question_task` includes the blueprint; citations go under Grounding; forbid SCQA/Minto/COBESY strings in published Markdown. _Boundary:_ question_task.py. _Depends:_ 3.1.
+- [x] 3.3 Tests: equal inputs → equal blueprint and equal task description; description contains governing idea. _Depends:_ 3.2.
 
 ## 4. Density grain
 

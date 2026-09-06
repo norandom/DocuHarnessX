@@ -23,11 +23,9 @@ from docuharnessx.composition.budgets import (
 from docuharnessx.composition.question_task import build_question_task
 from docuharnessx.planning.question_model import Question, QuestionKind, make_question_id
 
-# Parent-listed outline/slogan strings that must not appear in the task (Req 5.4).
+# Outline/slogan strings that must not appear as structure to copy.
+# SCQA/Minto/COBESY may appear only as a "do not write" prohibition.
 _FORBIDDEN_STRINGS: tuple[str, ...] = (
-    "COBESY",
-    "SCQA",
-    "Minto",
     "REDUCE",
     "fastest path for",
     "Situation:",
@@ -219,3 +217,47 @@ def test_does_not_mutate_question() -> None:
     before = dataclasses.asdict(question)
     build_question_task(question, repo_path="/repo")
     assert dataclasses.asdict(question) == before
+
+
+def test_description_contains_governing_idea_and_grounding() -> None:
+    from docuharnessx.composition.blueprint_question import build_question_blueprint
+
+    question = _sample_question()
+    blueprint = build_question_blueprint(question)
+    text = _text(build_question_task(question, repo_path="/repo"))
+    assert blueprint.governing_idea in text
+    assert "Grounding" in text
+    assert "do not write the words" in text.lower()
+    assert "SCQA" in text
+    assert "Minto" in text
+    assert "COBESY" in text
+    assert "## SCQA" not in text
+    assert "andragogy" in text.lower()
+
+
+def test_task_with_architecture_is_byte_identical() -> None:
+    from docuharnessx.comprehension.signals import (
+        AbstractionLevel,
+        ArchitectureModel,
+        ArchitectureNode,
+    )
+
+    architecture = ArchitectureModel(
+        system_name="agentic_repo",
+        nodes=(
+            ArchitectureNode(
+                id="actor:operator",
+                label="Operator",
+                level=AbstractionLevel.CONTEXT,
+                kind="actor",
+            ),
+        ),
+    )
+    question = _sample_question()
+    a = build_question_task(
+        question, repo_path="/repo", architecture=architecture
+    )
+    b = build_question_task(
+        question, repo_path="/repo", architecture=architecture
+    )
+    assert _text(a) == _text(b)

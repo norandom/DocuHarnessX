@@ -74,6 +74,14 @@ def test_namespace_reexports_agentic_entry_points_identity_equal() -> None:
     assert pkg.validate_agent_body is structure_gate.validate_agent_body
 
 
+def test_namespace_reexports_question_blueprint_identity_equal() -> None:
+    pkg = importlib.import_module("docuharnessx.composition")
+    module = importlib.import_module("docuharnessx.composition.blueprint_question")
+    assert pkg.QuestionBlueprint is module.QuestionBlueprint
+    assert pkg.DensityBudget is module.DensityBudget
+    assert pkg.build_question_blueprint is module.build_question_blueprint
+
+
 def test_all_lists_every_public_name_and_is_importable() -> None:
     pkg = importlib.import_module("docuharnessx.composition")
     expected = {
@@ -109,6 +117,9 @@ def test_all_lists_every_public_name_and_is_importable() -> None:
         "build_writer_harness",
         "AgenticProseRunner",
         "AgentRunStats",
+        "DensityBudget",
+        "QuestionBlueprint",
+        "build_question_blueprint",
     }
     assert set(pkg.__all__) == expected
     # __all__ is self-consistent: every advertised name is actually importable.

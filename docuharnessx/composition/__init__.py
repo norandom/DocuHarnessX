@@ -72,6 +72,11 @@ from __future__ import annotations
 
 from docuharnessx.composition.agent import AgenticProseRunner, AgentRunStats
 from docuharnessx.composition.blueprint import build_blueprint
+from docuharnessx.composition.blueprint_question import (
+    DensityBudget,
+    QuestionBlueprint,
+    build_question_blueprint,
+)
 from docuharnessx.composition.budgets import (
     MIN_CITED_FILES,
     WRITER_LOOP_THRESHOLD,
@@ -135,4 +140,8 @@ __all__ = [
     "build_writer_harness",
     "AgenticProseRunner",
     "AgentRunStats",
+    # explore-first question blueprint (architect-narrative)
+    "DensityBudget",
+    "QuestionBlueprint",
+    "build_question_blueprint",
 ]

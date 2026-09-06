@@ -173,11 +173,11 @@ def test_frozen_seams_stages_assembler_resolver_not_in_diff() -> None:
 
 
 def test_allowed_writer_files_are_the_only_composition_changes() -> None:
-    """Inside ``composition/``, only the two writer files may have changed.
+    """Inside ``composition/``, only the writer-path files may have changed.
 
-    The writer extension is confined to ``agent.py`` + ``task_prompt.py``; no other
-    composition module (``blueprint``, ``wiring``, ``fallback``, ``structure_gate``,
-    ``budgets``, ``model``, ``prompt``, ``prose``, ``harness_factory``) may move.
+    Explore-first and architect-narrative may touch the question writer and its
+    blueprint. Role × Intent modules (``blueprint``, ``wiring``, ``fallback``,
+    ``structure_gate``, ``budgets``, ``model``, ``prompt``, ``prose``) stay still.
     """
     if not _is_git_repo():
         pytest.skip("not a git checkout; diff-boundary check is not applicable")
@@ -190,6 +190,8 @@ def test_allowed_writer_files_are_the_only_composition_changes() -> None:
         "docuharnessx/composition/task_prompt.py",
         "docuharnessx/composition/explore_writer.py",
         "docuharnessx/composition/question_task.py",
+        "docuharnessx/composition/blueprint_question.py",
+        "docuharnessx/composition/__init__.py",
     }, f"unexpected composition changes: {sorted(composition_changes)}"
 
 
