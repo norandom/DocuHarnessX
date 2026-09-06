@@ -1226,24 +1226,28 @@ On [What does javascripts do?](component-javascripts-2aa9650e.md) at depth 5.
 flowchart TB
  n0["What does javascripts do?"]
  n1["javascripts"]
- n2["depth.js"]
- n3["mkdocs.yml"]
- n4["theme.py"]
- n5["writer.py"]
- n6["question_site.py"]
- n7["site_config.py"]
- n8["component-docuharnessx-3986831c.md"]
- n9["build-pyproject-toml-a625bf0a.md"]
+ n2["conceptual.js"]
+ n3["depth.js"]
+ n4["jit.js"]
+ n5["mkdocs.yml"]
+ n6["theme.py"]
+ n7["writer.py"]
+ n8["question_site.py"]
+ n9["site_config.py"]
+ n10["component-docuharnessx-3986831c.md"]
+ n11["build-pyproject-toml-a625bf0a.md"]
  n0 --> n1
  n1 --> n2
- n0 --> n3
- n0 --> n4
+ n1 --> n3
+ n1 --> n4
  n0 --> n5
  n0 --> n6
- n0 --> n2
  n0 --> n7
  n0 --> n8
+ n0 --> n3
  n0 --> n9
+ n0 --> n10
+ n0 --> n11
 ```
 
 <h2 id="glossary-related-term-graphs">Glossary related-term graphs</h2>
