@@ -4,12 +4,9 @@ title: How are tests organized?
 subjects:
 - tests
 summary: All tests for DocuHarnessX live in a single `tests/` directory at the repository
-  root. The only pytest configuration in the project is `pyproject.toml:46-47`, which
-  sets `testpaths = ["tests"]`, and the dev extra declares the sole test dependency
-  `pytest>=8.0` (`pyproject.toml:28-29`). There is no `conftest.py` anywhere in the
-  tree, and `tests/` has no `__init__.py`; the top level contains 127 `test_*.py`
-  modules plus two support entries — `tests/_fakes.py` and the `tests/fixtures/` directory
-  — and one nested subdirectory, `tests/ontology/`, holding 16 more modules.
+  root. The only pytest configuration in the project is -47`, which sets `testpaths
+  = ["tests"]`, and the dev extra declares the sole test dependency `pytest>=8.0`
+  -29`).
 related: []
 abstraction: container
 ---
@@ -17,7 +14,7 @@ abstraction: container
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
-All tests for <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a> live in a single `tests/` directory at the repository root. The only pytest configuration in the project is `pyproject.toml:46-47`, which sets `testpaths = ["tests"]`, and the dev extra declares the sole test dependency `pytest>=8.0` (`pyproject.toml:28-29`). There is no `conftest.py` anywhere in the tree, and `tests/` has no `__init__.py`; the top level contains 127 `test_*.py` modules plus two support entries — `tests/_fakes.py` and the `tests/fixtures/` directory — and one nested subdirectory, `tests/ontology/`, holding 16 more modules.
+All tests for <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a> live in a single `tests/` directory at the repository root. The only pytest configuration in the project is -47`, which sets `testpaths = ["tests"]`, and the dev extra declares the sole test dependency `pytest>=8.0` -29`).
 
 </div>
 

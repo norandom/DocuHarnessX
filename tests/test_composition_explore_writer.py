@@ -99,6 +99,9 @@ def test_inspecting_scripted_writer_accepts_grounded_page(tmp_path: Path) -> Non
     assert "config.py" in page.cited_files
     assert "engine.py" in page.cited_files
     assert "Engine" in page.subjects
+    assert "config.py:" not in page.summary
+    assert "engine.py:" not in page.summary
+    assert len(page.summary) <= 280
     # Real tool loop: scripted Read/Grep turns actually ran (Req 5.3 inverse).
     assert provider.complete_calls > 1
     assert "engine.py" in provider.read_paths

@@ -3,10 +3,9 @@ id: startup:cli.py
 title: How does this program start?
 subjects:
 - cli.py
-summary: 'The `dhx` program starts in `docuharnessx/cli.py`, whose `main()` is the
-  console-script entry point, and the startup path is: entry point → env loading →
-  argparse construction → argv normalization → dispatch to a subcommand handler (defaulting
-  to `run`).'
+summary: 'The `dhx` program starts in `docuharnessx/cli.py`, whose `main` is the console-script
+  entry point, and the startup path is: entry point → env loading → argparse construction
+  → argv normalization → dispatch to a subcommand handler (defaulting to `run`).'
 related: []
 abstraction: context
 ---
@@ -14,7 +13,7 @@ abstraction: context
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
-The `dhx` program starts in `docuharnessx/cli.py`, whose `main()` is the console-script entry point, and the startup path is: entry point → env loading → argparse construction → argv normalization → dispatch to a subcommand handler (defaulting to `run`).
+The `dhx` program starts in `docuharnessx/cli.py`, whose `main` is the console-script entry point, and the startup path is: entry point → env loading → argparse construction → argv normalization → dispatch to a subcommand handler (defaulting to `run`).
 
 </div>
 

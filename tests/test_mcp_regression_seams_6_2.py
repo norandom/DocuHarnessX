@@ -191,6 +191,7 @@ def test_allowed_writer_files_are_the_only_composition_changes() -> None:
         "docuharnessx/composition/explore_writer.py",
         "docuharnessx/composition/question_task.py",
         "docuharnessx/composition/blueprint_question.py",
+        "docuharnessx/composition/density.py",
         "docuharnessx/composition/__init__.py",
     }, f"unexpected composition changes: {sorted(composition_changes)}"
 

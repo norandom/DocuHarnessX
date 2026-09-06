@@ -5,8 +5,8 @@ subjects:
 - mcp
 summary: '`docuharnessx.mcp` is a **Model Context Protocol (MCP) server package that
   lets a human conversationally refine already-generated documentation**. It is described
-  in its own docstring as "the stdio MCP refine server" (`docuharnessx/mcp/__init__.py:1`)
-  and is the single public namespace for that interactive document-refinement service.'
+  in its own docstring as "the stdio MCP refine server" and is the single public namespace
+  for that interactive'
 related: []
 abstraction: component
 ---
@@ -14,7 +14,7 @@ abstraction: component
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
-`docuharnessx.mcp` is a **Model Context Protocol (<a class="dhx-term" href="glossary.md#mcp">MCP</a>) server package that lets a human conversationally refine already-generated documentation**. It is described in its own docstring as "the stdio <a class="dhx-term" href="glossary.md#mcp">MCP</a> refine server" (`docuharnessx/mcp/__init__.py:1`) and is the single public namespace for that interactive document-refinement service.
+`docuharnessx.mcp` is a **Model Context Protocol (<a class="dhx-term" href="glossary.md#mcp">MCP</a>) server package that lets a human conversationally refine already-generated documentation**. It is described in its own docstring as "the stdio <a class="dhx-term" href="glossary.md#mcp">MCP</a> refine server" and is the single public namespace for that interactive
 
 </div>
 

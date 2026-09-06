@@ -82,6 +82,12 @@ def test_namespace_reexports_question_blueprint_identity_equal() -> None:
     assert pkg.build_question_blueprint is module.build_question_blueprint
 
 
+def test_namespace_reexports_trim_summary_identity_equal() -> None:
+    pkg = importlib.import_module("docuharnessx.composition")
+    density = importlib.import_module("docuharnessx.composition.density")
+    assert pkg.trim_summary is density.trim_summary
+
+
 def test_all_lists_every_public_name_and_is_importable() -> None:
     pkg = importlib.import_module("docuharnessx.composition")
     expected = {
@@ -120,6 +126,7 @@ def test_all_lists_every_public_name_and_is_importable() -> None:
         "DensityBudget",
         "QuestionBlueprint",
         "build_question_blueprint",
+        "trim_summary",
     }
     assert set(pkg.__all__) == expected
     # __all__ is self-consistent: every advertised name is actually importable.

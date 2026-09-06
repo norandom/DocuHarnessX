@@ -14,6 +14,7 @@ import logging
 import os
 from typing import Any
 
+from docuharnessx.composition.density import trim_summary
 from docuharnessx.composition.harness_factory import build_writer_harness
 from docuharnessx.composition.question_task import build_question_task
 from docuharnessx.composition.substance_gate import (
@@ -121,14 +122,16 @@ def _write_one(
             question_id=question.id, reason=OmissionReason.GATE_REJECTED
         )
 
-    return Page(
-        id=question.id,
-        title=question.title,
-        summary=_summary(body),
-        body=body,
-        subjects=(question.subject_name,),
-        related=(),
-        cited_files=_existing_cited_files(body, repo_path),
+    return trim_summary(
+        Page(
+            id=question.id,
+            title=question.title,
+            summary=_summary(body),
+            body=body,
+            subjects=(question.subject_name,),
+            related=(),
+            cited_files=_existing_cited_files(body, repo_path),
+        )
     )
 
 

@@ -222,10 +222,16 @@ def render_question_page(
     immediately under the H1, before the prose. The page ends with a single
     trailing newline.
     """
-    parts: list[str] = [_question_frontmatter(page, identity), f"# {page.title}\n"]
-    summary = page.summary.strip()
+    from docuharnessx.composition.density import trim_page
+
+    trimmed = trim_page(page)
+    display = trimmed.page
+    parts: list[str] = [_question_frontmatter(display, identity), f"# {page.title}\n"]
+    summary = display.summary.strip()
     if summary:
         parts.append("\n" + wrap_layer(1, summary))
+    elif trimmed.note:
+        parts.append(f"\n<!-- dhx-density: {trimmed.note} -->\n")
     if include_diagrams:
         from docuharnessx.comprehension.graphs import render_page_extras
 

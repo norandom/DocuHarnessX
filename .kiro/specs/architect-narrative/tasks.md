@@ -27,9 +27,9 @@ later.
 
 ## 4. Density grain
 
-- [ ] 4.1 `trim_summary(page)`: ≤2 sentences, ≤280 chars, strip `path:line`. Apply at assemble for depth 1 even when the living page is older. _Boundary:_ composition or assembler. _Depends:_ none.
-- [ ] 4.2 Depth-1 assembled layer is the trimmed summary (plus context picture on the system page), not the body. _Boundary:_ assembler/pages.py. _Depends:_ 4.1, 2.2.
-- [ ] 4.3 Substance gate unchanged. Tests: long cited summary trims; empty-after-trim keeps body and records a note. _Depends:_ 4.1.
+- [x] 4.1 `trim_summary(page)`: ≤2 sentences, ≤280 chars, strip `path:line`. Apply at assemble for depth 1 even when the living page is older. _Boundary:_ composition or assembler. _Depends:_ none.
+- [x] 4.2 Depth-1 assembled layer is the trimmed summary (plus context picture on the system page), not the body. _Boundary:_ assembler/pages.py. _Depends:_ 4.1, 2.2.
+- [x] 4.3 Substance gate unchanged. Tests: long cited summary trims; empty-after-trim keeps body and records a note. _Depends:_ 4.1.
 
 ## 5. Requirements trace
 

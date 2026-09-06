@@ -6,13 +6,7 @@ subjects:
 summary: '`docuharnessx.assembler` is DocuHarnessX''s **MkDocs site-assembly core**
   — the "pure, model-free" stage that turns quality-gated content into a publishable
   **Material for MkDocs** source tree. Its own docstring names it the deterministic,
-  harness-free core behind the thin `AssembleStage` adapter: it consumes the accepted
-  ontology `Segment` set from the frozen `ReviewReport`, the loaded project `Vocabulary`,
-  and an optional `RepoAnalysis`, then "emits a Material for MkDocs source tree under
-  the run''s output directory: one `docs/*.md` page per accepted segment, per-role
-  landing pages with COBESY-structured intent-ordered agendas, a tags index, and a
-  `mkdocs.yml`" (`docuharnessx/assembler/__init__.py:1-13`). Everything downstream
-  imports from this one public namespace rather than the submodules (`docuharnessx/assembler/__init__.py:15-18`).'
+  harness-free core behind the thin'
 related: []
 abstraction: component
 ---
@@ -20,7 +14,7 @@ abstraction: component
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
-`docuharnessx.assembler` is <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>'s **MkDocs site-assembly core** — the "pure, model-free" stage that turns quality-gated content into a publishable **Material for MkDocs** source tree. Its own docstring names it the deterministic, harness-free core behind the thin `AssembleStage` adapter: it consumes the accepted <a class="dhx-term" href="glossary.md#ontology">ontology</a> `Segment` set from the frozen `ReviewReport`, the loaded project `Vocabulary`, and an optional `RepoAnalysis`, then "emits a Material for MkDocs source tree under the <a class="dhx-term" href="glossary.md#run">run</a>'s output directory: one `docs/*.md` page per accepted segment, per-role landing <a class="dhx-term" href="glossary.md#pages">pages</a> with COBESY-structured intent-ordered agendas, a tags index, and a `mkdocs.yml`" (`docuharnessx/assembler/__init__.py:1-13`). Everything downstream imports from this one public namespace rather than the submodules (`docuharnessx/assembler/__init__.py:15-18`).
+`docuharnessx.assembler` is <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>'s **MkDocs site-assembly core** — the "pure, model-free" stage that turns quality-gated content into a publishable **Material for MkDocs** source tree. Its own docstring names it the deterministic, harness-free core behind the thin
 
 </div>
 

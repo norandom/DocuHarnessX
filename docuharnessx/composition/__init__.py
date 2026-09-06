@@ -77,6 +77,7 @@ from docuharnessx.composition.blueprint_question import (
     QuestionBlueprint,
     build_question_blueprint,
 )
+from docuharnessx.composition.density import trim_summary
 from docuharnessx.composition.budgets import (
     MIN_CITED_FILES,
     WRITER_LOOP_THRESHOLD,
@@ -144,4 +145,5 @@ __all__ = [
     "DensityBudget",
     "QuestionBlueprint",
     "build_question_blueprint",
+    "trim_summary",
 ]

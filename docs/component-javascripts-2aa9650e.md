@@ -6,7 +6,7 @@ subjects:
 summary: 'In this repository, `javascripts` is the single client-side script folder
   of the generated MkDocs site: it contains exactly one file, `docs/javascripts/depth.js`,
   which powers an **engineering-depth slider** that progressively discloses each documentation
-  page by reader expertise.'
+  page by reader'
 related: []
 abstraction: component
 ---
@@ -14,7 +14,7 @@ abstraction: component
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
-In this repository, `javascripts` is the single client-side script folder of the generated MkDocs site: it contains exactly one file, `docs/javascripts/depth.js`, which powers an **engineering-depth slider** that progressively discloses each documentation page by reader expertise.
+In this repository, `javascripts` is the single client-side script folder of the generated MkDocs site: it contains exactly one file, `docs/javascripts/depth.js`, which powers an **engineering-depth slider** that progressively discloses each documentation page by reader
 
 </div>
 

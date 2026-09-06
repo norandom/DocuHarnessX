@@ -3,17 +3,10 @@ id: component:comprehension
 title: What does comprehension do?
 subjects:
 - comprehension
-summary: 'In DocuHarnessX, `comprehension` is the `docuharnessx.comprehension` package
-  — its own docstring is "Depth-assigned visuals, glossary, and compliance self-assessment."
-  (`docuharnessx/comprehension/__init__.py:1`). It turns a parsed `RepoAnalysis` plus
-  the raw repo path into the *extra* material that makes an assembled docs site explain
-  itself: derived pipeline/lineage signals, a project glossary with autolinked terms,
-  a compliance self-assessment matrix, and the Mermaid/Markdown visuals that get injected
-  into pages. The consumer that ties it together is `question_site.py`, which calls
-  `detect_comprehension` when no signals were passed in (`docuharnessx/assembler/question_site.py:96`),
-  writes a `glossary.md` and a `compliance.md`, and pushes every page through the
-  autolinker (`docuharnessx/assembler/question_site.py:115`, `docuharnessx/assembler/question_site.py:130`,
-  `docuharnessx/assembler/question_site.py:134`).'
+summary: In DocuHarnessX, `comprehension` is the `docuharnessx.comprehension` package
+  — its own docstring is "Depth-assigned visuals, glossary, and compliance self-assessment.".
+  It turns a parsed `RepoAnalysis` plus the raw repo path into the *extra* material
+  that makes an assembled
 related: []
 abstraction: component
 ---
@@ -21,7 +14,7 @@ abstraction: component
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
-In <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>, `comprehension` is the `docuharnessx.comprehension` package — its own docstring is "Depth-assigned visuals, glossary, and compliance self-assessment." (`docuharnessx/comprehension/__init__.py:1`). It turns a parsed `RepoAnalysis` plus the raw repo path into the *extra* material that makes an assembled docs site explain itself: derived <a class="dhx-term" href="glossary.md#pipeline">pipeline</a>/lineage signals, a project glossary with autolinked terms, a compliance self-assessment matrix, and the Mermaid/Markdown visuals that get injected into <a class="dhx-term" href="glossary.md#pages">pages</a>. The consumer that ties it together is `question_site.py`, which calls `detect_comprehension` when no signals were passed in (`docuharnessx/assembler/question_site.py:96`), writes a `glossary.md` and a `compliance.md`, and pushes every page through the autolinker (`docuharnessx/assembler/question_site.py:115`, `docuharnessx/assembler/question_site.py:130`, `docuharnessx/assembler/question_site.py:134`).
+In <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>, `comprehension` is the `docuharnessx.comprehension` package — its own docstring is "Depth-assigned visuals, glossary, and compliance self-assessment.". It turns a parsed `RepoAnalysis` plus the raw repo path into the *extra* material that makes an assembled
 
 </div>
 

@@ -6,11 +6,7 @@ subjects:
 summary: '`docuharnessx/composition` is the documentation **writing core** of DocuHarnessX.
   Its package docstring calls it "the pure, model-free COBESY composition core": it
   turns each `PlannedSegment` of the frozen `CoveragePlan` into a COBESY-structured
-  composition blueprint *before* any prose, and then renders an ontology `Segment`
-  (`docuharnessx/composition/__init__.py:1-9`). The key architectural claim, repeated
-  throughout the modules, is that **all structural work is deterministic and model-free**;
-  only one gated prose step touches a model. `WriteStage` in `docuharnessx/stages/write.py`
-  is described as a "thin HarnessX adapter" over this core (`docuharnessx/stages/write.py:6-9`).'
+  composition blueprint *before*'
 related: []
 abstraction: component
 ---
@@ -18,7 +14,7 @@ abstraction: component
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
-`docuharnessx/composition` is the documentation **writing core** of <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>. Its package docstring calls it "the pure, model-free COBESY <a class="dhx-term" href="glossary.md#composition">composition</a> core": it turns each `PlannedSegment` of the frozen `CoveragePlan` into a COBESY-structured <a class="dhx-term" href="glossary.md#composition">composition</a> blueprint *before* any prose, and then renders an <a class="dhx-term" href="glossary.md#ontology">ontology</a> `Segment` (`docuharnessx/composition/__init__.py:1-9`). The key architectural claim, repeated throughout the modules, is that **all structural work is deterministic and model-free**; only one gated prose step touches a model. `WriteStage` in `docuharnessx/stages/write.py` is described as a "thin HarnessX adapter" over this core (`docuharnessx/stages/write.py:6-9`).
+`docuharnessx/composition` is the documentation **writing core** of <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>. Its package docstring calls it "the pure, model-free COBESY <a class="dhx-term" href="glossary.md#composition">composition</a> core": it turns each `PlannedSegment` of the frozen `CoveragePlan` into a COBESY-structured <a class="dhx-term" href="glossary.md#composition">composition</a> blueprint *before*
 
 </div>
 
@@ -99,8 +95,8 @@ flowchart TB
   n2["__init__.py"]
   n3["agent.py"]
   n4["blueprint.py"]
-  n5["budgets.py"]
-  n6["explore_writer.py"]
+  n5["blueprint_question.py"]
+  n6["budgets.py"]
   n7["write.py"]
   n8["model.py"]
   n9["prompt.py"]

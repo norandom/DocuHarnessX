@@ -4,10 +4,9 @@ title: How is this project built and verified?
 subjects:
 - pyproject.toml
 summary: 'The build is declared entirely in the root `pyproject.toml`. The package
-  is built with **hatchling** rather than setuptools: `pyproject.toml:35-37` sets
-  `requires = ["hatchling"]` and `build-backend = "hatchling.build"`, and `pyproject.toml:43-44`
-  restricts the wheel to `packages = ["docuharnessx"]`. It requires Python `>=3.12`
-  (`pyproject.toml:5`).'
+  is built with **hatchling** rather than setuptools: -37` sets `requires = ["hatchling"]`
+  and `build-backend = "hatchling.build"`, and -44` restricts the wheel to `packages
+  = ["docuharnessx"]`.'
 related: []
 abstraction: container
 ---
@@ -15,7 +14,7 @@ abstraction: container
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
-The build is declared entirely in the root `pyproject.toml`. The package is built with **hatchling** rather than setuptools: `pyproject.toml:35-37` sets `requires = ["hatchling"]` and `build-backend = "hatchling.build"`, and `pyproject.toml:43-44` restricts the wheel to `packages = ["docuharnessx"]`. It requires Python `>=3.12` (`pyproject.toml:5`).
+The build is declared entirely in the root `pyproject.toml`. The package is built with **hatchling** rather than setuptools: -37` sets `requires = ["hatchling"]` and `build-backend = "hatchling.build"`, and -44` restricts the wheel to `packages = ["docuharnessx"]`.
 
 </div>
 

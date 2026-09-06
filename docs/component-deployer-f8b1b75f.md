@@ -6,10 +6,7 @@ subjects:
 summary: '`docuharnessx/deployer` is the **pure, model-free MkDocs deploy core** behind
   the pipeline''s Deploy stage (the "finale" of DocuHarnessX''s Ingest → … → Assemble
   → Deploy run). Its own docstring calls it "the deterministic, harness-free deploy
-  core behind the thin `DeployStage` adapter" (`docuharnessx/deployer/__init__.py:1`),
-  and the adapter describes it as the place where all the real work — mode resolution,
-  workflow rendering, target-tree writing, build validation, and the isolated `gh-deploy`
-  push — lives (`docuharnessx/stages/deploy.py:5`).'
+  core behind the thin `DeployStage`'
 related: []
 abstraction: component
 ---
@@ -17,7 +14,7 @@ abstraction: component
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
-`docuharnessx/deployer` is the **pure, model-free MkDocs deploy core** behind the <a class="dhx-term" href="glossary.md#pipeline">pipeline</a>'s Deploy stage (the "finale" of <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>'s Ingest → … → Assemble → Deploy <a class="dhx-term" href="glossary.md#run">run</a>). Its own docstring calls it "the deterministic, harness-free deploy core behind the thin `DeployStage` adapter" (`docuharnessx/deployer/__init__.py:1`), and the adapter describes it as the place where all the real work — mode resolution, workflow rendering, target-tree writing, build validation, and the isolated `gh-deploy` push — lives (`docuharnessx/stages/deploy.py:5`).
+`docuharnessx/deployer` is the **pure, model-free MkDocs deploy core** behind the <a class="dhx-term" href="glossary.md#pipeline">pipeline</a>'s Deploy stage (the "finale" of <a class="dhx-term" href="glossary.md#docuharnessx">DocuHarnessX</a>'s Ingest → … → Assemble → Deploy <a class="dhx-term" href="glossary.md#run">run</a>). Its own docstring calls it "the deterministic, harness-free deploy core behind the thin `DeployStage`
 
 </div>
 
