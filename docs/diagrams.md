@@ -5,7 +5,7 @@ Every picture this site assembled, in one catalog. Each also lives on the linked
 ## Contents
 
 - [System context](#system-context)
-- [Containers](#containers)
+- [Layered architecture](#layered-architecture)
 - [Typical run](#typical-run)
 - [Start-here path](#start-here-path)
 - [Coverage](#coverage)
@@ -77,41 +77,42 @@ flowchart TB
   classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
 ```
 
-<h3 id="containers">Containers</h3>
+## Architecture
 
-On [What does docuharnessx do?](component-docuharnessx-3986831c.md) at depth 2.
+<h3 id="layered-architecture">Layered architecture</h3>
+
+On [What does docuharnessx do?](component-docuharnessx-3986831c.md) at depth 2. Detected from entrypoint:CLI, analysis:domain, assembler:application, composition:application, comprehension:domain, deployer:application, mcp:interface, ontology:domain.
 
 ```mermaid
 flowchart TB
-  subgraph sys["DocuHarnessX"]
-    cli["CLI"]
-    c0["docuharnessx"]
-    c1["analysis"]
-    c2["assembler"]
-    c3["composition"]
-    c4["comprehension"]
-    c5["deployer"]
-    c6["mcp"]
-    c7["ontology"]
+  subgraph b0["Interface"]
+    b0m0["CLI"]
+    b0m1["mcp"]
   end
-  actor(["Operator"])
-  actor -->|"runs CLI"| cli
-  class actor actor
-  cli -->|uses| c0
-  cli -->|uses| c1
-  cli -->|uses| c2
-  cli -->|uses| c3
-  cli -->|uses| c4
-  cli -->|uses| c5
-  cli -->|uses| c6
-  cli -->|uses| c7
-  class cli,c0,c1,c2,c3,c4,c5,c6,c7 container
+  subgraph b1["Application"]
+    b1m0["assembler"]
+    b1m1["composition"]
+    b1m2["deployer"]
+    b1m3["pipeline"]
+    b1m4["planning"]
+    b1m5["review"]
+  end
+  subgraph b2["Domain"]
+    b2m0["analysis"]
+    b2m1["comprehension"]
+    b2m2["ontology"]
+  end
+  b0 -->|"depends on"| b1
+  b1 -->|"depends on"| b2
+  class b0m0,b0m1,b1m0,b1m1,b1m2,b1m3,b1m4,b1m5,b2m0,b2m1,b2m2 container
   classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
   classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
   classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
   classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
   classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
 ```
+
+## System
 
 <h3 id="typical-run">Typical run</h3>
 
@@ -948,13 +949,14 @@ flowchart TB
   n0["What does comprehension do?"]
   n1["comprehension"]
   n2["__init__.py"]
-  n3["autolink.py"]
-  n4["compliance.py"]
-  n5["detect.py"]
-  n6["glossary.py"]
+  n3["architecture.py"]
+  n4["autolink.py"]
+  n5["compliance.py"]
+  n6["detect.py"]
   n7["question_site.py"]
   n8["signals.py"]
-  n9["graphs.py"]
+  n9["glossary.py"]
+  n10["graphs.py"]
   n0 --> n1
   n1 --> n2
   n1 --> n3
@@ -963,12 +965,12 @@ flowchart TB
   n1 --> n6
   n0 --> n2
   n0 --> n7
-  n0 --> n5
-  n0 --> n8
   n0 --> n6
-  n0 --> n3
-  n0 --> n4
+  n0 --> n8
   n0 --> n9
+  n0 --> n4
+  n0 --> n5
+  n0 --> n10
 ```
 
 <h3 id="what-does-comprehension-do-files-by-directory">What does comprehension do? · Files by directory</h3>

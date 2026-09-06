@@ -6,7 +6,7 @@ This matrix is a **self-assessment reference**, not a certification or auditor o
 
 | Pillar | iso27001 | nis2 | cra | gdpr |
 |---|---|---|---|---|
-| Asset & data inventory | <span class="dhx-fail">red</span> | <span class="dhx-fail">red</span> | <span class="dhx-fail">red</span> | <span class="dhx-fail">red</span> |
+| Asset & data inventory | <span class="dhx-partial">yellow</span> | <span class="dhx-partial">yellow</span> | <span class="dhx-partial">yellow</span> | <span class="dhx-partial">yellow</span> |
 | Access control | <span class="dhx-fail">red</span> | <span class="dhx-fail">red</span> | <span class="dhx-na">n/a</span> | <span class="dhx-fail">red</span> |
 | Cryptography | <span class="dhx-fail">red</span> | <span class="dhx-na">n/a</span> | <span class="dhx-na">n/a</span> | <span class="dhx-fail">red</span> |
 | Logging & monitoring | <span class="dhx-pass">green</span> | <span class="dhx-na">n/a</span> | <span class="dhx-na">n/a</span> | <span class="dhx-pass">green</span> |
@@ -26,6 +26,10 @@ This matrix is a **self-assessment reference**, not a certification or auditor o
 
 ## Evidence
 
+- **iso27001 / Asset & data inventory** partial: `tests/test_architecture.py`
+- **nis2 / Asset & data inventory** partial: `tests/test_architecture.py`
+- **cra / Asset & data inventory** partial: `tests/test_architecture.py`
+- **gdpr / Asset & data inventory** partial: `tests/test_architecture.py`
 - **iso27001 / Logging & monitoring** pass: `docuharnessx/ontology/schema.py`, `tests/ontology/test_errors.py`, `tests/ontology/test_hardening.py`, `tests/ontology/test_model.py`, `tests/ontology/test_normalize_prefix.py`, `tests/ontology/test_package_import.py`
 - **gdpr / Logging & monitoring** pass: `docuharnessx/ontology/schema.py`, `tests/ontology/test_errors.py`, `tests/ontology/test_hardening.py`, `tests/ontology/test_model.py`, `tests/ontology/test_normalize_prefix.py`, `tests/ontology/test_package_import.py`
 - **iso27001 / Secure development** pass: `.github/workflows/adopt.yml`, `.github/workflows/dhx.yml`, `.github/workflows/docs.yml`, `tests/fixtures/agentic_repo/README.md`, `tests`, `tests/ontology/test_errors.py`

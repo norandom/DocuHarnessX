@@ -99,13 +99,14 @@ flowchart TB
   n0["What does comprehension do?"]
   n1["comprehension"]
   n2["__init__.py"]
-  n3["autolink.py"]
-  n4["compliance.py"]
-  n5["detect.py"]
-  n6["glossary.py"]
+  n3["architecture.py"]
+  n4["autolink.py"]
+  n5["compliance.py"]
+  n6["detect.py"]
   n7["question_site.py"]
   n8["signals.py"]
-  n9["graphs.py"]
+  n9["glossary.py"]
+  n10["graphs.py"]
   n0 --> n1
   n1 --> n2
   n1 --> n3
@@ -114,12 +115,12 @@ flowchart TB
   n1 --> n6
   n0 --> n2
   n0 --> n7
-  n0 --> n5
-  n0 --> n8
   n0 --> n6
-  n0 --> n3
-  n0 --> n4
+  n0 --> n8
   n0 --> n9
+  n0 --> n4
+  n0 --> n5
+  n0 --> n10
 ```
 
 ```mermaid

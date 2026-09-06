@@ -7,6 +7,7 @@ import re
 import yaml
 
 from docuharnessx.analysis.model import RepoAnalysis
+from docuharnessx.comprehension.architecture import detect_architectures
 from docuharnessx.comprehension.signals import (
     ComprehensionSignals,
     DagNode,
@@ -328,4 +329,5 @@ def detect_comprehension(
         lineage=_lineage(analysis),
         project_kinds=_project_kinds(analysis),
         requirement_sentences=_requirements(repo_path, analysis),
+        architectures=detect_architectures(analysis, repo_path),
     )

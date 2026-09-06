@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 __all__ = [
+    "ArchitectureBand",
+    "ArchitectureStyle",
     "ComprehensionSignals",
     "CoverageCounts",
     "DagNode",
@@ -51,8 +53,28 @@ class CoverageCounts:
 
 
 @dataclass(frozen=True)
+class ArchitectureBand:
+    """One band in a detected architecture (a layer, a service, a side)."""
+
+    id: str
+    label: str
+    members: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class ArchitectureStyle:
+    """A grounded architecture shape, or omitted when evidence is thin."""
+
+    id: str
+    label: str
+    bands: tuple[ArchitectureBand, ...] = ()
+    evidence: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class ComprehensionSignals:
     pipelines: tuple[PipelineDag, ...] = ()
     lineage: tuple[LineageHop, ...] = ()
     project_kinds: tuple[str, ...] = ()
     requirement_sentences: tuple[RequirementHit, ...] = ()
+    architectures: tuple[ArchitectureStyle, ...] = ()

@@ -15,6 +15,7 @@ from docuharnessx.comprehension.compliance import (
 )
 from docuharnessx.comprehension.glossary import Glossary
 from docuharnessx.comprehension.signals import (
+    ArchitectureStyle,
     ComprehensionSignals,
     CoverageCounts,
     PipelineDag,
@@ -51,6 +52,7 @@ class DiagramFigure:
     source_href: str
     min_depth: int
     mermaid: str
+    note: str = ""
 
 
 def _wrap(min_depth: int, markdown: str) -> str:
@@ -235,6 +237,73 @@ def render_c4_context(
     if ext_ids:
         lines.append("  class " + ",".join(ext_ids) + " external")
     return _fence_flow("TB", lines, styled=True)
+
+
+_ARCH_EDGES = {
+    "layered": ("depends on", "TB"),
+    "hexagonal": ("implements", "TB"),
+    "client_server": ("calls", "LR"),
+    "services": ("", "LR"),
+    "pipeline": ("feeds", "LR"),
+}
+_STRUCTURAL_IDS = frozenset(
+    {"layered", "services", "hexagonal", "client_server", "pipeline"}
+)
+
+
+def render_architecture(style: ArchitectureStyle) -> str:
+    """Organizational view for one detected architecture style."""
+    if len(style.bands) < 2:
+        return ""
+    verb, direction = _ARCH_EDGES.get(style.id, ("", "TB"))
+    lines: list[str] = []
+    member_ids: list[str] = []
+    for index, band in enumerate(style.bands):
+        bid = f"b{index}"
+        lines.append(f'  subgraph {bid}["{_label(band.label, 28)}"]')
+        if len(band.members) > 1 and direction == "LR" and style.id != "services":
+            lines.append("    direction LR")
+        if not band.members:
+            lines.append(f'    {bid}empty["{_label(band.label, 20)}"]')
+            member_ids.append(f"{bid}empty")
+        for offset, member in enumerate(band.members[:8]):
+            nid = f"{bid}m{offset}"
+            lines.append(f'    {nid}["{_label(member, 24)}"]')
+            member_ids.append(nid)
+        lines.append("  end")
+    if style.id == "services":
+        lines.append('  actor(["Consumer"])')
+        for index, _band in enumerate(style.bands):
+            lines.append(f'  actor --> b{index}m0')
+        if len(style.bands) > 1:
+            lines.append("  b0m0 -.-> b1m0")
+        lines.append("  class actor actor")
+    elif style.id == "hexagonal" and len(style.bands) >= 2:
+        # Ports/adapters sit around domain: connect neighbors toward domain.
+        domain_index = next(
+            (i for i, band in enumerate(style.bands) if band.id == "domain"),
+            1,
+        )
+        for index, _band in enumerate(style.bands):
+            if index == domain_index:
+                continue
+            if verb:
+                lines.append(
+                    f'  b{index} -->|"{verb}"| b{domain_index}'
+                )
+            else:
+                lines.append(f"  b{index} --> b{domain_index}")
+    else:
+        for index in range(len(style.bands) - 1):
+            if verb:
+                lines.append(
+                    f'  b{index} -->|"{_label(verb, 16)}"| b{index + 1}'
+                )
+            else:
+                lines.append(f"  b{index} --> b{index + 1}")
+    if member_ids:
+        lines.append("  class " + ",".join(member_ids) + " container")
+    return _fence_flow(direction, lines, styled=True)
 
 
 def render_c4_container(
@@ -557,9 +626,20 @@ def render_page_extras(
             mind = render_mindmap(analysis)
             if mind:
                 blocks.append((1, mind))
-        container = render_c4_container(analysis, identity, signals)
-        if container:
-            blocks.append((2, container))
+        styles = [
+            item
+            for item in (signals.architectures if signals is not None else ())
+            if item.id in _STRUCTURAL_IDS
+        ]
+        if styles:
+            for style in styles:
+                picture = render_architecture(style)
+                if picture:
+                    blocks.append((2, picture))
+        else:
+            container = render_c4_container(analysis, identity, signals)
+            if container:
+                blocks.append((2, container))
     if analysis is not None and page.id.startswith("startup:"):
         seq = render_sequence(analysis, identity)
         if seq:
@@ -607,9 +687,20 @@ def render_home_extras(
     pie = render_coverage_pie(counts)
     if pie:
         blocks.append((2, pie))
-    container = render_c4_container(analysis, identity, signals)
-    if container:
-        blocks.append((2, container))
+    styles = [
+        item
+        for item in (signals.architectures if signals is not None else ())
+        if item.id in _STRUCTURAL_IDS
+    ]
+    if styles:
+        for style in styles:
+            picture = render_architecture(style)
+            if picture:
+                blocks.append((2, picture))
+    else:
+        container = render_c4_container(analysis, identity, signals)
+        if container:
+            blocks.append((2, container))
     context = render_c4_context(analysis, identity)
     if context:
         blocks.append((5, context))
@@ -664,6 +755,7 @@ def collect_diagram_figures(
         source_href: str,
         min_depth: int,
         mermaid: str,
+        note: str = "",
     ) -> None:
         body = mermaid.strip()
         if not body or body in seen_bodies:
@@ -678,6 +770,7 @@ def collect_diagram_figures(
                 source_href=source_href,
                 min_depth=min_depth,
                 mermaid=body + "\n",
+                note=note,
             )
         )
 
@@ -695,16 +788,24 @@ def collect_diagram_figures(
             )
         else:
             add("System context", "System", "Home", HOME_PAGE_PATH, 5, context)
-    container = render_c4_container(analysis, identity, signals)
-    if container:
-        add(
-            "Containers",
-            "System",
-            primary.title if primary is not None else "Home",
-            page_filename(primary.id) if primary is not None else HOME_PAGE_PATH,
-            2,
-            container,
-        )
+    live = signals or ComprehensionSignals()
+    href = (
+        page_filename(primary.id) if primary is not None else HOME_PAGE_PATH
+    )
+    src_title = primary.title if primary is not None else "Home"
+    styles = [item for item in live.architectures if item.id in _STRUCTURAL_IDS]
+    if styles:
+        for style in styles:
+            picture = render_architecture(style)
+            if picture:
+                note = ""
+                if style.evidence:
+                    note = "Detected from " + ", ".join(style.evidence[:8])
+                add(style.label, "Architecture", src_title, href, 2, picture, note)
+    else:
+        container = render_c4_container(analysis, identity, signals)
+        if container:
+            add("Containers", "System", src_title, href, 2, container)
     sequence = render_sequence(analysis, identity)
     if sequence:
         startup = next((page for page in pages if page.id.startswith("startup:")), None)
@@ -730,7 +831,6 @@ def collect_diagram_figures(
     if home_map:
         add("Question map", "Reading path", "Home", HOME_PAGE_PATH, 5, home_map)
 
-    live = signals or ComprehensionSignals()
     lineage = render_sankey(live)
     if lineage:
         add("Lineage", "Lineage", "Home", HOME_PAGE_PATH, 5, lineage)
@@ -804,10 +904,13 @@ def render_diagrams_index(
                 lines.append("")
             lines.append(f'<h3 id="{figure.slug}">{figure.heading}</h3>')
             lines.append("")
-            lines.append(
+            location = (
                 f"On [{figure.source_title}]({figure.source_href}) "
                 f"at depth {figure.min_depth}."
             )
+            if figure.note:
+                location = location + " " + figure.note + "."
+            lines.append(location)
             lines.append("")
             lines.append(figure.mermaid.rstrip("\n"))
             lines.append("")
