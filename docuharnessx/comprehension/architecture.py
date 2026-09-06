@@ -1,6 +1,7 @@
-"""Detect organizational architecture from names, paths, and compose files.
+"""Detect organizational architecture and build one fail-closed model.
 
-Fail-closed: a style is emitted only when enough bands have members. No model.
+A style is emitted only when enough bands have members. Views read the
+frozen :class:`ArchitectureModel`; they do not invent extra nodes.
 """
 
 from __future__ import annotations
@@ -10,10 +11,34 @@ from collections.abc import Sequence
 
 import yaml
 
-from docuharnessx.analysis.model import Component, RepoAnalysis
-from docuharnessx.comprehension.signals import ArchitectureBand, ArchitectureStyle
+from typing import TYPE_CHECKING
 
-__all__ = ["detect_architectures"]
+from docuharnessx.analysis.model import Component, RepoAnalysis
+from docuharnessx.comprehension.signals import (
+    AbstractionLevel,
+    ArchitectureBand,
+    ArchitectureEdge,
+    ArchitectureModel,
+    ArchitectureNode,
+    ArchitectureStyle,
+)
+
+if TYPE_CHECKING:
+    from docuharnessx.assembler.model import SiteIdentity
+    from docuharnessx.pages.model import Page
+
+__all__ = [
+    "build_architecture_model",
+    "detect_architectures",
+    "page_abstraction",
+]
+
+_CI_LABELS = {
+    "github_actions": "GitHub Actions",
+    "gitlab_ci": "GitLab CI",
+    "circleci": "CircleCI",
+    "dagger": "Dagger",
+}
 
 _SKIP = frozenset({"javascripts", "stylesheets", "static", "assets", "css", "js"})
 
@@ -403,3 +428,246 @@ def detect_architectures(
         if candidate is not None:
             styles.append(candidate)
     return tuple(styles)
+
+
+def _alnum(value: str) -> str:
+    return "".join(ch for ch in value.lower() if ch.isalnum())
+
+
+def page_abstraction(
+    page: "Page",
+    identity: "SiteIdentity | None" = None,
+) -> AbstractionLevel:
+    """Zoom level for a question page: package at container, modules at component."""
+    kind = page.id.split(":", 1)[0]
+    if kind in {"startup", "public_surface"}:
+        return AbstractionLevel.CONTEXT
+    if kind in {"build", "tests"}:
+        return AbstractionLevel.CONTAINER
+    if kind == "component":
+        slug = page.id.split(":", 1)[1] if ":" in page.id else ""
+        keys: set[str] = set()
+        if identity is not None:
+            repo = (identity.repo_name or "").rsplit("/", 1)[-1]
+            if repo:
+                keys.add(_alnum(repo))
+            if identity.site_name:
+                keys.add(_alnum(identity.site_name))
+        tokens = [_alnum(slug), *(_alnum(item) for item in page.subjects)]
+        if keys and any(token in keys for token in tokens if token):
+            return AbstractionLevel.CONTAINER
+        return AbstractionLevel.COMPONENT
+    return AbstractionLevel.COMPONENT
+
+
+def _basename(path: str) -> str:
+    return path.replace("\\", "/").rstrip("/").rsplit("/", 1)[-1]
+
+
+def _container_id(member: str) -> str:
+    if member == "CLI":
+        return "container:CLI"
+    return f"container:{member}"
+
+
+def _cli_name(analysis: RepoAnalysis) -> str:
+    for entry in analysis.entrypoints:
+        if entry.name:
+            return entry.name
+    if any(e.kind in {"cli", "console_script", "main"} for e in analysis.entrypoints):
+        return "CLI"
+    if analysis.entrypoints:
+        return _basename(analysis.entrypoints[0].path) or "entrypoint"
+    return "CLI"
+
+
+def _system_name(
+    analysis: RepoAnalysis,
+    identity: "SiteIdentity | None",
+) -> str:
+    if identity is not None and identity.site_name:
+        return identity.site_name
+    if analysis.repo_path:
+        return _basename(analysis.repo_path) or "System"
+    return "System"
+
+
+def build_architecture_model(
+    analysis: RepoAnalysis | None,
+    identity: "SiteIdentity | None" = None,
+    styles: tuple[ArchitectureStyle, ...] = (),
+) -> ArchitectureModel | None:
+    """Build one fail-closed model. Views must not invent extra nodes."""
+    if analysis is None:
+        return None
+    if not (analysis.entrypoints or analysis.components):
+        return None
+    nodes: dict[str, ArchitectureNode] = {}
+    edges: list[ArchitectureEdge] = []
+
+    def add_node(node: ArchitectureNode) -> None:
+        if node.id not in nodes:
+            nodes[node.id] = node
+
+    def add_edge(source: str, target: str, verb: str, evidence: str) -> None:
+        if source not in nodes or target not in nodes or source == target:
+            return
+        pair = (source, target, verb)
+        if any((e.source, e.target, e.verb) == pair for e in edges):
+            return
+        edges.append(ArchitectureEdge(source, target, verb, evidence))
+
+    kinds = {entry.kind for entry in analysis.entrypoints}
+    actor = (
+        "Operator"
+        if kinds & {"cli", "console_script", "main", "script", "package_bin"}
+        else "User"
+    )
+    add_node(
+        ArchitectureNode(
+            id="actor:operator",
+            label=actor,
+            level=AbstractionLevel.CONTEXT,
+            kind="actor",
+        )
+    )
+    system_name = _system_name(analysis, identity)
+    add_node(
+        ArchitectureNode(
+            id="system",
+            label=system_name,
+            level=AbstractionLevel.CONTEXT,
+            kind="system",
+        )
+    )
+    cli = _cli_name(analysis) if analysis.entrypoints else ""
+    add_edge(
+        "actor:operator",
+        "system",
+        f"runs {cli}" if cli else "runs",
+        "entrypoint",
+    )
+
+    repo = ""
+    if identity is not None:
+        repo = identity.repo_name or identity.site_name
+    if not repo and analysis.repo_path:
+        repo = _basename(analysis.repo_path)
+    if repo:
+        add_node(
+            ArchitectureNode(
+                id="external:repo",
+                label=repo,
+                level=AbstractionLevel.CONTEXT,
+                kind="store",
+            )
+        )
+        add_edge("system", "external:repo", "reads and cites", "identity.repo")
+    if analysis.ci_workflows:
+        provider = analysis.ci_workflows[0].provider
+        add_node(
+            ArchitectureNode(
+                id="external:ci",
+                label=_CI_LABELS.get(provider, "CI"),
+                level=AbstractionLevel.CONTEXT,
+                kind="external",
+                path=analysis.ci_workflows[0].path,
+            )
+        )
+        add_edge("external:ci", "system", "runs in", "ci_workflows")
+    if analysis.docs.doc_dirs or analysis.docs.has_readme:
+        add_node(
+            ArchitectureNode(
+                id="external:docs",
+                label="Documentation site",
+                level=AbstractionLevel.CONTEXT,
+                kind="store",
+            )
+        )
+        add_edge("system", "external:docs", "publishes", "docs")
+
+    if analysis.entrypoints:
+        add_node(
+            ArchitectureNode(
+                id="container:CLI",
+                label="CLI",
+                level=AbstractionLevel.CONTAINER,
+                kind="container",
+                path=analysis.entrypoints[0].path,
+                band="interface",
+            )
+        )
+        add_edge("actor:operator", "container:CLI", f"runs {cli}", "entrypoint")
+
+    live_styles = styles or detect_architectures(analysis)
+    seen_members: set[str] = set()
+    if analysis.entrypoints:
+        seen_members.add("CLI")
+    for style in live_styles:
+        for band in style.bands:
+            for member in band.members:
+                if member in seen_members or member.casefold() in _SKIP:
+                    continue
+                seen_members.add(member)
+                add_node(
+                    ArchitectureNode(
+                        id=_container_id(member),
+                        label=member,
+                        level=AbstractionLevel.CONTAINER,
+                        kind="container",
+                        band=band.id,
+                    )
+                )
+        if style.id == "layered":
+            filled = [band for band in style.bands if band.members]
+            for left, right in zip(filled, filled[1:]):
+                add_edge(
+                    _container_id(left.members[0]),
+                    _container_id(right.members[0]),
+                    "depends on",
+                    f"layered:{left.id}->{right.id}",
+                )
+
+    leftover = [
+        item
+        for item in _real(analysis)
+        if item.name not in seen_members and item.name.casefold() not in _SKIP
+    ]
+    has_structural = any(
+        style.id in {"layered", "services", "hexagonal", "client_server"}
+        and style.bands
+        for style in live_styles
+    )
+    leftover_level = (
+        AbstractionLevel.COMPONENT if has_structural else AbstractionLevel.CONTAINER
+    )
+    leftover_kind = "component" if has_structural else "container"
+    leftover_prefix = "component:" if has_structural else "container:"
+    for index, item in enumerate(leftover[:8]):
+        nid = leftover_prefix + item.name
+        add_node(
+            ArchitectureNode(
+                id=nid,
+                label=item.name,
+                level=leftover_level,
+                kind=leftover_kind,
+                path=item.path,
+            )
+        )
+        if (
+            not has_structural
+            and index < 4
+            and "container:CLI" in nodes
+            and leftover_kind == "container"
+        ):
+            add_edge("container:CLI", nid, "uses", "entrypoint")
+
+    ordered = tuple(
+        sorted(nodes.values(), key=lambda node: (node.level, node.kind, node.id))
+    )
+    return ArchitectureModel(
+        system_name=system_name,
+        nodes=ordered,
+        edges=tuple(edges),
+        styles=live_styles,
+    )

@@ -7,7 +7,10 @@ import re
 import yaml
 
 from docuharnessx.analysis.model import RepoAnalysis
-from docuharnessx.comprehension.architecture import detect_architectures
+from docuharnessx.comprehension.architecture import (
+    build_architecture_model,
+    detect_architectures,
+)
 from docuharnessx.comprehension.signals import (
     ComprehensionSignals,
     DagNode,
@@ -324,10 +327,12 @@ def detect_comprehension(
     pipelines.extend(_named_files(repo_path, analysis))
     if not pipelines:
         pipelines.extend(_coarse(analysis))
+    styles = detect_architectures(analysis, repo_path)
     return ComprehensionSignals(
         pipelines=tuple(pipelines),
         lineage=_lineage(analysis),
         project_kinds=_project_kinds(analysis),
         requirement_sentences=_requirements(repo_path, analysis),
-        architectures=detect_architectures(analysis, repo_path),
+        architectures=styles,
+        model=build_architecture_model(analysis, styles=styles),
     )

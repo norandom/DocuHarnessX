@@ -15,6 +15,8 @@ from docuharnessx.comprehension.compliance import (
 )
 from docuharnessx.comprehension.glossary import Glossary
 from docuharnessx.comprehension.signals import (
+    AbstractionLevel,
+    ArchitectureModel,
     ArchitectureStyle,
     ComprehensionSignals,
     CoverageCounts,
@@ -29,11 +31,19 @@ __all__ = [
     "DIAGRAMS_PAGE_PATH",
     "DiagramFigure",
     "collect_diagram_figures",
+    "render_architecture",
     "render_compliance_page",
     "render_diagrams_index",
     "render_glossary_page",
     "render_home_extras",
     "render_page_extras",
+    "view_container",
+    "view_context",
+    "view_deployment",
+    "view_erd",
+    "view_sequence",
+    "view_style",
+    "view_use_case",
 ]
 
 DIAGRAMS_PAGE_PATH = "diagrams.md"
@@ -594,6 +604,230 @@ def render_question_map(
     return _fence_flow("TB", lines, styled=True)
 
 
+def _mid(node_id: str) -> str:
+    slug = re.sub(r"[^A-Za-z0-9]", "_", node_id)
+    if not slug or slug[0].isdigit():
+        slug = "n" + slug
+    return slug
+
+
+def _class_for_kind(kind: str) -> str:
+    return {
+        "actor": "person",
+        "system": "system",
+        "container": "container",
+        "component": "container",
+        "external": "external",
+        "store": "store",
+    }.get(kind, "container")
+
+
+def _node_line(node_id: str, label: str, kind: str) -> str:
+    mid = _mid(node_id)
+    text = _label(label)
+    if kind == "actor":
+        return f'  {mid}(["{text}"])'
+    if kind == "store":
+        return f'  {mid}[("{text}")]'
+    return f'  {mid}["{text}"]'
+
+
+def view_context(model: ArchitectureModel | None) -> str:
+    """Context view: people, this system, externals. Same node labels as other views."""
+    if model is None:
+        return ""
+    actors = [n for n in model.nodes if n.kind == "actor"]
+    systems = [n for n in model.nodes if n.kind == "system"]
+    externals = [
+        n for n in model.nodes if n.kind in {"external", "store"} and n.level == "context"
+    ]
+    if not (actors or systems):
+        return ""
+    allowed = {n.id for n in (*actors, *systems, *externals)}
+    lines: list[str] = []
+    if actors:
+        lines.append('  subgraph people["People"]')
+        lines.extend(_node_line(n.id, n.label, n.kind) for n in actors)
+        lines.append("  end")
+    if systems:
+        lines.append('  subgraph enterprise["This system"]')
+        lines.extend(_node_line(n.id, n.label, n.kind) for n in systems)
+        lines.append("  end")
+    if externals:
+        lines.append('  subgraph external["External"]')
+        lines.extend(_node_line(n.id, n.label, n.kind) for n in externals)
+        lines.append("  end")
+    for edge in model.edges:
+        if edge.source in allowed and edge.target in allowed:
+            lines.append(
+                f'  {_mid(edge.source)} -->|"{_label(edge.verb, 24)}"| {_mid(edge.target)}'
+            )
+    for node in (*actors, *systems, *externals):
+        lines.append(f"  class {_mid(node.id)} {_class_for_kind(node.kind)}")
+    return _fence_flow("TB", lines, styled=True)
+
+
+def view_container(model: ArchitectureModel | None) -> str:
+    """Container view from the model, clustered by architecture band when present."""
+    if model is None:
+        return ""
+    actors = [n for n in model.nodes if n.kind == "actor"]
+    containers = [
+        n
+        for n in model.nodes
+        if n.level == AbstractionLevel.CONTAINER or n.level == "container"
+    ]
+    if not containers:
+        return ""
+    allowed = {n.id for n in (*actors, *containers)}
+    lines: list[str] = []
+    for actor in actors:
+        lines.append(_node_line(actor.id, actor.label, actor.kind))
+    lines.append(f'  subgraph sys["{_label(model.system_name)}"]')
+    band_order: list[tuple[str, str]] = []
+    seen_bands: set[str] = set()
+    for style in model.styles:
+        for band in style.bands:
+            if band.id in seen_bands:
+                continue
+            seen_bands.add(band.id)
+            band_order.append((band.id, band.label))
+    used: set[str] = set()
+    for band_id, band_label in band_order:
+        members = [node for node in containers if node.band == band_id]
+        if not members:
+            continue
+        lines.append(
+            f'    subgraph {_mid("band:" + band_id)}["{_label(band_label, 28)}"]'
+        )
+        for node in members:
+            lines.append(_node_line(node.id, node.label, node.kind))
+            used.add(node.id)
+        lines.append("    end")
+    for node in containers:
+        if node.id in used:
+            continue
+        lines.append(_node_line(node.id, node.label, node.kind))
+    lines.append("  end")
+    for edge in model.edges:
+        if edge.source in allowed and edge.target in allowed:
+            lines.append(
+                f'  {_mid(edge.source)} -->|"{_label(edge.verb, 24)}"| {_mid(edge.target)}'
+            )
+    for node in (*actors, *containers):
+        lines.append(f"  class {_mid(node.id)} {_class_for_kind(node.kind)}")
+    return _fence_flow("TB", lines, styled=True)
+
+
+def view_style(model: ArchitectureModel | None, style_id: str) -> str:
+    if model is None:
+        return ""
+    style = next((item for item in model.styles if item.id == style_id), None)
+    if style is None:
+        return ""
+    return render_architecture(style)
+
+
+def view_sequence(model: ArchitectureModel | None) -> str:
+    """Typical run from model edges: actor → CLI → containers."""
+    if model is None:
+        return ""
+    actors = [n for n in model.nodes if n.kind == "actor"]
+    cli = next((n for n in model.nodes if n.id == "container:CLI"), None)
+    others = [
+        n
+        for n in model.nodes
+        if n.level == "container" and n.id != "container:CLI"
+    ][:4]
+    if not actors or cli is None:
+        return ""
+    actor = actors[0]
+    aid = _ident("a", actor.label)
+    cli_id = _mid(cli.id)
+    lines = [
+        "  autonumber",
+        f"  actor {aid}",
+        f"  participant {cli_id} as {_label(cli.label, 20)}",
+    ]
+    for node in others:
+        lines.append(f"  participant {_mid(node.id)} as {_label(node.label, 20)}")
+    lines.append(f"  {aid}->>{cli_id}: run")
+    for node in others:
+        lines.append(f"  {cli_id}->>{_mid(node.id)}: uses")
+    lines.append(f"  {cli_id}-->>{aid}: result")
+    return _fence("sequenceDiagram", lines)
+
+
+def view_use_case(analysis: RepoAnalysis | None) -> str:
+    if analysis is None:
+        return ""
+    goals = []
+    for symbol in analysis.public_surface:
+        if symbol.kind == "cli_subcommand" and symbol.name and symbol.name not in goals:
+            goals.append(symbol.name)
+        if len(goals) >= 8:
+            break
+    if not goals:
+        return ""
+    lines = ['  actor(["Operator"])']
+    for index, name in enumerate(goals):
+        lines.append(f'  u{index}(["{_label(name, 20)}"])')
+        lines.append(f"  actor --> u{index}")
+    lines.append("  class actor person")
+    return _fence_flow("LR", lines, styled=True)
+
+
+def view_erd(analysis: RepoAnalysis | None) -> str:
+    if analysis is None:
+        return ""
+    names = []
+    for item in analysis.artifacts:
+        if item.kind != "schema":
+            continue
+        names.append(_basename(item.path))
+        if len(names) >= 8:
+            break
+    if len(names) < 2:
+        return ""
+    lines = ["  direction LR"]
+    for index, name in enumerate(names):
+        cid = _ident("E", name)
+        lines.append(f"  class {cid} {{")
+        lines.append("    <<schema>>")
+        lines.append(f"    {re.sub(r'[^A-Za-z0-9_]', '_', name) or 'entity'}()")
+        lines.append("  }")
+        if index:
+            prev = _ident("E", names[index - 1])
+            lines.append(f"  {prev} --> {cid}")
+    return _fence("classDiagram", lines)
+
+
+def view_deployment(analysis: RepoAnalysis | None) -> str:
+    if analysis is None:
+        return ""
+    docker = [item.path for item in analysis.artifacts if item.kind == "dockerfile"]
+    if not analysis.ci_workflows and not docker:
+        return ""
+    lines = ['  subgraph run["Runtime"]']
+    if analysis.ci_workflows:
+        provider = analysis.ci_workflows[0].provider
+        label = _CI_LABELS.get(provider, "CI")
+        lines.append(f'    ci["{_label(label)}"]')
+    if docker:
+        lines.append(f'    img["{_label(_basename(docker[0]))}"]')
+    if analysis.docs.doc_dirs or analysis.docs.has_readme:
+        lines.append('    site[("Documentation site")]')
+    lines.append("  end")
+    if analysis.ci_workflows and docker:
+        lines.append("  ci --> img")
+    if analysis.ci_workflows and (analysis.docs.doc_dirs or analysis.docs.has_readme):
+        lines.append("  ci --> site")
+        lines.append("  class site store")
+    if analysis.ci_workflows:
+        lines.append("  class ci external")
+    return _fence_flow("TB", lines, styled=True)
+
+
 def render_coverage_pie(counts: CoverageCounts | None) -> str:
     if counts is None or counts.planned == 0:
         return ""
@@ -620,30 +854,35 @@ def render_page_extras(
     blocks: list[tuple[int, str]] = []
     from docuharnessx.assembler.story import is_system_overview
 
+    model = signals.model if signals is not None else None
     if is_system_overview(page, accepted, identity):
-        context = render_c4_context(analysis, identity)
+        context = view_context(model) or render_c4_context(analysis, identity)
         if context:
             blocks.append((1, context))
         else:
             mind = render_mindmap(analysis)
             if mind:
                 blocks.append((1, mind))
-        styles = [
-            item
-            for item in (signals.architectures if signals is not None else ())
-            if item.id in _STRUCTURAL_IDS
-        ]
-        if styles:
-            for style in styles:
-                picture = render_architecture(style)
-                if picture:
-                    blocks.append((2, picture))
-        else:
+        styles = list(model.styles if model is not None else ())
+        if not styles and signals is not None:
+            styles = [item for item in signals.architectures if item.id in _STRUCTURAL_IDS]
+        drawn = False
+        for style in styles:
+            picture = (
+                view_style(model, style.id)
+                if model is not None
+                else render_architecture(style)
+            )
+            if picture:
+                blocks.append((2, picture))
+                drawn = True
+        container = view_container(model)
+        if not container and not drawn:
             container = render_c4_container(analysis, identity, signals)
-            if container:
-                blocks.append((2, container))
+        if container:
+            blocks.append((2, container))
     if analysis is not None and page.id.startswith("startup:"):
-        seq = render_sequence(analysis, identity)
+        seq = view_sequence(model) or render_sequence(analysis, identity)
         if seq:
             blocks.append((3, seq))
         sankey = render_sankey(signals or ComprehensionSignals())
@@ -689,21 +928,27 @@ def render_home_extras(
     pie = render_coverage_pie(counts)
     if pie:
         blocks.append((2, pie))
-    styles = [
-        item
-        for item in (signals.architectures if signals is not None else ())
-        if item.id in _STRUCTURAL_IDS
-    ]
-    if styles:
-        for style in styles:
-            picture = render_architecture(style)
-            if picture:
-                blocks.append((2, picture))
-    else:
-        container = render_c4_container(analysis, identity, signals)
+    model = signals.model if signals is not None else None
+    styles = list(model.styles if model is not None else ())
+    if not styles and signals is not None:
+        styles = [item for item in signals.architectures if item.id in _STRUCTURAL_IDS]
+    drawn = False
+    for style in styles:
+        picture = (
+            view_style(model, style.id)
+            if model is not None
+            else render_architecture(style)
+        )
+        if picture:
+            blocks.append((2, picture))
+            drawn = True
+    if not drawn:
+        container = view_container(model) or render_c4_container(
+            analysis, identity, signals
+        )
         if container:
             blocks.append((2, container))
-    context = render_c4_context(analysis, identity)
+    context = view_context(model) or render_c4_context(analysis, identity)
     if context:
         blocks.append((5, context))
     else:
@@ -777,48 +1022,54 @@ def collect_diagram_figures(
         )
 
     primary = primary_component(pages, identity)
-    context = render_c4_context(analysis, identity) or render_mindmap(analysis)
-    if context:
-        if primary is not None:
-            add(
-                "System context",
-                "System",
-                primary.title,
-                page_filename(primary.id),
-                1,
-                context,
-            )
-        else:
-            add("System context", "System", "Home", HOME_PAGE_PATH, 5, context)
     live = signals or ComprehensionSignals()
+    model = live.model
     href = (
         page_filename(primary.id) if primary is not None else HOME_PAGE_PATH
     )
     src_title = primary.title if primary is not None else "Home"
-    styles = [item for item in live.architectures if item.id in _STRUCTURAL_IDS]
-    if styles:
-        for style in styles:
-            picture = render_architecture(style)
-            if picture:
-                note = ""
-                if style.evidence:
-                    note = "Detected from " + ", ".join(style.evidence[:8])
-                add(style.label, "Architecture", src_title, href, 2, picture, note)
-    else:
+    context = view_context(model) or render_c4_context(analysis, identity) or render_mindmap(analysis)
+    if context:
+        add("System context", "Architecture", src_title, href, 1, context)
+    styles = list(model.styles if model is not None else live.architectures)
+    drawn_style = False
+    for style in styles:
+        picture = (
+            view_style(model, style.id)
+            if model is not None
+            else render_architecture(style)
+        )
+        if picture:
+            note = ""
+            if style.evidence:
+                note = "Detected from " + ", ".join(style.evidence[:8])
+            add(style.label, "Architecture", src_title, href, 2, picture, note)
+            drawn_style = True
+    container = view_container(model)
+    if not container and not drawn_style:
         container = render_c4_container(analysis, identity, signals)
-        if container:
-            add("Containers", "System", src_title, href, 2, container)
-    sequence = render_sequence(analysis, identity)
+    if container:
+        add("Containers", "Architecture", src_title, href, 2, container)
+    sequence = view_sequence(model) or render_sequence(analysis, identity)
     if sequence:
         startup = next((page for page in pages if page.id.startswith("startup:")), None)
         add(
             "Typical run",
-            "System",
+            "Architecture",
             startup.title if startup is not None else "Home",
             page_filename(startup.id) if startup is not None else HOME_PAGE_PATH,
             3,
             sequence,
         )
+    use_case = view_use_case(analysis)
+    if use_case:
+        add("Use cases", "Architecture", src_title, href, 3, use_case)
+    deploy = view_deployment(analysis)
+    if deploy:
+        add("Deployment", "Architecture", src_title, href, 3, deploy)
+    erd = view_erd(analysis)
+    if erd:
+        add("Schema", "Architecture", src_title, href, 4, erd)
 
     spine = story_spine(pages, identity)
     path = render_story_path(spine)
@@ -835,15 +1086,22 @@ def collect_diagram_figures(
 
     lineage = render_sankey(live)
     if lineage:
-        add("Lineage", "Lineage", "Home", HOME_PAGE_PATH, 5, lineage)
+        add("Lineage", "Architecture", "Home", HOME_PAGE_PATH, 5, lineage)
 
     if live.pipelines:
         collapsed = render_dag(live.pipelines[0], detailed=False)
         if collapsed:
-            add("Pipeline", "Pipeline", "Home", HOME_PAGE_PATH, 5, collapsed)
+            add("Pipeline", "Architecture", "Home", HOME_PAGE_PATH, 5, collapsed)
         detailed = render_dag(live.pipelines[0], detailed=True)
         if detailed:
-            add("Pipeline (detailed)", "Pipeline", "Home", HOME_PAGE_PATH, 7, detailed)
+            add(
+                "Pipeline (detailed)",
+                "Architecture",
+                "Home",
+                HOME_PAGE_PATH,
+                7,
+                detailed,
+            )
 
     surface = render_public_surface(analysis)
     if surface:
@@ -859,14 +1117,14 @@ def collect_diagram_figures(
         if surface_page is not None:
             add(
                 "Public surface",
-                "Public surface",
+                "Architecture",
                 surface_page.title,
                 page_filename(surface_page.id),
                 4,
                 surface,
             )
         else:
-            add("Public surface", "Public surface", "Home", HOME_PAGE_PATH, 4, surface)
+            add("Public surface", "Architecture", "Home", HOME_PAGE_PATH, 4, surface)
 
     for page in pages:
         href = page_filename(page.id)
@@ -890,16 +1148,55 @@ def render_diagrams_index(
         "the linked page, often behind the depth slider.",
         "",
     ]
-    if figures:
+    section_rank = {
+        "Architecture": 0,
+        "Reading path": 1,
+        "Coverage": 2,
+        "Per question": 3,
+    }
+    architecture_rank = {
+        "System context": 0,
+        "Containers": 1,
+        "Layered architecture": 2,
+        "Services": 3,
+        "Ports and adapters": 4,
+        "Client / server": 5,
+        "Processing pipeline": 6,
+        "Typical run": 7,
+        "Use cases": 8,
+        "Deployment": 9,
+        "Schema": 10,
+        "Public surface": 11,
+        "Lineage": 12,
+        "Pipeline": 13,
+        "Pipeline (detailed)": 14,
+    }
+    reading_rank = {
+        "Start-here path": 0,
+        "Question map": 1,
+    }
+    ordered = sorted(
+        figures,
+        key=lambda item: (
+            section_rank.get(item.section, 9),
+            architecture_rank.get(item.heading, 50)
+            if item.section == "Architecture"
+            else reading_rank.get(item.heading, 50)
+            if item.section == "Reading path"
+            else 50,
+            item.heading,
+        ),
+    )
+    if ordered:
         lines.append("## Contents")
         lines.append("")
-        for figure in figures:
+        for figure in ordered:
             lines.append(f"- [{figure.heading}](#{figure.slug})")
         if glossary_links:
             lines.append("- [Glossary related-term graphs](#glossary-related-term-graphs)")
         lines.append("")
         current_section = ""
-        for figure in figures:
+        for figure in ordered:
             if figure.section != current_section:
                 current_section = figure.section
                 lines.append(f"## {figure.section}")

@@ -145,6 +145,31 @@ incl. docs/config, so a doc-heavy repo can report a markup language as primary.
 
 ### Specs (dependency order)
 
-- [ ] explore-first-simplification — invert authoring and reduce the project to
+- [x] explore-first-simplification — invert authoring and reduce the project to
       analyze → questions → explore-write → substance-gate → assemble. Dependencies: none
       (reuses `RepoAnalysis`, inner writer harness, MkDocs emit, deploy modes).
+
+## Wave 6 — Comprehension and architect narrative (2026-09-06)
+
+- **Chosen**: Keep explore-first pages. Add pictures and a glossary
+  (`comprehension-visuals`, implemented), then a **single architecture
+  model + COBESY writing grain** (`architect-narrative`) instead of
+  cloning Visual Paradigm / Sparx / ArchiMate.
+- **Why**: Depth slider and diagram catalog are not zoom. Prose is an
+  inspection dump. VP-class tools win on model + viewpoints; this
+  harness wins if the repo is the model and the page is a short story
+  at the right grain.
+- **Rejected alternatives**: VP product integration; TOGAF ADM
+  guide-through; Role × Intent cobesy-writer revival; prompt-only
+  “write SCQA” with labels on the page.
+
+### Specs (dependency order)
+
+- [x] comprehension-visuals — depth-assigned pictures, glossary,
+      architecture-style detection, diagrams catalog. Dependencies:
+      explore-first-simplification.
+- [ ] architect-narrative — architecture model with abstraction
+      levels; views from the model; COBESY blueprint + density trim
+      on explore-first pages; harvested requirements linked to bands.
+      Dependencies: comprehension-visuals.
+      _(spec.json: approved, implementing architecture overview)_

@@ -8,6 +8,7 @@ summary: '`docuharnessx.mcp` is a **Model Context Protocol (MCP) server package 
   in its own docstring as "the stdio MCP refine server" (`docuharnessx/mcp/__init__.py:1`)
   and is the single public namespace for that interactive document-refinement service.'
 related: []
+abstraction: component
 ---
 # What does mcp do?
 

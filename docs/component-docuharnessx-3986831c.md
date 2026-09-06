@@ -11,6 +11,7 @@ summary: DocuHarnessX is a Python package — version `2.0.0` (`docuharnessx/__i
   accepted ones into an MkDocs site. Its pyproject entry point is the console script
   `dhx = "docuharnessx.cli:main"` (`pyproject.toml:33`).
 related: []
+abstraction: container
 ---
 # What does docuharnessx do?
 
@@ -25,24 +26,25 @@ related: []
 ```mermaid
 flowchart TB
   subgraph people["People"]
-    actor(["Operator"])
+  actor_operator(["Operator"])
   end
   subgraph enterprise["This system"]
-    sys["DocuHarnessX<br/>Command-line program (CLI)"]
+  system["DocuHarnessX"]
   end
   subgraph external["External"]
-    repo[("norandom/DocuHarnessX")]
-    ci["GitHub Actions"]
-    docs[("Documentation site")]
+  external_ci["GitHub Actions"]
+  external_docs[("Documentation site")]
+  external_repo[("norandom/DocuHarnessX")]
   end
-  actor -->|"runs CLI"| sys
-  sys -->|"reads and cites"| repo
-  ci -->|"runs in"| sys
-  sys -->|"publishes"| docs
-  class actor person
-  class sys system
-  class repo,docs store
-  class ci external
+  actor_operator -->|"runs CLI"| system
+  system -->|"reads and cites"| external_repo
+  external_ci -->|"runs in"| system
+  system -->|"publishes"| external_docs
+  class actor_operator person
+  class system system
+  class external_ci external
+  class external_docs store
+  class external_repo store
   classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
   classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
   classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
@@ -76,6 +78,54 @@ flowchart TB
   b0 -->|"depends on"| b1
   b1 -->|"depends on"| b2
   class b0m0,b0m1,b1m0,b1m1,b1m2,b1m3,b1m4,b1m5,b2m0,b2m1,b2m2 container
+  classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
+  classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
+  classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
+  classDef external fill:#D5DCE6,stroke:#4A5568,color:#1A202C
+  classDef store fill:#7ED4C0,stroke:#0F766E,color:#042F2E
+```
+
+</div>
+
+<div class="dhx-layer" data-min="2" markdown="1">
+
+```mermaid
+flowchart TB
+  actor_operator(["Operator"])
+  subgraph sys["DocuHarnessX"]
+    subgraph band_interface["Interface"]
+  container_CLI["CLI"]
+  container_mcp["mcp"]
+    end
+    subgraph band_application["Application"]
+  container_assembler["assembler"]
+  container_composition["composition"]
+  container_deployer["deployer"]
+  container_pipeline["pipeline"]
+  container_planning["planning"]
+  container_review["review"]
+    end
+    subgraph band_domain["Domain"]
+  container_analysis["analysis"]
+  container_comprehension["comprehension"]
+  container_ontology["ontology"]
+    end
+  end
+  actor_operator -->|"runs CLI"| container_CLI
+  container_CLI -->|"depends on"| container_assembler
+  container_assembler -->|"depends on"| container_analysis
+  class actor_operator person
+  class container_CLI container
+  class container_analysis container
+  class container_assembler container
+  class container_composition container
+  class container_comprehension container
+  class container_deployer container
+  class container_mcp container
+  class container_ontology container
+  class container_pipeline container
+  class container_planning container
+  class container_review container
   classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
   classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
   classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A

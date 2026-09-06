@@ -12,6 +12,7 @@ summary: '`docuharnessx/composition` is the documentation **writing core** of Do
   only one gated prose step touches a model. `WriteStage` in `docuharnessx/stages/write.py`
   is described as a "thin HarnessX adapter" over this core (`docuharnessx/stages/write.py:6-9`).'
 related: []
+abstraction: component
 ---
 # What does composition do?
 

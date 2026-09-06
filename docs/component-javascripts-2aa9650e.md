@@ -8,6 +8,7 @@ summary: 'In this repository, `javascripts` is the single client-side script fol
   which powers an **engineering-depth slider** that progressively discloses each documentation
   page by reader expertise.'
 related: []
+abstraction: component
 ---
 # What does javascripts do?
 

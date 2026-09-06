@@ -22,9 +22,17 @@ from docuharnessx.comprehension.glossary import (
     save_glossary,
     seed_glossary,
 )
-from docuharnessx.comprehension.architecture import detect_architectures
+from docuharnessx.comprehension.architecture import (
+    build_architecture_model,
+    detect_architectures,
+    page_abstraction,
+)
 from docuharnessx.comprehension.signals import (
+    AbstractionLevel,
     ArchitectureBand,
+    ArchitectureEdge,
+    ArchitectureModel,
+    ArchitectureNode,
     ArchitectureStyle,
     ComprehensionSignals,
     DagNode,
@@ -39,7 +47,11 @@ __all__ = [
     "GLOSSARY_RELPATH",
     "ComplianceCell",
     "ComplianceSelection",
+    "AbstractionLevel",
     "ArchitectureBand",
+    "ArchitectureEdge",
+    "ArchitectureModel",
+    "ArchitectureNode",
     "ArchitectureStyle",
     "ComprehensionSignals",
     "DagNode",
@@ -48,8 +60,10 @@ __all__ = [
     "LineageHop",
     "PipelineDag",
     "RequirementHit",
+    "build_architecture_model",
     "detect_architectures",
     "detect_comprehension",
+    "page_abstraction",
     "load_compliance",
     "load_glossary",
     "merge_glossary",

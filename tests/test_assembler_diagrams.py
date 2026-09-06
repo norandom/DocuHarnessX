@@ -230,3 +230,96 @@ def test_typical_run_is_a_sequence() -> None:
     assert "actor Operator" in text
     assert "invoke" not in text
     assert "run" in text
+
+
+def test_assembled_page_carries_abstraction(tmp_path: Path) -> None:
+    site = assemble_question_site(
+        _two(),
+        _identity(),
+        str(tmp_path),
+        analysis=_analysis(),
+    )
+    assert site is not None
+    startup = Path(site.docs_dir) / page_filename(
+        make_question_id(QuestionKind.STARTUP, "cli.py")
+    )
+    text = startup.read_text(encoding="utf-8")
+    assert "abstraction: context" in text
+    engine = Path(site.docs_dir) / page_filename(
+        make_question_id(QuestionKind.COMPONENT, "engine")
+    )
+    assert "abstraction: component" in engine.read_text(encoding="utf-8")
+
+
+def test_context_and_layered_views_build_strict(tmp_path: Path) -> None:
+    import subprocess
+    import sys
+
+    import pytest
+
+    pytest.importorskip("mkdocs")
+    pytest.importorskip("material")
+    analysis = RepoAnalysis(
+        schema_version=REPO_ANALYSIS_SCHEMA_VERSION,
+        repo_path="/tmp/repo",
+        languages=(),
+        primary_languages=(),
+        total_loc=0,
+        total_files=0,
+        structure=(),
+        entrypoints=(Entrypoint(path="app.py", kind="cli", name="app"),),
+        build_files=(),
+        ci_workflows=(),
+        tests=AnalysisTestLayout(present=False, frameworks=(), paths=()),
+        dependencies=(),
+        components=(
+            Component(name="cli", path="app/cli", representative_files=()),
+            Component(name="assembler", path="app/assembler", representative_files=()),
+            Component(name="ontology", path="app/ontology", representative_files=()),
+        ),
+        public_surface=(),
+        docs=DocPresence(
+            has_readme=False, readme_paths=(), doc_dirs=(), other_docs=()
+        ),
+        artifacts=(),
+        scan_stats=ScanStats(
+            files_scanned=0,
+            files_skipped=0,
+            bytes_scanned=0,
+            limit_reached=False,
+            notes=(),
+        ),
+    )
+    pages = (
+        *_two(),
+        _page(QuestionKind.COMPONENT, "assembler", "What does assembler do?"),
+    )
+    site = assemble_question_site(
+        pages, _identity(), str(tmp_path), analysis=analysis
+    )
+    assert site is not None
+    catalog = Path(site.docs_dir) / DIAGRAMS_PAGE_PATH
+    text = catalog.read_text(encoding="utf-8")
+    assert "System context" in text
+    assert "Layered architecture" in text
+    assert "```mermaid" in text
+    built = tmp_path / "_built"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "mkdocs",
+            "build",
+            "-f",
+            site.mkdocs_yml_path,
+            "-d",
+            str(built),
+            "--strict",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    html = (built / "diagrams" / "index.html").read_text(encoding="utf-8")
+    assert "mermaid" in html
+    assert "System context" in html

@@ -7,6 +7,7 @@ summary: The package keeps the root `__init__.py` deliberately thin and pushes t
   real public surface down into subpackage `__init__.py` modules, which act as single
   namespaces whose `__all__` is treated as an authoritative, test-policed contract.
 related: []
+abstraction: context
 ---
 # How is the public surface used or extended?
 

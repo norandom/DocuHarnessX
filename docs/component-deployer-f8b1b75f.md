@@ -11,6 +11,7 @@ summary: '`docuharnessx/deployer` is the **pure, model-free MkDocs deploy core**
   workflow rendering, target-tree writing, build validation, and the isolated `gh-deploy`
   push — lives (`docuharnessx/stages/deploy.py:5`).'
 related: []
+abstraction: component
 ---
 # What does deployer do?
 

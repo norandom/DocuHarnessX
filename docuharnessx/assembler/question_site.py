@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Sequence
+from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -42,6 +43,7 @@ from docuharnessx.comprehension.compliance import (
     load_compliance,
     score_matrix,
 )
+from docuharnessx.comprehension.architecture import build_architecture_model
 from docuharnessx.comprehension.detect import detect_comprehension
 from docuharnessx.comprehension.glossary import (
     Glossary,
@@ -120,6 +122,13 @@ def assemble_question_site(
         if signals is not None
         else detect_comprehension(analysis, root or ".")
     )
+    if analysis is not None:
+        live_signals = replace(
+            live_signals,
+            model=build_architecture_model(
+                analysis, identity, live_signals.architectures
+            ),
+        )
     site_dir = Path(out_dir) / _SITE_SUBDIR
     docs_dir = site_dir / _DOCS_SUBDIR
     docs_dir.mkdir(parents=True, exist_ok=True)

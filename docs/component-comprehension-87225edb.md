@@ -15,6 +15,7 @@ summary: 'In DocuHarnessX, `comprehension` is the `docuharnessx.comprehension` p
   autolinker (`docuharnessx/assembler/question_site.py:115`, `docuharnessx/assembler/question_site.py:130`,
   `docuharnessx/assembler/question_site.py:134`).'
 related: []
+abstraction: component
 ---
 # What does comprehension do?
 

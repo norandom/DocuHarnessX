@@ -9,6 +9,7 @@ summary: 'The build is declared entirely in the root `pyproject.toml`. The packa
   restricts the wheel to `packages = ["docuharnessx"]`. It requires Python `>=3.12`
   (`pyproject.toml:5`).'
 related: []
+abstraction: container
 ---
 # How is this project built and verified?
 

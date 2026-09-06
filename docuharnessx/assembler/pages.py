@@ -167,8 +167,12 @@ def render_segment_page(
     return page_filename(segment.id), content
 
 
-def _question_frontmatter(page: Page) -> str:
+def _question_frontmatter(
+    page: Page, identity: "SiteIdentity | None" = None
+) -> str:
     """Return slim YAML frontmatter for an accepted question page."""
+    from docuharnessx.comprehension.architecture import page_abstraction
+
     body = yaml.safe_dump(
         {
             "id": page.id,
@@ -176,6 +180,7 @@ def _question_frontmatter(page: Page) -> str:
             "subjects": list(page.subjects),
             "summary": page.summary,
             "related": list(page.related),
+            "abstraction": str(page_abstraction(page, identity)),
         },
         default_flow_style=False,
         sort_keys=False,
@@ -217,7 +222,7 @@ def render_question_page(
     immediately under the H1, before the prose. The page ends with a single
     trailing newline.
     """
-    parts: list[str] = [_question_frontmatter(page), f"# {page.title}\n"]
+    parts: list[str] = [_question_frontmatter(page, identity), f"# {page.title}\n"]
     summary = page.summary.strip()
     if summary:
         parts.append("\n" + wrap_layer(1, summary))

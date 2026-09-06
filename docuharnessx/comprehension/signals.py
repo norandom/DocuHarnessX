@@ -3,9 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
 
 __all__ = [
+    "AbstractionLevel",
     "ArchitectureBand",
+    "ArchitectureEdge",
+    "ArchitectureModel",
+    "ArchitectureNode",
     "ArchitectureStyle",
     "ComprehensionSignals",
     "CoverageCounts",
@@ -14,6 +19,13 @@ __all__ = [
     "PipelineDag",
     "RequirementHit",
 ]
+
+
+class AbstractionLevel(StrEnum):
+    CONTEXT = "context"
+    CONTAINER = "container"
+    COMPONENT = "component"
+    CODE = "code"
 
 
 @dataclass(frozen=True)
@@ -72,9 +84,42 @@ class ArchitectureStyle:
 
 
 @dataclass(frozen=True)
+class ArchitectureNode:
+    id: str
+    label: str
+    level: AbstractionLevel
+    kind: str
+    path: str | None = None
+    band: str | None = None
+
+
+@dataclass(frozen=True)
+class ArchitectureEdge:
+    source: str
+    target: str
+    verb: str
+    evidence: str
+
+
+@dataclass(frozen=True)
+class ArchitectureModel:
+    """One system model; views are projections of these nodes and edges."""
+
+    system_name: str
+    nodes: tuple[ArchitectureNode, ...] = ()
+    edges: tuple[ArchitectureEdge, ...] = ()
+    styles: tuple[ArchitectureStyle, ...] = ()
+    requirement_links: tuple[tuple[str, str], ...] = ()
+
+    def by_id(self) -> dict[str, ArchitectureNode]:
+        return {node.id: node for node in self.nodes}
+
+
+@dataclass(frozen=True)
 class ComprehensionSignals:
     pipelines: tuple[PipelineDag, ...] = ()
     lineage: tuple[LineageHop, ...] = ()
     project_kinds: tuple[str, ...] = ()
     requirement_sentences: tuple[RequirementHit, ...] = ()
     architectures: tuple[ArchitectureStyle, ...] = ()
+    model: ArchitectureModel | None = None

@@ -14,6 +14,7 @@ summary: '`docuharnessx.assembler` is DocuHarnessX''s **MkDocs site-assembly cor
   `mkdocs.yml`" (`docuharnessx/assembler/__init__.py:1-13`). Everything downstream
   imports from this one public namespace rather than the submodules (`docuharnessx/assembler/__init__.py:15-18`).'
 related: []
+abstraction: component
 ---
 # What does assembler do?
 

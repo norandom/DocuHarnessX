@@ -8,6 +8,7 @@ summary: 'The `dhx` program starts in `docuharnessx/cli.py`, whose `main()` is t
   argparse construction → argv normalization → dispatch to a subcommand handler (defaulting
   to `run`).'
 related: []
+abstraction: context
 ---
 # How does this program start?
 
@@ -22,18 +23,18 @@ The `dhx` program starts in `docuharnessx/cli.py`, whose `main()` is the console
 ```mermaid
 sequenceDiagram
   autonumber
-  actor Operator
-  participant pCLI as CLI
-  participant panalysis as analysis
-  participant passembler as assembler
-  participant pcomposition as composition
-  participant pcomprehension as comprehension
-  Operator->>pCLI: run
-  pCLI->>panalysis: uses
-  pCLI->>passembler: uses
-  pCLI->>pcomposition: uses
-  pCLI->>pcomprehension: uses
-  pCLI-->>Operator: result
+  actor aOperator
+  participant container_CLI as CLI
+  participant container_analysis as analysis
+  participant container_assembler as assembler
+  participant container_composition as composition
+  participant container_comprehension as comprehension
+  aOperator->>container_CLI: run
+  container_CLI->>container_analysis: uses
+  container_CLI->>container_assembler: uses
+  container_CLI->>container_composition: uses
+  container_CLI->>container_comprehension: uses
+  container_CLI-->>aOperator: result
 ```
 
 </div>

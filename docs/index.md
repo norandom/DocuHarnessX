@@ -2,7 +2,7 @@
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
-This site walks through 10 questions about [`norandom/DocuHarnessX`](https://github.com/norandom/DocuHarnessX), in the order you would actually learn the project.
+This site walks through 12 questions about [`norandom/DocuHarnessX`](https://github.com/norandom/DocuHarnessX), in the order you would actually learn the project.
 
 Read the numbered list first. Later questions cover individual modules.
 
@@ -28,7 +28,9 @@ Read the numbered list first. Later questions cover individual modules.
 - [What does assembler do?](component-assembler-d9228a8c.md)
 - [What does composition do?](component-composition-e6f778c7.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
+- [What does deployer do?](component-deployer-f8b1b75f.md)
 - [What does javascripts do?](component-javascripts-2aa9650e.md)
+- [What does mcp do?](component-mcp-bdf519de.md)
 
 </div>
 
@@ -62,7 +64,7 @@ flowchart LR
 ```mermaid
 pie showData
   title Documentation coverage
-  "Accepted pages" : 10
+  "Accepted pages" : 12
 ```
 
 </div>
@@ -105,24 +107,25 @@ flowchart TB
 ```mermaid
 flowchart TB
   subgraph people["People"]
-    actor(["Operator"])
+  actor_operator(["Operator"])
   end
   subgraph enterprise["This system"]
-    sys["DocuHarnessX<br/>Command-line program (CLI)"]
+  system["DocuHarnessX"]
   end
   subgraph external["External"]
-    repo[("norandom/DocuHarnessX")]
-    ci["GitHub Actions"]
-    docs[("Documentation site")]
+  external_ci["GitHub Actions"]
+  external_docs[("Documentation site")]
+  external_repo[("norandom/DocuHarnessX")]
   end
-  actor -->|"runs CLI"| sys
-  sys -->|"reads and cites"| repo
-  ci -->|"runs in"| sys
-  sys -->|"publishes"| docs
-  class actor person
-  class sys system
-  class repo,docs store
-  class ci external
+  actor_operator -->|"runs CLI"| system
+  system -->|"reads and cites"| external_repo
+  external_ci -->|"runs in"| system
+  system -->|"publishes"| external_docs
+  class actor_operator person
+  class system system
+  class external_ci external
+  class external_docs store
+  class external_repo store
   classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300
   classDef system fill:#A8C8FF,stroke:#1E4BB8,color:#0B1F4A
   classDef container fill:#B9D4FE,stroke:#2F62C4,color:#0B1F4A
@@ -152,7 +155,9 @@ flowchart TB
     m1["What does assembler do?"]
     m2["What does composition do?"]
     m3["What does comprehension do?"]
-    m4["What does javascripts do?"]
+    m4["What does deployer do?"]
+    m5["What does javascripts do?"]
+    m6["What does mcp do?"]
   end
   s4 -.-> m0
   classDef person fill:#E8B923,stroke:#7A5100,color:#1A1300

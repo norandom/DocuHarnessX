@@ -6,6 +6,7 @@ subjects:
 summary: The five evidence files plus the directly-referenced `model.py`, `scanner.py`,
   and `languages.py` give a complete picture. Here is the finished Markdown body.
 related: []
+abstraction: component
 ---
 # What does analysis do?
 

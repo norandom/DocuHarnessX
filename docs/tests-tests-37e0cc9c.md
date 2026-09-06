@@ -11,6 +11,7 @@ summary: All tests for DocuHarnessX live in a single `tests/` directory at the r
   modules plus two support entries — `tests/_fakes.py` and the `tests/fixtures/` directory
   — and one nested subdirectory, `tests/ontology/`, holding 16 more modules.
 related: []
+abstraction: container
 ---
 # How are tests organized?
 
