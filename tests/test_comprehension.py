@@ -74,6 +74,13 @@ def test_autolink_skips_code() -> None:
     assert "```\nSignal\n```" in out
     linked = autolink_markdown("[go](component-root-551790a4.md)", glossary)
     assert linked == "[go](component-root-551790a4.md)"
+    nested = autolink_markdown("See DocuHarnessX docs.", Glossary(
+        terms=(
+            GlossaryTerm(id="docuharnessx", label="DocuHarnessX"),
+            GlossaryTerm(id="glossary", label="glossary"),
+        )
+    ))
+    assert nested.count("](") == 1
 
 
 def test_parse_frameworks() -> None:

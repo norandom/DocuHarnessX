@@ -44,5 +44,12 @@ def _link_part(text: str, phrases: list[tuple[str, str]]) -> str:
         def _sub(match: re.Match[str], tid: str = term_id) -> str:
             return f"[{match.group(1)}](glossary.md#{tid})"
 
-        result = pattern.sub(_sub, result)
+        pieces = re.split(r"(\[[^\]]*\]\([^)]+\))", result)
+        rebuilt: list[str] = []
+        for piece in pieces:
+            if piece.startswith("[") and "](" in piece:
+                rebuilt.append(piece)
+            else:
+                rebuilt.append(pattern.sub(_sub, piece))
+        result = "".join(rebuilt)
     return result

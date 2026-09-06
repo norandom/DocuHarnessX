@@ -32,9 +32,18 @@ from docuharnessx.assembler.theme import (
     render_extra_css,
 )
 from docuharnessx.comprehension.autolink import autolink_markdown
-from docuharnessx.comprehension.compliance import load_compliance, score_matrix
+from docuharnessx.comprehension.compliance import (
+    ComplianceSelection,
+    load_compliance,
+    score_matrix,
+)
 from docuharnessx.comprehension.detect import detect_comprehension
-from docuharnessx.comprehension.glossary import load_glossary, merge_glossary, seed_glossary
+from docuharnessx.comprehension.glossary import (
+    Glossary,
+    load_glossary,
+    merge_glossary,
+    seed_glossary,
+)
 from docuharnessx.comprehension.graphs import render_compliance_page, render_glossary_page
 from docuharnessx.comprehension.signals import ComprehensionSignals, CoverageCounts
 from docuharnessx.pages.model import Page
@@ -92,9 +101,11 @@ def assemble_question_site(
 
     look = presentation or SitePresentation()
     accepted = tuple(pages)
-    root = project_dir or (analysis.repo_path if analysis is not None else ".")
-    live_signals = signals if signals is not None else detect_comprehension(
-        analysis, root
+    root = project_dir or (analysis.repo_path if analysis is not None else None)
+    live_signals = (
+        signals
+        if signals is not None
+        else detect_comprehension(analysis, root or ".")
     )
     site_dir = Path(out_dir) / _SITE_SUBDIR
     docs_dir = site_dir / _DOCS_SUBDIR
@@ -102,7 +113,7 @@ def assemble_question_site(
 
     glossary = merge_glossary(
         seed_glossary(vocab, analysis),
-        load_glossary(root),
+        load_glossary(root) if root else Glossary(),
     )
 
     for page in accepted:
@@ -129,7 +140,7 @@ def assemble_question_site(
     if glossary.terms:
         _write_text(docs_dir / "glossary.md", render_glossary_page(glossary))
         extra_nav.append(("Glossary", "glossary.md"))
-    selection = load_compliance(root)
+    selection = load_compliance(root) if root else ComplianceSelection()
     if selection.frameworks:
         cells = score_matrix(selection, analysis)
         _write_text(

@@ -1,0 +1,10 @@
+frameworks:
+- iso27001
+- nis2
+- cra
+- gdpr
+disclaimer: self-assessment
+overrides: {}
+notes:
+  gdpr: Open-source documentation tool; no payment card data (PCI DSS not in scope).
+  pci-dss: Not applicable.

@@ -1,22 +1,22 @@
 ---
-id: [tests](glossary.md#tests):[tests](glossary.md#tests)
-title: How are [tests](glossary.md#tests) organized?
+id: tests:tests
+title: How are tests organized?
 subjects:
-- [tests](glossary.md#tests)
-summary: All [tests](glossary.md#tests) for [DocuHarnessX]([glossary](glossary.md#glossary).md#docuharnessx) live in a single `tests/` directory at the repository
+- tests
+summary: All tests for [DocuHarnessX](glossary.md#docuharnessx) live in a single `tests/` directory at the repository
   root. The only pytest configuration in the project is `pyproject.toml:46-47`, which
-  sets `testpaths = ["tests"]`, and the dev extra declares the sole test [dependency]([glossary](glossary.md#glossary).md#dependency)
+  sets `testpaths = ["tests"]`, and the dev extra declares the sole test dependency
   `pytest>=8.0` (`pyproject.toml:28-29`). There is no `conftest.py` anywhere in the
   tree, and `tests/` has no `__init__.py`; the top level contains 127 `test_*.py`
   modules plus two support entries — `tests/_fakes.py` and the `tests/fixtures/` directory
   — and one nested subdirectory, `tests/ontology/`, holding 16 more modules.
 related: []
 ---
-# How are [tests](glossary.md#tests) organized?
+# How are tests organized?
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
-All [tests](glossary.md#tests) for [DocuHarnessX]([glossary](glossary.md#glossary).md#docuharnessx) live in a single `tests/` directory at the repository root. The only pytest configuration in the project is `pyproject.toml:46-47`, which sets `testpaths = ["tests"]`, and the dev extra declares the sole test [dependency]([glossary](glossary.md#glossary).md#dependency) `pytest>=8.0` (`pyproject.toml:28-29`). There is no `conftest.py` anywhere in the tree, and `tests/` has no `__init__.py`; the top level contains 127 `test_*.py` modules plus two support entries — `tests/_fakes.py` and the `tests/fixtures/` directory — and one nested subdirectory, `tests/ontology/`, holding 16 more modules.
+All tests for [DocuHarnessX](glossary.md#docuharnessx) live in a single `tests/` directory at the repository root. The only pytest configuration in the project is `pyproject.toml:46-47`, which sets `testpaths = ["tests"]`, and the dev extra declares the sole test dependency `pytest>=8.0` (`pyproject.toml:28-29`). There is no `conftest.py` anywhere in the tree, and `tests/` has no `__init__.py`; the top level contains 127 `test_*.py` modules plus two support entries — `tests/_fakes.py` and the `tests/fixtures/` directory — and one nested subdirectory, `tests/ontology/`, holding 16 more modules.
 
 </div>
 
@@ -113,19 +113,19 @@ flowchart TB
 
 <div class="dhx-layer" data-min="5" markdown="1">
 
-# How are [tests](glossary.md#tests) organized?
+# How are tests organized?
 
-All [tests](glossary.md#tests) for [DocuHarnessX]([glossary](glossary.md#glossary).md#docuharnessx) live in a single `tests/` directory at the repository root. The only pytest configuration in the project is `pyproject.toml:46-47`, which sets `testpaths = ["tests"]`, and the dev extra declares the sole test [dependency]([glossary](glossary.md#glossary).md#dependency) `pytest>=8.0` (`pyproject.toml:28-29`). There is no `conftest.py` anywhere in the tree, and `tests/` has no `__init__.py`; the top level contains 127 `test_*.py` modules plus two support entries — `tests/_fakes.py` and the `tests/fixtures/` directory — and one nested subdirectory, `tests/ontology/`, holding 16 more modules.
+All tests for [DocuHarnessX](glossary.md#docuharnessx) live in a single `tests/` directory at the repository root. The only pytest configuration in the project is `pyproject.toml:46-47`, which sets `testpaths = ["tests"]`, and the dev extra declares the sole test dependency `pytest>=8.0` (`pyproject.toml:28-29`). There is no `conftest.py` anywhere in the tree, and `tests/` has no `__init__.py`; the top level contains 127 `test_*.py` modules plus two support entries — `tests/_fakes.py` and the `tests/fixtures/` directory — and one nested subdirectory, `tests/ontology/`, holding 16 more modules.
 
 ## Filenames mirror the `docuharnessx` module layout
 
 The naming convention is one test file per package module or boundary, and the prefixes form recognizable groups. The suite contains 14 `planning` files, 14 `composition`, 14 `mcp`, 14 `assembler` (plus `test_assembled_site_seam.py`), 12 `analysis`, 9 `review`, 8 `cli`, 8 `deployer`/`deploy`, 4 `pipeline`, and 4 top-level `ontology_*` files, with one-offs such as `test_config.py`, `test_context.py`, `test_model_resolver.py`, and `test_pages_model.py`.
 
-Each file's docstring names the exact boundary it pins. `tests/test_ontology_loader.py:1-9` opens with "Run-start [ontology](glossary.md#ontology) loading [tests](glossary.md#tests) for task 2.6 (OntologyLoader boundary)" and documents that it owns `docuharnessx/ontology_loader.py` and the single public function `load_project_vocabulary(project_dir)`. `tests/test_ontology_setup.py:1-10` similarly pins `run_init` in `docuharnessx/ontology_setup.py`, and `tests/test_validation.py:1-7` says it covers `validate_segment` from `docuharnessx/ontology/validation.py`. The e2e file `tests/test_deploy_build_e2e_5_3.py:1-3` identifies itself as "the github-pages-deploy *task 5.3* deliverable."
+Each file's docstring names the exact boundary it pins. `tests/test_ontology_loader.py:1-9` opens with "Run-start [ontology](glossary.md#ontology) loading tests for task 2.6 (OntologyLoader boundary)" and documents that it owns `docuharnessx/ontology_loader.py` and the single public function `load_project_vocabulary(project_dir)`. `tests/test_ontology_setup.py:1-10` similarly pins `run_init` in `docuharnessx/ontology_setup.py`, and `tests/test_validation.py:1-7` says it covers `validate_segment` from `docuharnessx/ontology/validation.py`. The e2e file `tests/test_deploy_build_e2e_5_3.py:1-3` identifies itself as "the github-pages-deploy *task 5.3* deliverable."
 
 ## `tests/ontology/` is the one nested mirror
 
-The single structural deviation from the flat layout is `tests/ontology/`, which mirrors `docuharnessx/ontology/` module-for-module: `test_errors.py`, `test_model.py`, `test_schema.py`, `test_serializer.py`, `test_vocabulary.py`, `test_validation.py`, `test_validation_set.py`, `test_tags.py`, `test_views.py`, plus store suites `test_store_inmemory.py`, `test_store_filesystem.py`, and the shared `test_store_conformance.py`. The scaffold [tests](glossary.md#tests) `tests/ontology/test_package_import.py:11-22` assert only that `docuharnessx.ontology` is an importable package (`hasattr(ontology, "__path__")`), while `test_public_api.py` iterates `docuharnessx.ontology.__all__` to check every exported name is usable. The two store suites are task-scoped: `test_store_inmemory.py:1-3` [tests](glossary.md#tests) the frozen `SegmentStore` port and `InMemorySegmentStore` ("task 4.1"), and `test_store_filesystem.py:1-3` [tests](glossary.md#tests) `FilesystemSegmentStore` ("task 4.2").
+The single structural deviation from the flat layout is `tests/ontology/`, which mirrors `docuharnessx/ontology/` module-for-module: `test_errors.py`, `test_model.py`, `test_schema.py`, `test_serializer.py`, `test_vocabulary.py`, `test_validation.py`, `test_validation_set.py`, `test_tags.py`, `test_views.py`, plus store suites `test_store_inmemory.py`, `test_store_filesystem.py`, and the shared `test_store_conformance.py`. The scaffold tests `tests/ontology/test_package_import.py:11-22` assert only that `docuharnessx.ontology` is an importable package (`hasattr(ontology, "__path__")`), while `test_public_api.py` iterates `docuharnessx.ontology.__all__` to check every exported name is usable. The two store suites are task-scoped: `test_store_inmemory.py:1-3` tests the frozen `SegmentStore` port and `InMemorySegmentStore` ("task 4.1"), and `test_store_filesystem.py:1-3` tests `FilesystemSegmentStore` ("task 4.2").
 
 ## Shared infrastructure replaces conftest
 
@@ -137,11 +137,11 @@ Because there is no `conftest.py`, shared setup comes from two plain modules:
 
 ## Suites are anchored to spec tasks and requirement numbers
 
-Module docstrings open by naming the SDLC task and the "Req" numbers they pin. `tests/ontology/test_errors.py:1-10` starts "[Tests](glossary.md#tests) for the typed error and result model (task 1.2)" and lists the discriminated error types from design.md's `errors` [component]([glossary](glossary.md#glossary).md#component). `tests/ontology/test_store_conformance.py:1-13` describes itself as the "cross-adapter conformance and reproducibility gate" in three parts: parametrized store conformance, determinism, and a no-network/no-LLM import check. Inside modules, `# ---- #` banner comments group [tests](glossary.md#tests) by contract area — for example "Base / discriminated-error contract", "Config-level error (Req 1.6)", and "[ValidationResult]([glossary](glossary.md#glossary).md#validationresult) (per-segment) — Req 6.6" in `tests/ontology/test_errors.py:19-21,63-65,168-170`. 112 of the test modules reference "Req" somewhere. Some suites group further into classes: `tests/test_analysis_core_validation.py` defines `TestScannerEdgeCases` (line 193), `TestLanguageOrdering` (316), `TestSerdeContract` (458), `TestDetectorSignals` (506), and `TestEndToEndDeterminism` (612).
+Module docstrings open by naming the SDLC task and the "Req" numbers they pin. `tests/ontology/test_errors.py:1-10` starts "Tests for the typed error and result model (task 1.2)" and lists the discriminated error types from design.md's `errors` [component](glossary.md#component). `tests/ontology/test_store_conformance.py:1-13` describes itself as the "cross-adapter conformance and reproducibility gate" in three parts: parametrized store conformance, determinism, and a no-network/no-LLM import check. Inside modules, `# ---- #` banner comments group tests by contract area — for example "Base / discriminated-error contract", "Config-level error (Req 1.6)", and "ValidationResult (per-segment) — Req 6.6" in `tests/ontology/test_errors.py:19-21,63-65,168-170`. 112 of the test modules reference "Req" somewhere. Some suites group further into classes: `tests/test_analysis_core_validation.py` defines `TestScannerEdgeCases` (line 193), `TestLanguageOrdering` (316), `TestSerdeContract` (458), `TestDetectorSignals` (506), and `TestEndToEndDeterminism` (612).
 
 ## Depth is layered: unit → package surface → conformance → integration → offline e2e
 
-- **Unit**: one file per module using `tmp_path` for file-touching [tests](glossary.md#tests), and `pytest.mark.parametrize` where convenient — e.g. `@pytest.mark.parametrize("prefix", ["component", "tech", "artifact", "topic"])` over `Subject.parse` in `tests/ontology/test_model.py:67-72`.
+- **Unit**: one file per module using `tmp_path` for file-touching tests, and `pytest.mark.parametrize` where convenient — e.g. `@pytest.mark.parametrize("prefix", ["component", "tech", "artifact", "topic"])` over `Subject.parse` in `tests/ontology/test_model.py:67-72`.
 - **Package-surface boundary**: recurring `test_*_package_surface.py` suites assert that a package root re-exports its public surface identity-equal to submodule definitions. `tests/test_composition_package_surface.py:1-14` requires every re-export (e.g. `build_blueprint`, `generate_prose`, `WrittenSegments`) to be "identity-equal to its submodule definition (no shadow copies)", mirroring `docuharnessx.planning.__init__`; the [MCP](glossary.md#mcp) variant, `tests/test_mcp_package_surface.py:1-15`, pins the `docuharnessx.mcp` package as the single public namespace.
 - **Cross-adapter conformance**: `tests/ontology/test_store_conformance.py:83-94` runs one set of scenario bodies against both store adapters via `@pytest.fixture(params=["in_memory", "filesystem"])`, yielding a fresh `InMemorySegmentStore` or a `tmp_path`-backed `FilesystemSegmentStore`, so the same assertions exercise both adapters with no copy-pasted second suite.
 - **Integration**: `tests/test_pipeline_integration.py:1-14` wires the real planner, writer (substance gate inside), and `assemble_question_site` for the `PipelineRunner` boundary; `tests/test_pipeline_run.py` substitutes only the model provider.
@@ -151,7 +151,7 @@ Module docstrings open by naming the SDLC task and the "Req" numbers they pin. `
 
 ## Determinism and no-network/no-LLM are first-class concerns
 
-The suite enforces the project's constraints directly. The CLI's env loader refuses to load `.env` files while pytest is running — `docuharnessx/cli.py:132` returns early when `os.environ.get("PYTEST_CURRENT_TEST")` is set, "so the credential-free suite cannot pick up a developer's local secrets." `tests/ontology/test_store_conformance.py:27-30` describes part 3 of that module as re-importing every `docuharnessx.ontology.*` module in a fresh subprocess to assert no network/LLM library leaks in (the only permitted third-party import is `yaml`). `tests/test_guardrails_no_rl.py:11-13` pins that `make_question_id` rejects role-intent-shaped ids (`"developer__extend"` → `ValueError` matching `reader-role`) and that `docuharnessx` never imports `harnessx.rl`.
+The suite enforces the project's constraints directly. The CLI's env loader refuses to load `.env` files while pytest is running — `docuharnessx/cli.py:132` returns early when `os.environ.get("PYTEST_CURRENT_TEST")` is set, "so the credential-free suite cannot pick up a [developer](glossary.md#developer)'s local secrets." `tests/ontology/test_store_conformance.py:27-30` describes part 3 of that module as re-importing every `docuharnessx.ontology.*` module in a fresh subprocess to assert no network/LLM library leaks in (the only permitted third-party import is `yaml`). `tests/test_guardrails_no_rl.py:11-13` pins that `make_question_id` rejects role-intent-shaped ids (`"developer__extend"` → `ValueError` matching `reader-role`) and that `docuharnessx` never imports `harnessx.rl`.
 
 In short: pytest-driven with `testpaths = ["tests"]`, no `conftest.py`, one-file-per-module naming that mirrors `docuharnessx` (with `tests/ontology/` as the only nested mirror), shared fakes (`tests/_fakes.py`) and a fixture repo (`tests/fixtures/agentic_repo`) in place of conftest fixtures, docstrings tracing each suite to a spec task and requirement numbers, and a deliberate ladder from unit through package-surface/conformance/integration to offline end-to-end runs that keeps every test credential-free and deterministic.
 

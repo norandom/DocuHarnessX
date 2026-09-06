@@ -61,6 +61,20 @@ def seed_glossary(
         tid = _slug(label)
         if not tid or len(tid) < 2:
             return
+        if source.startswith("surface:") and (
+            "_" in label
+            or label.isupper()
+            or (
+                " " not in label
+                and any(c.islower() for c in label)
+                and any(c.isupper() for c in label)
+            )
+        ):
+            return
+        if source.startswith("component:") and (
+            "test" in source or "fixture" in source
+        ):
+            return
         current = terms.get(tid)
         sources = (source,)
         if current is not None:
