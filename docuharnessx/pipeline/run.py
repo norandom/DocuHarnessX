@@ -26,6 +26,7 @@ from docuharnessx.pages.model import Page
 from docuharnessx.pages.store import FilesystemLivingPageStore
 from docuharnessx.pipeline.report import RunReport, write_run_report
 from docuharnessx.planning.questions import plan_questions
+from docuharnessx.comprehension.signals import CoverageCounts
 from docuharnessx.site_config import load_site_presentation
 
 __all__ = ["RunOutcome", "run_pipeline"]
@@ -64,6 +65,8 @@ def _assemble_if_accepted(
     out_dir: str,
     deploy_mode: str,
     analysis: RepoAnalysis | None = None,
+    planned: int = 0,
+    omitted: int = 0,
 ) -> None:
     """Write a question-organised site only when accepted ≥ 1.
 
@@ -82,6 +85,12 @@ def _assemble_if_accepted(
         out_dir,
         analysis=analysis,
         presentation=load_site_presentation(repo_path),
+        project_dir=repo_path,
+        counts=CoverageCounts(
+            planned=planned or len(pages),
+            accepted=len(pages),
+            omitted=omitted,
+        ),
     )
     _log.info(
         "assembled question site under %s/site (accepted=%s, deploy_mode=%s)",
@@ -160,5 +169,7 @@ def run_pipeline(
         out_dir=out_dir,
         deploy_mode=deploy_mode,
         analysis=analysis,
+        planned=len(plan.questions),
+        omitted=len(omissions),
     )
     return RunOutcome(report=report, out_dir=out_dir, pages=pages)

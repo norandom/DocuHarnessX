@@ -19,12 +19,16 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
+from docuharnessx.assembler.depth import wrap_layer
 from docuharnessx.assembler.graphs import render_home_diagrams
 from docuharnessx.assembler.mkdocs_config import HOME_PAGE_PATH, TAGS_INDEX_PATH
 from docuharnessx.assembler.pages import page_filename
+from docuharnessx.comprehension.graphs import render_home_extras
+from docuharnessx.comprehension.signals import ComprehensionSignals, CoverageCounts
 from docuharnessx.pages.model import Page
 
 if TYPE_CHECKING:  # consumed read-only; typing-only import.
+    from docuharnessx.analysis.model import RepoAnalysis
     from docuharnessx.assembler.model import SiteIdentity
 
 __all__ = ["HOME_PAGE_PATH", "render_home_page", "render_question_home"]
@@ -77,6 +81,10 @@ def render_home_page(
 def render_question_home(
     identity: "SiteIdentity",
     pages: Sequence[Page],
+    *,
+    analysis: "RepoAnalysis | None" = None,
+    signals: ComprehensionSignals | None = None,
+    counts: CoverageCounts | None = None,
 ) -> str:
     """Render the question-organised ``docs/index.md`` (Req 8.1, 8.2).
 
@@ -92,10 +100,16 @@ def render_question_home(
         f"Documentation for {target}.",
         "",
     ]
-    diagrams = render_home_diagrams(pages)
-    if diagrams:
-        lines.append(diagrams.rstrip("\n"))
-        lines.append("")
+    extras = render_home_extras(pages, analysis, signals, counts)
+    if extras:
+        for depth, block in extras:
+            lines.append(wrap_layer(depth, block).rstrip("\n"))
+            lines.append("")
+    else:
+        diagrams = render_home_diagrams(pages)
+        if diagrams:
+            lines.append(diagrams.rstrip("\n"))
+            lines.append("")
     lines.extend(["## Questions", ""])
     for page in pages:
         lines.append(f"- [{page.title}]({page_filename(page.id)})")

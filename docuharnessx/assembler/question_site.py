@@ -31,11 +31,18 @@ from docuharnessx.assembler.theme import (
     render_depth_js,
     render_extra_css,
 )
+from docuharnessx.comprehension.autolink import autolink_markdown
+from docuharnessx.comprehension.compliance import load_compliance, score_matrix
+from docuharnessx.comprehension.detect import detect_comprehension
+from docuharnessx.comprehension.glossary import load_glossary, merge_glossary, seed_glossary
+from docuharnessx.comprehension.graphs import render_compliance_page, render_glossary_page
+from docuharnessx.comprehension.signals import ComprehensionSignals, CoverageCounts
 from docuharnessx.pages.model import Page
 from docuharnessx.site_config import SitePresentation
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from docuharnessx.analysis.model import RepoAnalysis
+    from docuharnessx.ontology import Vocabulary
 
 __all__ = ["assemble_question_site"]
 
@@ -57,6 +64,11 @@ def assemble_question_site(
     out_dir: str,
     analysis: "RepoAnalysis | None" = None,
     presentation: SitePresentation | None = None,
+    *,
+    project_dir: str | None = None,
+    vocab: "Vocabulary | None" = None,
+    signals: ComprehensionSignals | None = None,
+    counts: CoverageCounts | None = None,
 ) -> AssembledSite | None:
     """Assemble a question-organised site from accepted pages, or skip.
 
@@ -80,25 +92,62 @@ def assemble_question_site(
 
     look = presentation or SitePresentation()
     accepted = tuple(pages)
+    root = project_dir or (analysis.repo_path if analysis is not None else ".")
+    live_signals = signals if signals is not None else detect_comprehension(
+        analysis, root
+    )
     site_dir = Path(out_dir) / _SITE_SUBDIR
     docs_dir = site_dir / _DOCS_SUBDIR
     docs_dir.mkdir(parents=True, exist_ok=True)
 
+    glossary = merge_glossary(
+        seed_glossary(vocab, analysis),
+        load_glossary(root),
+    )
+
     for page in accepted:
         rel_path, content = render_question_page(
-            page, accepted, analysis=analysis
+            page,
+            accepted,
+            analysis=analysis,
+            signals=live_signals,
         )
-        _write_text(docs_dir / rel_path, content)
+        _write_text(docs_dir / rel_path, autolink_markdown(content, glossary))
 
-    _write_text(docs_dir / HOME_PAGE_PATH, render_question_home(identity, accepted))
+    home = render_question_home(
+        identity,
+        accepted,
+        analysis=analysis,
+        signals=live_signals,
+        counts=counts,
+    )
+    _write_text(docs_dir / HOME_PAGE_PATH, autolink_markdown(home, glossary))
     _write_text(docs_dir / EXTRA_CSS_PATH, render_extra_css(look.theme))
     _write_text(docs_dir / EXTRA_JS_PATH, render_depth_js(look.depth))
+
+    extra_nav: list[tuple[str, str]] = []
+    if glossary.terms:
+        _write_text(docs_dir / "glossary.md", render_glossary_page(glossary))
+        extra_nav.append(("Glossary", "glossary.md"))
+    selection = load_compliance(root)
+    if selection.frameworks:
+        cells = score_matrix(selection, analysis)
+        _write_text(
+            docs_dir / "compliance.md",
+            render_compliance_page(selection, cells),
+        )
+        extra_nav.append(("Compliance", "compliance.md"))
 
     nav_pages = tuple((page.title, page_filename(page.id)) for page in accepted)
     mkdocs_yml_path = site_dir / _MKDOCS_YML
     _write_text(
         mkdocs_yml_path,
-        build_question_mkdocs_yaml(identity, nav_pages, presentation=look),
+        build_question_mkdocs_yaml(
+            identity,
+            nav_pages,
+            presentation=look,
+            extra_nav=tuple(extra_nav),
+        ),
     )
 
     return AssembledSite(

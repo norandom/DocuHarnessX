@@ -1,0 +1,90 @@
+# Implementation Plan
+
+- [x] 1. Frozen comprehension signals and glossary model
+- [x] 1.1 Add `ComprehensionSignals`, `PipelineDag`, `LineageHop`, `RequirementHit` value objects with empty-tuple defaults and round-trip tests *(P)*
+  - Observable: constructing signals with no pipelines equals a second empty instance; fields are tuples.
+  - _Requirements: 9_
+  - _Boundary: analysis model (new module, do not reshape RepoAnalysis)_
+- [x] 1.2 Add `GlossaryTerm` / `Glossary` load-merge-save for `.docuharnessx/glossary.yaml` *(P)*
+  - Operator file wins on definition/aliases; missing file → empty glossary; invalid file raises naming the path.
+  - Observable: tests for missing, valid merge, invalid YAML.
+  - _Requirements: 6_
+  - _Boundary: glossary IO_
+
+- [x] 2. Analysis detectors
+- [x] 2.1 Detect GitHub Actions `needs:` and Makefile targets into `PipelineDag` *(P)*
+  - _Requirements: 4_
+  - _Boundary: analysis/pipelines.py_
+- [x] 2.2 Detect Snakemake, dbt, Kedro catalog/pipeline names *(P)*
+  - _Requirements: 4_
+- [x] 2.3 Detect Airflow / Prefect / Dagster with regex-only, skip malformed *(P)*
+  - _Requirements: 4_
+- [x] 2.4 Coarse DAG fallback from entrypoints → components → artifacts when no DSL matches
+  - _Requirements: 4_
+  - _Depends: 1.1_
+- [x] 2.5 Lineage hops from entrypoints, data dirs, notebooks; project_kind hints `software|quant|ml`
+  - Structural weights only; tests with a mini quant-like tree and a mini ML-like tree.
+  - _Requirements: 3_
+- [x] 2.6 Harvest requirement-shaped sentences from `requirements.md` / `*.adr.md` / `.kiro/specs/**/requirements.md` (bounded paths)
+  - _Requirements: 8_
+
+- [x] 3. Diagram emitters
+- [x] 3.1 C4 context + container with flowchart fallback if C4 fails `mkdocs build --strict` *(P)*
+  - _Requirements: 1, 2_
+  - _Boundary: assembler/comprehension_graphs.py_
+- [x] 3.2 System mindmap when C4 has no neighbors *(P)*
+  - _Requirements: 2_
+- [x] 3.3 Run sequence from entrypoint order *(P)*
+  - _Requirements: 2_
+- [x] 3.4 Public-surface class/flowchart at depth 4 *(P)*
+  - _Requirements: 5_
+- [x] 3.5 Coverage pie + adoption timeline (optional counts / adoption record)
+  - _Requirements: 2_
+- [x] 3.6 Sankey (or flowchart+weights fallback) from lineage hops; label structural
+  - Add `sankey-beta` only if the strict MkDocs build renders it; otherwise document fallback in emitter.
+  - _Requirements: 3, 9_
+- [x] 3.7 DAG collapsed (depth 3) vs detailed (depth 4–7)
+  - _Requirements: 1, 4_
+
+- [x] 4. Assemble integration
+- [x] 4.1 `render_question_page` / home wrap each new figure with `wrap_layer(min_depth)`
+  - Keep existing file flowcharts at depth 5.
+  - _Requirements: 1, 10_
+- [x] 4.2 Pass `ComprehensionSignals` + optional coverage counts from pipeline and MCP reassemble
+  - Pie omitted when counts unknown.
+  - _Requirements: 2, 9_
+- [x] 4.3 Glossary seed from ontology + components + public surface; write `docs/glossary.md`; nav entry only if terms exist
+  - _Requirements: 6, 7_
+- [x] 4.4 Fence-aware autolink of terms/aliases in assembled prose; CSS `dhx-term`; skip code
+  - Living pages on disk unchanged.
+  - _Requirements: 7_
+- [x] 4.5 Term page related-nodes mermaid + appears-on list
+  - _Requirements: 7_
+- [x] 4.6 Requirement cards on glossary or a depth-7 section when hits exist
+  - _Requirements: 8_
+
+- [x] 5. Verification
+- [x] 5.1 Byte-stable assemble twice on a fixture with DAG + glossary
+  - _Requirements: 9_
+- [x] 5.2 `mkdocs build --strict` fixture covering autolink, glossary nav, and at least one new picture kind
+  - _Requirements: 9, 10_
+- [x] 5.3 Depth slider still hides min-depth 7 sankey/cards when default depth is 5
+  - _Requirements: 1, 10_
+
+- [x] 6. Compliance self-assessment
+- [x] 6.1 Frozen pillar catalog + `ComplianceSelection` / `ComplianceCell` load-save for `.docuharnessx/compliance.yaml` *(P)*
+  - Invalid YAML fails naming the path; missing file is empty frameworks.
+  - _Requirements: 11, 12_
+  - _Boundary: compliance model_
+- [x] 6.2 Interactive init + `--manage` prompt for iso27001, pci-dss, nis2, cra, gdpr, none; `--default` writes none
+  - Previous selection is the Enter default on re-init.
+  - _Requirements: 11_
+  - _Depends: 6.1_
+- [x] 6.3 Evidence detectors for each pillar (path/content heuristics) and `score_matrix`
+  - Unselected regime → all `na`; PCI `cde` `na` unless pci-dss selected; no evidence → `fail`; override wins color.
+  - _Requirements: 12_
+- [x] 6.4 Assemble `docs/compliance.md` heatmap (CSS gray/red/yellow/green) at depth 1 and evidence list at depth 5; nav only if frameworks non-empty
+  - Page states it is a self-assessment, not a certification.
+  - _Requirements: 11, 12, 10_
+- [x] 6.5 Tests: none-in-scope omits page; GDPR-only grays PCI column; override yellow with evidence note still listed
+  - _Requirements: 12, 9_

@@ -180,6 +180,7 @@ def test_init_interactive_gathers_roles_intents_subjects(
             "",                      # model → DeepSeek default
             "",                      # site theme → black
             "",                      # engineering depth → 5
+            "",                      # compliance topics → none
             "edit",                  # reject proposal; enter terms by hand
             "developer: Developer",  # role 1
             "maintainer",            # role 2 (id doubles as label)
@@ -369,7 +370,7 @@ def test_init_accepts_harness_proposal(tmp_path, capsys, monkeypatch) -> None:
     )
     monkeypatch.setattr("docuharnessx.cli._resolve_init_model", lambda: object())
 
-    answers = iter(["", "", "", "", "", "Y"])  # creds + theme/depth + accept
+    answers = iter(["", "", "", "", "", "", "Y"])  # creds + theme/depth/compliance + accept
 
     def _reader(_prompt: str = "") -> str:
         return next(answers)
@@ -407,7 +408,7 @@ def test_init_manage_does_not_touch_living_pages(tmp_path, monkeypatch) -> None:
     page_path = next((project / ".docuharnessx" / "pages").glob("*.md"))
     original = page_path.read_bytes()
 
-    answers = iter(["", "", "", "", "", "edit", "solo", "", "read", "", "topic", ""])
+    answers = iter(["", "", "", "", "", "", "edit", "solo", "", "read", "", "topic", ""])
 
     def _reader(_prompt: str = "") -> str:
         return next(answers)

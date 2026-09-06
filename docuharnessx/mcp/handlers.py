@@ -896,6 +896,7 @@ def reassemble_site(session: "RefineSession") -> dict[str, Any]:
             identity,
             session.out_dir,
             presentation=load_site_presentation(session.target_repo),
+            project_dir=session.target_repo,
         )
         return {
             "assembled": True,

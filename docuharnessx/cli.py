@@ -1100,6 +1100,11 @@ def _init_command(args: argparse.Namespace, *, input_fn: "Any" = None) -> int:
         return EXIT_INIT_FAILED
 
     answers: Any = None
+    from docuharnessx.comprehension.compliance import (
+        load_compliance,
+        prompt_compliance_topics,
+        save_compliance,
+    )
     from docuharnessx.site_config import (
         SitePresentation,
         load_site_presentation,
@@ -1108,6 +1113,7 @@ def _init_command(args: argparse.Namespace, *, input_fn: "Any" = None) -> int:
     )
 
     presentation = load_site_presentation(project_dir)
+    compliance = load_compliance(project_dir)
     if not args.default:
         # Interactive when an input reader is injected (tests) or stdin is a TTY.
         interactive = input_fn is not None or sys.stdin.isatty()
@@ -1137,6 +1143,9 @@ def _init_command(args: argparse.Namespace, *, input_fn: "Any" = None) -> int:
         write_project_env(project_dir, creds)
         presentation = prompt_site_presentation(
             input_fn=reader, out=sys.stdout, existing=presentation
+        )
+        compliance = prompt_compliance_topics(
+            input_fn=reader, out=sys.stdout, existing=compliance
         )
         proposal = default_profile()
         model = _resolve_init_model()
@@ -1170,11 +1179,16 @@ def _init_command(args: argparse.Namespace, *, input_fn: "Any" = None) -> int:
 
     if args.default:
         presentation = SitePresentation()
+        from docuharnessx.comprehension.compliance import ComplianceSelection
+
+        compliance = ComplianceSelection()
     site_path = save_site_presentation(args.project_dir, presentation)
+    compliance_path = save_compliance(args.project_dir, compliance)
     adoption_path = os.path.join(args.project_dir, ADOPTION_RELPATH)
     print(f"dhx init: wrote ontology config: {written}")
     print(f"dhx init: wrote adoption record: {adoption_path}")
     print(f"dhx init: wrote site presentation: {site_path}")
+    print(f"dhx init: wrote compliance selection: {compliance_path}")
     print(f"dhx init: blueprint version: {BLUEPRINT_VERSION}")
     if args.default:
         print("dhx init: ontology was not agent-managed")

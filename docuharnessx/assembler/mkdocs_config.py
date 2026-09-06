@@ -312,6 +312,7 @@ def build_question_mkdocs_yaml(
     identity: SiteIdentity,
     pages: tuple[tuple[str, str], ...],
     presentation: SitePresentation | None = None,
+    extra_nav: tuple[tuple[str, str], ...] = (),
 ) -> str:
     """Build ``mkdocs.yml`` for a question-organised site (Req 8.1, 8.2).
 
@@ -334,6 +335,8 @@ def build_question_mkdocs_yaml(
     config["plugins"] = ["search"]
     nav: list = [{HOME_NAV_TITLE: HOME_PAGE_PATH}]
     for title, path in pages:
+        nav.append({title: path})
+    for title, path in extra_nav:
         nav.append({title: path})
     config["nav"] = nav
     config["markdown_extensions"] = _markdown_extensions()

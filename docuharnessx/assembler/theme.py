@@ -50,6 +50,13 @@ _SLIDER_CSS: str = """
 .dhx-layer[hidden] {
   display: none !important;
 }
+a.dhx-term, a[href*="glossary.md"] {
+  text-decoration: underline dotted;
+}
+.dhx-na { background: #9e9e9e; color: #fff; padding: 0.05em 0.4em; }
+.dhx-fail { background: #c62828; color: #fff; padding: 0.05em 0.4em; }
+.dhx-partial { background: #f9a825; color: #111; padding: 0.05em 0.4em; }
+.dhx-pass { background: #2e7d32; color: #fff; padding: 0.05em 0.4em; }
 
 .md-typeset pre,
 .md-typeset .admonition,
