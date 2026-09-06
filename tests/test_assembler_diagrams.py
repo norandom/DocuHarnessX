@@ -175,3 +175,54 @@ def test_assemble_emits_diagrams_nav_next_to_glossary(tmp_path: Path) -> None:
 
 def test_empty_index_is_empty_string() -> None:
     assert render_diagrams_index(()) == ""
+
+
+def test_context_is_c4_shaped_not_a_star() -> None:
+    from docuharnessx.comprehension.graphs import render_c4_context
+
+    text = render_c4_context(_analysis(), _identity())
+    assert "subgraph people" in text
+    assert "Operator" in text
+    assert "This system" in text
+    assert "External" in text
+    assert "javascripts" not in text
+    assert "-->" in text and "|" in text
+    assert "classDef actor" in text
+
+
+def test_coverage_is_a_pie() -> None:
+    from docuharnessx.comprehension.graphs import render_coverage_pie
+
+    text = render_coverage_pie(CoverageCounts(planned=12, accepted=12, omitted=0))
+    assert text.startswith("```mermaid\npie")
+    assert "Accepted pages" in text
+    assert "flowchart" not in text
+
+
+def test_lineage_merges_nodes() -> None:
+    from docuharnessx.comprehension.graphs import render_sankey
+    from docuharnessx.comprehension.signals import ComprehensionSignals, LineageHop
+
+    signals = ComprehensionSignals(
+        lineage=(
+            LineageHop("input", "cli.py", 1, "input"),
+            LineageHop("cli.py", "engine", 1, "transform"),
+            LineageHop("engine", "output", 1, "output"),
+            LineageHop("cli.py", "javascripts", 1, "transform"),
+        )
+    )
+    text = render_sankey(signals)
+    assert "javascripts" not in text
+    assert text.count('cli.py') <= 2
+    assert "subgraph" in text
+    assert "s0[" not in text
+
+
+def test_typical_run_is_a_sequence() -> None:
+    from docuharnessx.comprehension.graphs import render_sequence
+
+    text = render_sequence(_analysis(), _identity())
+    assert "sequenceDiagram" in text
+    assert "actor Operator" in text
+    assert "invoke" not in text
+    assert "run" in text

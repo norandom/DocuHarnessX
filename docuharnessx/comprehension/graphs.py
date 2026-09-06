@@ -59,122 +59,484 @@ def _wrap(min_depth: int, markdown: str) -> str:
     return wrap_layer(min_depth, markdown)
 
 
-def _fence_flow(direction: str, lines: Sequence[str]) -> str:
-    body = "\n".join(lines)
-    return f"```mermaid\nflowchart {direction}\n{body}\n```\n"
+_SKIP_COMPONENT_NAMES = frozenset(
+    {"javascripts", "stylesheets", "static", "assets", "css", "js"}
+)
+_CI_LABELS = {
+    "github_actions": "GitHub Actions",
+    "gitlab_ci": "GitLab CI",
+    "circleci": "CircleCI",
+    "dagger": "Dagger",
+}
+_STYLE_LINES = (
+    "  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF",
+    "  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF",
+    "  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A",
+    "  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A",
+    "  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A",
+)
 
 
-def _label(text: str, limit: int = 36) -> str:
-    cleaned = " ".join(text.split()).replace('"', "'")[:limit]
+def _fence(header: str, lines: Sequence[str]) -> str:
+    body = "\n".join(line for line in lines if line is not None)
+    return f"```mermaid\n{header}\n{body}\n```\n"
+
+
+def _fence_flow(direction: str, lines: Sequence[str], *, styled: bool = False) -> str:
+    body = list(lines)
+    if styled:
+        body.extend(_STYLE_LINES)
+    return _fence(f"flowchart {direction}", body)
+
+
+def _label(text: str, limit: int = 42) -> str:
+    cleaned = " ".join(text.split()).replace('"', "'")
+    for src, dst in (("[", "("), ("]", ")"), ("{", "("), ("}", ")")):
+        cleaned = cleaned.replace(src, dst)
+    if len(cleaned) > limit:
+        cleaned = cleaned[: limit - 1] + "…"
     return cleaned or "?"
 
 
-def render_c4_context(analysis: RepoAnalysis | None) -> str:
+def _basename(path: str) -> str:
+    return path.replace("\\", "/").rstrip("/").rsplit("/", 1)[-1]
+
+
+def _ident(prefix: str, raw: str) -> str:
+    slug = re.sub(r"[^A-Za-z0-9]", "", raw)[:18] or "x"
+    if slug[0].isdigit():
+        slug = "n" + slug
+    return f"{prefix}{slug}"
+
+
+def _is_noise_component(name: str, path: str = "") -> bool:
+    token = name.casefold().rsplit("/", 1)[-1]
+    rel = path.replace("\\", "/").casefold()
+    if token in _SKIP_COMPONENT_NAMES:
+        return True
+    if rel.startswith("docs/") or "/javascripts" in rel or "/stylesheets" in rel:
+        return True
+    return False
+
+
+def _real_components(analysis: RepoAnalysis):
+    return [
+        item
+        for item in analysis.components
+        if not _is_noise_component(item.name, item.path)
+    ]
+
+
+def _system_name(
+    analysis: RepoAnalysis | None,
+    identity: "SiteIdentity | None",
+) -> str:
+    if identity is not None and identity.site_name:
+        return identity.site_name
+    if analysis is not None and analysis.components:
+        real = _real_components(analysis)
+        if real:
+            return real[0].name
+    return "System"
+
+
+def _cli_name(analysis: RepoAnalysis) -> str:
+    for entry in analysis.entrypoints:
+        if entry.name:
+            return entry.name
+    commands = [
+        symbol.name
+        for symbol in analysis.public_surface
+        if symbol.kind == "cli_subcommand" and symbol.name and symbol.name != "run"
+    ]
+    for entry in analysis.entrypoints:
+        if entry.kind in {"cli", "console_script", "main"}:
+            base = _basename(entry.path)
+            if base in {"cli.py", "cli", "__main__.py", "main.py"}:
+                return "CLI"
+            return base or "CLI"
+    if commands:
+        return "CLI"
+    if analysis.entrypoints:
+        return _basename(analysis.entrypoints[0].path) or "entrypoint"
+    return "CLI"
+
+
+def _system_blurb(analysis: RepoAnalysis) -> str:
+    cli = _cli_name(analysis) if analysis.entrypoints else ""
+    if any(e.kind in {"cli", "console_script", "main"} for e in analysis.entrypoints):
+        return f"Command-line program ({cli})"
+    if analysis.entrypoints:
+        return "Runnable program"
+    return "Software system"
+
+
+def _actor_label(analysis: RepoAnalysis) -> str:
+    kinds = {entry.kind for entry in analysis.entrypoints}
+    if kinds & {"cli", "console_script", "main", "script", "package_bin"}:
+        return "Operator"
+    return "User"
+
+
+def render_c4_context(
+    analysis: RepoAnalysis | None,
+    identity: "SiteIdentity | None" = None,
+) -> str:
+    """System-context view: people, this system, evidenced externals."""
     if analysis is None or not (analysis.entrypoints or analysis.components):
         return ""
-    lines = ['  system["System"]']
-    for index, entry in enumerate(analysis.entrypoints[:6]):
-        nid = f"e{index}"
-        lines.append(f'  {nid}["{_label(entry.name or entry.path)}"]')
-        lines.append(f"  {nid} --> system")
-    for index, component in enumerate(analysis.components[:6]):
+    name = _system_name(analysis, identity)
+    blurb = _system_blurb(analysis)
+    actor = _actor_label(analysis)
+    cli = _cli_name(analysis) if analysis.entrypoints else ""
+    lines = [
+        '  subgraph people["People"]',
+        f'    actor(["{_label(actor)}"])',
+        "  end",
+        f'  subgraph enterprise["This system"]',
+        f'    sys["{_label(name)}<br/>{_label(blurb, 40)}"]',
+        "  end",
+    ]
+    externals: list[tuple[str, str, str]] = []
+    ext_nodes: list[str] = []
+    repo = ""
+    if identity is not None:
+        repo = identity.repo_name or identity.site_name
+    if not repo and analysis.repo_path:
+        repo = _basename(analysis.repo_path)
+    if repo:
+        ext_nodes.append(f'    repo[("{_label(repo)}")]')
+        externals.append(("repo", "store", "reads and cites"))
+    if analysis.ci_workflows:
+        provider = analysis.ci_workflows[0].provider
+        ci_label = _CI_LABELS.get(provider, "CI")
+        ext_nodes.append(f'    ci["{_label(ci_label)}"]')
+        externals.append(("ci", "external", "runs in"))
+    if analysis.docs.doc_dirs or analysis.docs.has_readme:
+        ext_nodes.append('    docs[("Documentation site")]')
+        externals.append(("docs", "store", "publishes"))
+    if ext_nodes:
+        lines.append('  subgraph external["External"]')
+        lines.extend(ext_nodes)
+        lines.append("  end")
+    run_label = f"runs {cli}" if cli else "runs"
+    lines.append(f'  actor -->|"{_label(run_label, 24)}"| sys')
+    for nid, _kind, verb in externals:
+        if nid == "ci":
+            lines.append(f'  ci -->|"{_label(verb, 24)}"| sys')
+        else:
+            lines.append(f'  sys -->|"{_label(verb, 24)}"| {nid}')
+    lines.append("  class actor actor")
+    lines.append("  class sys system")
+    classed = [nid for nid, kind, _verb in externals if kind == "store"]
+    if classed:
+        lines.append("  class " + ",".join(classed) + " store")
+    ext_ids = [nid for nid, kind, _verb in externals if kind == "external"]
+    if ext_ids:
+        lines.append("  class " + ",".join(ext_ids) + " external")
+    return _fence_flow("TB", lines, styled=True)
+
+
+def render_c4_container(
+    analysis: RepoAnalysis | None,
+    identity: "SiteIdentity | None" = None,
+    signals: ComprehensionSignals | None = None,
+) -> str:
+    """Container view: CLI and modules inside the system boundary."""
+    if analysis is None:
+        return ""
+    components = _real_components(analysis)[:8]
+    if not (analysis.entrypoints or components):
+        return ""
+    name = _system_name(analysis, identity)
+    lines = [f'  subgraph sys["{_label(name)}"]']
+    classed = ["sysbox"]
+    if analysis.entrypoints:
+        cli_name = _cli_name(analysis)
+        cli_label = "CLI" if cli_name == "CLI" else f"CLI · {_label(cli_name, 20)}"
+        lines.append(f'    cli["{cli_label}"]')
+        classed.append("cli")
+    for index, component in enumerate(components):
         nid = f"c{index}"
-        lines.append(f'  {nid}["{_label(component.name)}"]')
-        lines.append(f"  system --> {nid}")
-    return _fence_flow("TB", lines)
+        lines.append(f'    {nid}["{_label(component.name, 24)}"]')
+        classed.append(nid)
+    lines.append("  end")
+    if analysis.entrypoints:
+        lines.append(f'  actor(["{_label(_actor_label(analysis))}"])')
+        lines.append(f'  actor -->|"{_label("runs " + _cli_name(analysis), 24)}"| cli')
+        lines.append("  class actor actor")
+    dag_edges: list[tuple[str, str]] = []
+    if signals and signals.pipelines:
+        label_to_id = {component.name: f"c{index}" for index, component in enumerate(components)}
+        if analysis.entrypoints:
+            label_to_id[_cli_name(analysis)] = "cli"
+            for entry in analysis.entrypoints:
+                if entry.name:
+                    label_to_id[entry.name] = "cli"
+                label_to_id[entry.path] = "cli"
+                label_to_id[_basename(entry.path)] = "cli"
+        for src, dst in signals.pipelines[0].edges:
+            left = label_to_id.get(src)
+            right = label_to_id.get(dst)
+            if left and right and left != right:
+                dag_edges.append((left, right))
+    if dag_edges:
+        for src, dst in dict.fromkeys(dag_edges):
+            lines.append(f"  {src} --> {dst}")
+    elif analysis.entrypoints:
+        for index, _component in enumerate(components):
+            lines.append(f'  cli -->|uses| c{index}')
+    elif len(components) > 1:
+        for index in range(len(components) - 1):
+            lines.append(f"  c{index} --> c{index + 1}")
+    styled_ids = [item for item in classed if item != "sysbox"]
+    if styled_ids:
+        lines.append("  class " + ",".join(styled_ids) + " container")
+    return _fence_flow("TB", lines, styled=True)
 
 
 def render_mindmap(analysis: RepoAnalysis | None) -> str:
-    if analysis is None or not analysis.components:
+    if analysis is None:
+        return ""
+    components = _real_components(analysis)[:8]
+    if not components:
         return ""
     lines = ["  root((System))"]
-    for component in analysis.components[:8]:
-        lines.append(f"    { _label(component.name, 24) }")
-    return "```mermaid\nmindmap\n" + "\n".join(lines) + "\n```\n"
+    for component in components:
+        lines.append(f"    {_label(component.name, 24)}")
+    return _fence("mindmap", lines)
 
 
-def render_sequence(analysis: RepoAnalysis | None) -> str:
+def render_sequence(
+    analysis: RepoAnalysis | None,
+    identity: "SiteIdentity | None" = None,
+) -> str:
+    """Typical run: operator through the CLI into the main modules."""
     if analysis is None or not analysis.entrypoints:
         return ""
-    actors = ["User"] + [
-        _label(e.name or e.path, 20).replace(" ", "_")
-        for e in analysis.entrypoints[:4]
-    ]
-    lines = [f"  participant {name}" for name in actors]
-    prev = actors[0]
-    for name in actors[1:]:
-        lines.append(f"  {prev}->>{name}: invoke")
-        prev = name
-    if analysis.components:
-        last = _label(analysis.components[0].name, 20).replace(" ", "_")
-        lines.append(f"  participant {last}")
-        lines.append(f"  {prev}->>{last}: work")
-    return "```mermaid\nsequenceDiagram\n" + "\n".join(lines) + "\n```\n"
+    cli = _cli_name(analysis)
+    actor = _actor_label(analysis)
+    root = _system_name(analysis, identity).casefold()
+    components = [
+        item
+        for item in _real_components(analysis)
+        if item.name.casefold() not in {root, cli.casefold(), "cli"}
+    ][:4]
+    participants = ["  autonumber", f"  actor {actor}"]
+    cli_id = _ident("p", cli)
+    participants.append(f"  participant {cli_id} as {_label(cli, 20)}")
+    comp_ids: list[str] = []
+    for component in components:
+        cid = _ident("p", component.name)
+        if cid == cli_id:
+            continue
+        participants.append(f"  participant {cid} as {_label(component.name, 20)}")
+        comp_ids.append(cid)
+    messages = [f"  {actor}->>{cli_id}: run"]
+    for cid in comp_ids:
+        messages.append(f"  {cli_id}->>{cid}: uses")
+    messages.append(f"  {cli_id}-->>{actor}: result")
+    return _fence("sequenceDiagram", participants + messages)
 
 
 def render_sankey(signals: ComprehensionSignals) -> str:
+    """Merged data-flow, not one disconnected hop per edge."""
     if not signals.lineage:
         return ""
-    lines = ["%% structural counts, not measured volume"]
-    for hop in signals.lineage[:24]:
-        src = hop.source.replace(",", " ")
-        dst = hop.target.replace(",", " ")
-        lines.append(f"{src},{dst},{max(1, hop.weight)}")
-    # Flowchart fallback (Material mermaid may not ship sankey-beta).
-    flow = []
-    for index, hop in enumerate(signals.lineage[:24]):
-        a = f"s{index}"
-        b = f"t{index}"
-        flow.append(f'  {a}["{_label(hop.source)}"]')
-        flow.append(f'  {b}["{_label(hop.target)}"]')
-        flow.append(f"  {a} -->|{hop.weight}| {b}")
-    return _fence_flow("LR", flow)
+    hops = [
+        hop
+        for hop in signals.lineage[:24]
+        if not _is_noise_component(hop.source) and not _is_noise_component(hop.target)
+    ]
+    if not hops:
+        return ""
+    ids: dict[str, str] = {}
+    kinds: dict[str, str] = {}
+
+    def node_id(name: str, kind: str) -> str:
+        if name not in ids:
+            ids[name] = f"n{len(ids)}"
+            kinds[name] = kind
+        return ids[name]
+
+    for hop in hops:
+        node_id(hop.source, hop.kind if hop.kind == "input" else "transform")
+        node_id(hop.target, hop.kind if hop.kind == "output" else "transform")
+        if hop.kind == "input":
+            kinds[hop.source] = "input"
+        if hop.kind == "output":
+            kinds[hop.target] = "output"
+
+    def display(name: str) -> str:
+        if name.casefold() == "input":
+            return "Inputs"
+        if name.casefold() == "output":
+            return "Outputs"
+        return _label(_basename(name), 28)
+
+    groups = (
+        ("input", "Inputs"),
+        ("transform", "This system"),
+        ("output", "Outputs"),
+    )
+    lines: list[str] = []
+    for kind, title in groups:
+        members = [name for name, node_kind in kinds.items() if node_kind == kind]
+        if not members:
+            continue
+        lines.append(f'  subgraph g{kind}["{title}"]')
+        for name in members:
+            shape_l, shape_r = ("([", "])") if kind != "transform" else ("[", "]")
+            if kind == "output":
+                shape_l, shape_r = '[(', ")]"
+            lines.append(
+                f"    {ids[name]}{shape_l}\"{display(name)}\"{shape_r}"
+            )
+        lines.append("  end")
+    seen_edges: set[tuple[str, str]] = set()
+    for hop in hops:
+        pair = (ids[hop.source], ids[hop.target])
+        if pair in seen_edges or pair[0] == pair[1]:
+            continue
+        seen_edges.add(pair)
+        if hop.weight > 1:
+            lines.append(f"  {pair[0]} -->|{hop.weight}| {pair[1]}")
+        else:
+            lines.append(f"  {pair[0]} --> {pair[1]}")
+    if len(seen_edges) < 1:
+        return ""
+    return _fence_flow("LR", lines, styled=True)
 
 
 def render_dag(dag: PipelineDag, *, detailed: bool) -> str:
     nodes = dag.nodes if detailed else dag.nodes[:12]
-    allowed = {node.id for node in nodes}
-    lines = [f'  {node.id}["{_label(node.label)}"]' for node in nodes]
+    allowed = {
+        node.id: node
+        for node in nodes
+        if not _is_noise_component(node.label, node.path or "")
+    }
+    if len(allowed) < 2:
+        return ""
+    lines = ['  subgraph pipe["Pipeline"]']
+    for node in allowed.values():
+        lines.append(f'    {node.id}["{_label(node.label)}"]')
+    lines.append("  end")
+    any_edge = False
     for src, dst in dag.edges:
         if src in allowed and dst in allowed:
             lines.append(f"  {src} --> {dst}")
-    if len(lines) < 2:
+            any_edge = True
+    if not any_edge:
         return ""
-    return _fence_flow("LR", lines)
+    lines.append("  class " + ",".join(allowed) + " container")
+    return _fence_flow("LR", lines, styled=True)
 
 
 def render_public_surface(analysis: RepoAnalysis | None) -> str:
     if analysis is None or not analysis.public_surface:
         return ""
-    lines = ['  api["Public surface"]']
-    for index, symbol in enumerate(analysis.public_surface[:12]):
-        nid = f"p{index}"
-        lines.append(f'  {nid}["{_label(symbol.name)}"]')
-        lines.append(f"  api --> {nid}")
-    return _fence_flow("TB", lines)
+    commands: list[str] = []
+    modules: dict[str, list[str]] = {}
+    for symbol in analysis.public_surface:
+        name = symbol.name.strip()
+        if not name or name.startswith("_"):
+            continue
+        if symbol.kind == "cli_flag":
+            continue
+        if symbol.kind == "cli_subcommand":
+            if name not in commands:
+                commands.append(name)
+            continue
+        if name.endswith("Error") or name.endswith("Exception"):
+            continue
+        if name.isupper():
+            continue
+        source = _basename(symbol.source).replace(".py", "") or "api"
+        if source in {"__init__", "init"}:
+            continue
+        bucket = modules.setdefault(source, [])
+        if name not in bucket:
+            bucket.append(name)
+    if not commands and not modules:
+        return ""
+    lines = ["  direction LR"]
+    if commands:
+        lines.append("  class CLI {")
+        lines.append("    <<command>>")
+        for item in commands[:10]:
+            safe = re.sub(r"[^A-Za-z0-9_]", "_", item) or "cmd"
+            lines.append(f"    {safe}()")
+        lines.append("  }")
+    for source, names in list(modules.items())[:4]:
+        class_name = _ident("C", source)
+        lines.append(f"  class {class_name} {{")
+        lines.append("    <<module>>")
+        for item in names[:6]:
+            safe = re.sub(r"[^A-Za-z0-9_]", "_", item) or "item"
+            lines.append(f"    {safe}()")
+        lines.append("  }")
+    return _fence("classDiagram", lines)
 
 
 def render_story_path(pages: Sequence[Page]) -> str:
-    """Small left-to-right path of the home reading list. Empty if under two pages."""
+    """Numbered reading path for an enterprise landing page."""
     if len(pages) < 2:
         return ""
-    lines = [f'  p{index}["{_label(page.title)}"]' for index, page in enumerate(pages)]
+    lines = ['  subgraph path["Read in this order"]', "    direction LR"]
+    for index, page in enumerate(pages):
+        lines.append(f'    p{index}["{index + 1}. {_label(page.title, 36)}"]')
+    lines.append("  end")
     for index in range(len(pages) - 1):
-        lines.append(f"  p{index} --> p{index + 1}")
-    return _fence_flow("LR", lines)
+        lines.append(f'  p{index} -->|"then"| p{index + 1}')
+    return _fence_flow("LR", lines, styled=True)
+
+
+def render_question_map(
+    pages: Sequence[Page],
+    identity: "SiteIdentity | None" = None,
+) -> str:
+    """Questions clustered by reading path, not a star from Home."""
+    if not pages:
+        return ""
+    from docuharnessx.assembler.story import story_spine
+
+    spine = story_spine(pages, identity)
+    spine_ids = {page.id for page in spine}
+    rest = [page for page in pages if page.id not in spine_ids]
+    lines: list[str] = []
+    if spine:
+        lines.append('  subgraph start["Start here"]')
+        for index, page in enumerate(spine):
+            lines.append(f'    s{index}["{_label(page.title, 36)}"]')
+        lines.append("  end")
+        for index in range(len(spine) - 1):
+            lines.append(f"  s{index} --> s{index + 1}")
+    if rest:
+        lines.append('  subgraph more["Further questions"]')
+        for index, page in enumerate(rest):
+            lines.append(f'    m{index}["{_label(page.title, 36)}"]')
+        lines.append("  end")
+        if spine:
+            lines.append("  s" + str(len(spine) - 1) + " -.-> m0")
+    if len(lines) < 2:
+        return ""
+    return _fence_flow("TB", lines, styled=True)
 
 
 def render_coverage_pie(counts: CoverageCounts | None) -> str:
     if counts is None or counts.planned == 0:
         return ""
-    lines = [
-        f'  accepted["accepted {counts.accepted}"]',
-        f'  omitted["omitted {counts.omitted}"]',
-        f'  planned["planned {counts.planned}"]',
-        "  planned --> accepted",
-        "  planned --> omitted",
-    ]
-    return _fence_flow("TB", lines)
+    slices: list[str] = []
+    if counts.accepted:
+        slices.append(f'  "Accepted pages" : {counts.accepted}')
+    if counts.omitted:
+        slices.append(f'  "Omitted pages" : {counts.omitted}')
+    leftover = counts.planned - counts.accepted - counts.omitted
+    if leftover > 0:
+        slices.append(f'  "Not yet written" : {leftover}')
+    if not slices:
+        return ""
+    return _fence("pie showData\n  title Documentation coverage", slices)
 
 
 def render_page_extras(
@@ -188,15 +550,18 @@ def render_page_extras(
     from docuharnessx.assembler.story import is_system_overview
 
     if is_system_overview(page, accepted, identity):
-        context = render_c4_context(analysis)
+        context = render_c4_context(analysis, identity)
         if context:
             blocks.append((1, context))
         else:
             mind = render_mindmap(analysis)
             if mind:
                 blocks.append((1, mind))
-    if analysis is not None and page.id.startswith("how:"):
-        seq = render_sequence(analysis)
+        container = render_c4_container(analysis, identity, signals)
+        if container:
+            blocks.append((2, container))
+    if analysis is not None and page.id.startswith("startup:"):
+        seq = render_sequence(analysis, identity)
         if seq:
             blocks.append((3, seq))
         sankey = render_sankey(signals or ComprehensionSignals())
@@ -242,16 +607,17 @@ def render_home_extras(
     pie = render_coverage_pie(counts)
     if pie:
         blocks.append((2, pie))
-    context = render_c4_context(analysis)
+    container = render_c4_container(analysis, identity, signals)
+    if container:
+        blocks.append((2, container))
+    context = render_c4_context(analysis, identity)
     if context:
         blocks.append((5, context))
     else:
         mind = render_mindmap(analysis)
         if mind:
             blocks.append((5, mind))
-    from docuharnessx.assembler.graphs import render_home_diagrams
-
-    home_map = render_home_diagrams(pages)
+    home_map = render_question_map(pages, identity)
     if home_map:
         blocks.append((5, home_map))
     if signals and signals.lineage:
@@ -282,7 +648,7 @@ def collect_diagram_figures(
     identity: "SiteIdentity | None" = None,
 ) -> tuple[DiagramFigure, ...]:
     """Unique assembled pictures for ``diagrams.md``, overview first."""
-    from docuharnessx.assembler.graphs import iter_page_diagrams, render_home_diagrams
+    from docuharnessx.assembler.graphs import iter_page_diagrams
     from docuharnessx.assembler.mkdocs_config import HOME_PAGE_PATH
     from docuharnessx.assembler.pages import page_filename
     from docuharnessx.assembler.story import primary_component, story_spine
@@ -316,7 +682,7 @@ def collect_diagram_figures(
         )
 
     primary = primary_component(pages, identity)
-    context = render_c4_context(analysis) or render_mindmap(analysis)
+    context = render_c4_context(analysis, identity) or render_mindmap(analysis)
     if context:
         if primary is not None:
             add(
@@ -329,6 +695,27 @@ def collect_diagram_figures(
             )
         else:
             add("System context", "System", "Home", HOME_PAGE_PATH, 5, context)
+    container = render_c4_container(analysis, identity, signals)
+    if container:
+        add(
+            "Containers",
+            "System",
+            primary.title if primary is not None else "Home",
+            page_filename(primary.id) if primary is not None else HOME_PAGE_PATH,
+            2,
+            container,
+        )
+    sequence = render_sequence(analysis, identity)
+    if sequence:
+        startup = next((page for page in pages if page.id.startswith("startup:")), None)
+        add(
+            "Typical run",
+            "System",
+            startup.title if startup is not None else "Home",
+            page_filename(startup.id) if startup is not None else HOME_PAGE_PATH,
+            3,
+            sequence,
+        )
 
     spine = story_spine(pages, identity)
     path = render_story_path(spine)
@@ -339,7 +726,7 @@ def collect_diagram_figures(
     if pie:
         add("Coverage", "Coverage", "Home", HOME_PAGE_PATH, 2, pie)
 
-    home_map = render_home_diagrams(pages)
+    home_map = render_question_map(pages, identity)
     if home_map:
         add("Question map", "Reading path", "Home", HOME_PAGE_PATH, 5, home_map)
 

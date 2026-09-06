@@ -26,32 +26,46 @@ related: []
 <div class="dhx-layer" data-min="4" markdown="1">
 
 ```mermaid
-flowchart TB
-  api["Public surface"]
-  p0["__version__"]
-  api --> p0
-  p1["ADOPTION_RELPATH"]
-  api --> p1
-  p2["AdoptionRecord"]
-  api --> p2
-  p3["declare_sufficient"]
-  api --> p3
-  p4["load_adoption"]
-  api --> p4
-  p5["mark_stale"]
-  api --> p5
-  p6["save_adoption"]
-  api --> p6
-  p7["AnalysisError"]
-  api --> p7
-  p8["AnalyzeError"]
-  api --> p8
-  p9["Artifact"]
-  api --> p9
-  p10["BuildFile"]
-  api --> p10
-  p11["CIWorkflow"]
-  api --> p11
+classDiagram
+  direction LR
+  class CLI {
+    <<command>>
+    ci()
+    evolve()
+    hook()
+    init()
+    install_ci()
+    install_hooks()
+    mcp()
+    run()
+    status()
+    sufficient()
+  }
+  class Cadoption {
+    <<module>>
+    AdoptionRecord()
+    declare_sufficient()
+    load_adoption()
+    mark_stale()
+    save_adoption()
+  }
+  class Canalyzer {
+    <<module>>
+    analyze()
+  }
+  class Cdetectors {
+    <<module>>
+    detect_artifacts()
+    detect_build_files()
+    detect_ci()
+    detect_docs()
+    detect_entrypoints()
+    detect_public_surface()
+  }
+  class Cenrich {
+    <<module>>
+    enrich()
+  }
 ```
 
 </div>

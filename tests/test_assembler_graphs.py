@@ -263,7 +263,8 @@ def test_system_page_gets_context_picture_at_depth_one() -> None:
         engine, (startup, engine), analysis=analysis, identity=_identity()
     )
     assert 'data-min="1"' in markdown
-    assert "System" in markdown
+    assert "Operator" in markdown
+    assert "This system" in markdown
     home = render_question_home(
         _identity(), (startup, engine), analysis=analysis
     )
@@ -271,7 +272,7 @@ def test_system_page_gets_context_picture_at_depth_one() -> None:
     depth_one = [part for part in layers if 'data-min="1"' in part.split(">", 1)[0]]
     assert depth_one
     assert all("```mermaid" not in part.split("</div>", 1)[0] for part in depth_one)
-    assert "System" in home
+    assert "This system" in home
 
 
 def test_home_diagrams_helper_is_deterministic() -> None:

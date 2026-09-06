@@ -24,21 +24,66 @@ related: []
 
 ```mermaid
 flowchart TB
-  system["System"]
-  e0["docuharnessx/cli.py"]
-  e0 --> system
-  c0["javascripts"]
-  system --> c0
-  c1["docuharnessx"]
-  system --> c1
-  c2["analysis"]
-  system --> c2
-  c3["assembler"]
-  system --> c3
-  c4["composition"]
-  system --> c4
-  c5["comprehension"]
-  system --> c5
+  subgraph people["People"]
+    actor(["Operator"])
+  end
+  subgraph enterprise["This system"]
+    sys["DocuHarnessX<br/>Command-line program (CLI)"]
+  end
+  subgraph external["External"]
+    repo[("norandom/DocuHarnessX")]
+    ci["GitHub Actions"]
+    docs[("Documentation site")]
+  end
+  actor -->|"runs CLI"| sys
+  sys -->|"reads and cites"| repo
+  ci -->|"runs in"| sys
+  sys -->|"publishes"| docs
+  class actor actor
+  class sys system
+  class repo,docs store
+  class ci external
+  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
+  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
+  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
+  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
+  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+```
+
+</div>
+
+<div class="dhx-layer" data-min="2" markdown="1">
+
+```mermaid
+flowchart TB
+  subgraph sys["DocuHarnessX"]
+    cli["CLI"]
+    c0["docuharnessx"]
+    c1["analysis"]
+    c2["assembler"]
+    c3["composition"]
+    c4["comprehension"]
+    c5["deployer"]
+    c6["mcp"]
+    c7["ontology"]
+  end
+  actor(["Operator"])
+  actor -->|"runs CLI"| cli
+  class actor actor
+  cli -->|uses| c0
+  cli -->|uses| c1
+  cli -->|uses| c2
+  cli -->|uses| c3
+  cli -->|uses| c4
+  cli -->|uses| c5
+  cli -->|uses| c6
+  cli -->|uses| c7
+  class cli,c0,c1,c2,c3,c4,c5,c6,c7 container
+  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
+  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
+  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
+  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
+  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
 ```
 
 </div>
@@ -46,32 +91,46 @@ flowchart TB
 <div class="dhx-layer" data-min="4" markdown="1">
 
 ```mermaid
-flowchart TB
-  api["Public surface"]
-  p0["__version__"]
-  api --> p0
-  p1["ADOPTION_RELPATH"]
-  api --> p1
-  p2["AdoptionRecord"]
-  api --> p2
-  p3["declare_sufficient"]
-  api --> p3
-  p4["load_adoption"]
-  api --> p4
-  p5["mark_stale"]
-  api --> p5
-  p6["save_adoption"]
-  api --> p6
-  p7["AnalysisError"]
-  api --> p7
-  p8["AnalyzeError"]
-  api --> p8
-  p9["Artifact"]
-  api --> p9
-  p10["BuildFile"]
-  api --> p10
-  p11["CIWorkflow"]
-  api --> p11
+classDiagram
+  direction LR
+  class CLI {
+    <<command>>
+    ci()
+    evolve()
+    hook()
+    init()
+    install_ci()
+    install_hooks()
+    mcp()
+    run()
+    status()
+    sufficient()
+  }
+  class Cadoption {
+    <<module>>
+    AdoptionRecord()
+    declare_sufficient()
+    load_adoption()
+    mark_stale()
+    save_adoption()
+  }
+  class Canalyzer {
+    <<module>>
+    analyze()
+  }
+  class Cdetectors {
+    <<module>>
+    detect_artifacts()
+    detect_build_files()
+    detect_ci()
+    detect_docs()
+    detect_entrypoints()
+    detect_public_surface()
+  }
+  class Cenrich {
+    <<module>>
+    enrich()
+  }
 ```
 
 </div>

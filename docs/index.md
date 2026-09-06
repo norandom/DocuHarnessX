@@ -2,7 +2,7 @@
 
 <div class="dhx-layer" data-min="1" markdown="1">
 
-This site walks through 10 questions about [`norandom/DocuHarnessX`](https://github.com/norandom/DocuHarnessX), in the order you would actually learn the project.
+This site walks through 12 questions about [`norandom/DocuHarnessX`](https://github.com/norandom/DocuHarnessX), in the order you would actually learn the project.
 
 Read the numbered list first. Later questions cover individual modules.
 
@@ -28,7 +28,9 @@ Read the numbered list first. Later questions cover individual modules.
 - [What does assembler do?](component-assembler-d9228a8c.md)
 - [What does composition do?](component-composition-e6f778c7.md)
 - [What does comprehension do?](component-comprehension-87225edb.md)
+- [What does deployer do?](component-deployer-f8b1b75f.md)
 - [What does javascripts do?](component-javascripts-2aa9650e.md)
+- [What does mcp do?](component-mcp-bdf519de.md)
 
 </div>
 
@@ -36,15 +38,33 @@ Read the numbered list first. Later questions cover individual modules.
 
 ```mermaid
 flowchart LR
-  p0["How does this program start?"]
-  p1["What does docuharnessx do?"]
-  p2["How is this project built and verifi"]
-  p3["How are tests organized?"]
-  p4["How is the public surface used or ex"]
-  p0 --> p1
-  p1 --> p2
-  p2 --> p3
-  p3 --> p4
+  subgraph path["Read in this order"]
+    direction LR
+    p0["1. How does this program start?"]
+    p1["2. What does docuharnessx do?"]
+    p2["3. How is this project built and verif…"]
+    p3["4. How are tests organized?"]
+    p4["5. How is the public surface used or e…"]
+  end
+  p0 -->|"then"| p1
+  p1 -->|"then"| p2
+  p2 -->|"then"| p3
+  p3 -->|"then"| p4
+  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
+  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
+  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
+  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
+  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+```
+
+</div>
+
+<div class="dhx-layer" data-min="2" markdown="1">
+
+```mermaid
+pie showData
+  title Documentation coverage
+  "Accepted pages" : 12
 ```
 
 </div>
@@ -53,11 +73,34 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-  accepted["accepted 10"]
-  omitted["omitted 0"]
-  planned["planned 10"]
-  planned --> accepted
-  planned --> omitted
+  subgraph sys["DocuHarnessX"]
+    cli["CLI"]
+    c0["docuharnessx"]
+    c1["analysis"]
+    c2["assembler"]
+    c3["composition"]
+    c4["comprehension"]
+    c5["deployer"]
+    c6["mcp"]
+    c7["ontology"]
+  end
+  actor(["Operator"])
+  actor -->|"runs CLI"| cli
+  class actor actor
+  cli -->|uses| c0
+  cli -->|uses| c1
+  cli -->|uses| c2
+  cli -->|uses| c3
+  cli -->|uses| c4
+  cli -->|uses| c5
+  cli -->|uses| c6
+  cli -->|uses| c7
+  class cli,c0,c1,c2,c3,c4,c5,c6,c7 container
+  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
+  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
+  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
+  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
+  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
 ```
 
 </div>
@@ -66,21 +109,30 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-  system["System"]
-  e0["docuharnessx/cli.py"]
-  e0 --> system
-  c0["javascripts"]
-  system --> c0
-  c1["docuharnessx"]
-  system --> c1
-  c2["analysis"]
-  system --> c2
-  c3["assembler"]
-  system --> c3
-  c4["composition"]
-  system --> c4
-  c5["comprehension"]
-  system --> c5
+  subgraph people["People"]
+    actor(["Operator"])
+  end
+  subgraph enterprise["This system"]
+    sys["DocuHarnessX<br/>Command-line program (CLI)"]
+  end
+  subgraph external["External"]
+    repo[("norandom/DocuHarnessX")]
+    ci["GitHub Actions"]
+    docs[("Documentation site")]
+  end
+  actor -->|"runs CLI"| sys
+  sys -->|"reads and cites"| repo
+  ci -->|"runs in"| sys
+  sys -->|"publishes"| docs
+  class actor actor
+  class sys system
+  class repo,docs store
+  class ci external
+  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
+  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
+  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
+  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
+  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
 ```
 
 </div>
@@ -89,74 +141,70 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-  n0["Home"]
-  n1["How does this program start?"]
-  n2["What does docuharnessx do?"]
-  n3["How is this project built and verified?"]
-  n4["How are tests organized?"]
-  n5["How is the public surface used or exten…"]
-  n6["What does analysis do?"]
-  n7["What does assembler do?"]
-  n8["What does composition do?"]
-  n9["What does comprehension do?"]
-  n10["What does javascripts do?"]
+  subgraph start["Start here"]
+    s0["How does this program start?"]
+    s1["What does docuharnessx do?"]
+    s2["How is this project built and verif…"]
+    s3["How are tests organized?"]
+    s4["How is the public surface used or e…"]
+  end
+  s0 --> s1
+  s1 --> s2
+  s2 --> s3
+  s3 --> s4
+  subgraph more["Further questions"]
+    m0["What does analysis do?"]
+    m1["What does assembler do?"]
+    m2["What does composition do?"]
+    m3["What does comprehension do?"]
+    m4["What does deployer do?"]
+    m5["What does javascripts do?"]
+    m6["What does mcp do?"]
+  end
+  s4 -.-> m0
+  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
+  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
+  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
+  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
+  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+```
+
+</div>
+
+<div class="dhx-layer" data-min="5" markdown="1">
+
+```mermaid
+flowchart LR
+  subgraph ginput["Inputs"]
+    n0(["Inputs"])
+  end
+  subgraph gtransform["This system"]
+    n1["cli.py"]
+    n2["docuharnessx"]
+    n4["analysis"]
+    n5["assembler"]
+    n6["composition"]
+    n7["comprehension"]
+  end
+  subgraph goutput["Outputs"]
+    n3[("Outputs")]
+  end
   n0 --> n1
-  n0 --> n2
-  n0 --> n3
-  n0 --> n4
-  n0 --> n5
-  n0 --> n6
-  n0 --> n7
-  n0 --> n8
-  n0 --> n9
-  n0 --> n10
-```
-
-</div>
-
-<div class="dhx-layer" data-min="5" markdown="1">
-
-```mermaid
-flowchart LR
-  s0["input"]
-  t0["docuharnessx/cli.py"]
-  s0 -->|1| t0
-  s1["docuharnessx/cli.py"]
-  t1["javascripts"]
-  s1 -->|1| t1
-  s2["javascripts"]
-  t2["output"]
-  s2 -->|1| t2
-  s3["docuharnessx/cli.py"]
-  t3["docuharnessx"]
-  s3 -->|1| t3
-  s4["docuharnessx"]
-  t4["output"]
-  s4 -->|1| t4
-  s5["docuharnessx/cli.py"]
-  t5["analysis"]
-  s5 -->|1| t5
-  s6["analysis"]
-  t6["output"]
-  s6 -->|1| t6
-  s7["docuharnessx/cli.py"]
-  t7["assembler"]
-  s7 -->|1| t7
-  s8["assembler"]
-  t8["output"]
-  s8 -->|1| t8
-  s9["docuharnessx/cli.py"]
-  t9["composition"]
-  s9 -->|1| t9
-  s10["composition"]
-  t10["output"]
-  s10 -->|1| t10
-  s11["docuharnessx/cli.py"]
-  t11["comprehension"]
-  s11 -->|1| t11
-  s12["comprehension"]
-  t12["output"]
-  s12 -->|1| t12
+  n1 --> n2
+  n2 --> n3
+  n1 --> n4
+  n4 --> n3
+  n1 --> n5
+  n5 --> n3
+  n1 --> n6
+  n6 --> n3
+  n1 --> n7
+  n7 --> n3
+  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
+  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
+  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
+  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
+  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
 ```
 
 </div>
@@ -165,45 +213,36 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  s0["input"]
-  t0["docuharnessx/cli.py"]
-  s0 -->|1| t0
-  s1["docuharnessx/cli.py"]
-  t1["javascripts"]
-  s1 -->|1| t1
-  s2["javascripts"]
-  t2["output"]
-  s2 -->|1| t2
-  s3["docuharnessx/cli.py"]
-  t3["docuharnessx"]
-  s3 -->|1| t3
-  s4["docuharnessx"]
-  t4["output"]
-  s4 -->|1| t4
-  s5["docuharnessx/cli.py"]
-  t5["analysis"]
-  s5 -->|1| t5
-  s6["analysis"]
-  t6["output"]
-  s6 -->|1| t6
-  s7["docuharnessx/cli.py"]
-  t7["assembler"]
-  s7 -->|1| t7
-  s8["assembler"]
-  t8["output"]
-  s8 -->|1| t8
-  s9["docuharnessx/cli.py"]
-  t9["composition"]
-  s9 -->|1| t9
-  s10["composition"]
-  t10["output"]
-  s10 -->|1| t10
-  s11["docuharnessx/cli.py"]
-  t11["comprehension"]
-  s11 -->|1| t11
-  s12["comprehension"]
-  t12["output"]
-  s12 -->|1| t12
+  subgraph ginput["Inputs"]
+    n0(["Inputs"])
+  end
+  subgraph gtransform["This system"]
+    n1["cli.py"]
+    n2["docuharnessx"]
+    n4["analysis"]
+    n5["assembler"]
+    n6["composition"]
+    n7["comprehension"]
+  end
+  subgraph goutput["Outputs"]
+    n3[("Outputs")]
+  end
+  n0 --> n1
+  n1 --> n2
+  n2 --> n3
+  n1 --> n4
+  n4 --> n3
+  n1 --> n5
+  n5 --> n3
+  n1 --> n6
+  n6 --> n3
+  n1 --> n7
+  n7 --> n3
+  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
+  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
+  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
+  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
+  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
 ```
 
 </div>
@@ -212,9 +251,17 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  docs["docs"]
-  evolve["evolve"]
+  subgraph pipe["Pipeline"]
+    docs["docs"]
+    evolve["evolve"]
+  end
   docs --> evolve
+  class docs,evolve container
+  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
+  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
+  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
+  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
+  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
 ```
 
 </div>
@@ -223,9 +270,17 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  docs["docs"]
-  evolve["evolve"]
+  subgraph pipe["Pipeline"]
+    docs["docs"]
+    evolve["evolve"]
+  end
   docs --> evolve
+  class docs,evolve container
+  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
+  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
+  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
+  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
+  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
 ```
 
 </div>

@@ -17,6 +17,103 @@ The `dhx` program starts in `docuharnessx/cli.py`, whose `main()` is the console
 
 </div>
 
+<div class="dhx-layer" data-min="3" markdown="1">
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor Operator
+  participant pCLI as CLI
+  participant panalysis as analysis
+  participant passembler as assembler
+  participant pcomposition as composition
+  participant pcomprehension as comprehension
+  Operator->>pCLI: run
+  pCLI->>panalysis: uses
+  pCLI->>passembler: uses
+  pCLI->>pcomposition: uses
+  pCLI->>pcomprehension: uses
+  pCLI-->>Operator: result
+```
+
+</div>
+
+<div class="dhx-layer" data-min="3" markdown="1">
+
+```mermaid
+flowchart LR
+  subgraph ginput["Inputs"]
+    n0(["Inputs"])
+  end
+  subgraph gtransform["This system"]
+    n1["cli.py"]
+    n2["docuharnessx"]
+    n4["analysis"]
+    n5["assembler"]
+    n6["composition"]
+    n7["comprehension"]
+  end
+  subgraph goutput["Outputs"]
+    n3[("Outputs")]
+  end
+  n0 --> n1
+  n1 --> n2
+  n2 --> n3
+  n1 --> n4
+  n4 --> n3
+  n1 --> n5
+  n5 --> n3
+  n1 --> n6
+  n6 --> n3
+  n1 --> n7
+  n7 --> n3
+  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
+  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
+  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
+  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
+  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+```
+
+</div>
+
+<div class="dhx-layer" data-min="3" markdown="1">
+
+```mermaid
+flowchart LR
+  subgraph pipe["Pipeline"]
+    docs["docs"]
+    evolve["evolve"]
+  end
+  docs --> evolve
+  class docs,evolve container
+  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
+  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
+  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
+  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
+  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+```
+
+</div>
+
+<div class="dhx-layer" data-min="4" markdown="1">
+
+```mermaid
+flowchart LR
+  subgraph pipe["Pipeline"]
+    docs["docs"]
+    evolve["evolve"]
+  end
+  docs --> evolve
+  class docs,evolve container
+  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
+  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
+  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
+  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
+  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+```
+
+</div>
+
 <div class="dhx-layer" data-min="5" markdown="1">
 
 ```mermaid

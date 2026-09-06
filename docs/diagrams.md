@@ -5,6 +5,8 @@ Every picture this site assembled, in one catalog. Each also lives on the linked
 ## Contents
 
 - [System context](#system-context)
+- [Containers](#containers)
+- [Typical run](#typical-run)
 - [Start-here path](#start-here-path)
 - [Coverage](#coverage)
 - [Question map](#question-map)
@@ -36,9 +38,14 @@ Every picture this site assembled, in one catalog. Each also lives on the linked
 - [What does comprehension do? · Question and files](#what-does-comprehension-do-question-and-files)
 - [What does comprehension do? · Structure](#what-does-comprehension-do-structure)
 - [What does comprehension do? · Files by directory](#what-does-comprehension-do-files-by-directory)
+- [What does deployer do? · Question and files](#what-does-deployer-do-question-and-files)
+- [What does deployer do? · Structure](#what-does-deployer-do-structure)
+- [What does deployer do? · Files by directory](#what-does-deployer-do-files-by-directory)
 - [What does javascripts do? · Question and files](#what-does-javascripts-do-question-and-files)
 - [What does javascripts do? · Structure](#what-does-javascripts-do-structure)
 - [What does javascripts do? · Files by directory](#what-does-javascripts-do-files-by-directory)
+- [What does mcp do? · Question and files](#what-does-mcp-do-question-and-files)
+- [What does mcp do? · Structure](#what-does-mcp-do-structure)
 - [Glossary related-term graphs](#glossary-related-term-graphs)
 
 ## System
@@ -49,21 +56,87 @@ On [What does docuharnessx do?](component-docuharnessx-3986831c.md) at depth 1.
 
 ```mermaid
 flowchart TB
-  system["System"]
-  e0["docuharnessx/cli.py"]
-  e0 --> system
-  c0["javascripts"]
-  system --> c0
-  c1["docuharnessx"]
-  system --> c1
-  c2["analysis"]
-  system --> c2
-  c3["assembler"]
-  system --> c3
-  c4["composition"]
-  system --> c4
-  c5["comprehension"]
-  system --> c5
+  subgraph people["People"]
+    actor(["Operator"])
+  end
+  subgraph enterprise["This system"]
+    sys["DocuHarnessX<br/>Command-line program (CLI)"]
+  end
+  subgraph external["External"]
+    repo[("norandom/DocuHarnessX")]
+    ci["GitHub Actions"]
+    docs[("Documentation site")]
+  end
+  actor -->|"runs CLI"| sys
+  sys -->|"reads and cites"| repo
+  ci -->|"runs in"| sys
+  sys -->|"publishes"| docs
+  class actor actor
+  class sys system
+  class repo,docs store
+  class ci external
+  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
+  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
+  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
+  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
+  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+```
+
+<h3 id="containers">Containers</h3>
+
+On [What does docuharnessx do?](component-docuharnessx-3986831c.md) at depth 2.
+
+```mermaid
+flowchart TB
+  subgraph sys["DocuHarnessX"]
+    cli["CLI"]
+    c0["docuharnessx"]
+    c1["analysis"]
+    c2["assembler"]
+    c3["composition"]
+    c4["comprehension"]
+    c5["deployer"]
+    c6["mcp"]
+    c7["ontology"]
+  end
+  actor(["Operator"])
+  actor -->|"runs CLI"| cli
+  class actor actor
+  cli -->|uses| c0
+  cli -->|uses| c1
+  cli -->|uses| c2
+  cli -->|uses| c3
+  cli -->|uses| c4
+  cli -->|uses| c5
+  cli -->|uses| c6
+  cli -->|uses| c7
+  class cli,c0,c1,c2,c3,c4,c5,c6,c7 container
+  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
+  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
+  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
+  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
+  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
+```
+
+<h3 id="typical-run">Typical run</h3>
+
+On [How does this program start?](startup-cli-py-126eba90.md) at depth 3.
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor Operator
+  participant pCLI as CLI
+  participant panalysis as analysis
+  participant passembler as assembler
+  participant pcomposition as composition
+  participant pcomprehension as comprehension
+  Operator->>pCLI: run
+  pCLI->>panalysis: uses
+  pCLI->>passembler: uses
+  pCLI->>pcomposition: uses
+  pCLI->>pcomprehension: uses
+  pCLI-->>Operator: result
 ```
 
 ## Reading path
@@ -74,15 +147,23 @@ On [Home](index.md) at depth 3.
 
 ```mermaid
 flowchart LR
-  p0["How does this program start?"]
-  p1["What does docuharnessx do?"]
-  p2["How is this project built and verifi"]
-  p3["How are tests organized?"]
-  p4["How is the public surface used or ex"]
-  p0 --> p1
-  p1 --> p2
-  p2 --> p3
-  p3 --> p4
+  subgraph path["Read in this order"]
+    direction LR
+    p0["1. How does this program start?"]
+    p1["2. What does docuharnessx do?"]
+    p2["3. How is this project built and verif…"]
+    p3["4. How are tests organized?"]
+    p4["5. How is the public surface used or e…"]
+  end
+  p0 -->|"then"| p1
+  p1 -->|"then"| p2
+  p2 -->|"then"| p3
+  p3 -->|"then"| p4
+  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
+  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
+  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
+  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
+  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
 ```
 
 ## Coverage
@@ -92,12 +173,9 @@ flowchart LR
 On [Home](index.md) at depth 2.
 
 ```mermaid
-flowchart TB
-  accepted["accepted 10"]
-  omitted["omitted 0"]
-  planned["planned 10"]
-  planned --> accepted
-  planned --> omitted
+pie showData
+  title Documentation coverage
+  "Accepted pages" : 12
 ```
 
 ## Reading path
@@ -108,27 +186,32 @@ On [Home](index.md) at depth 5.
 
 ```mermaid
 flowchart TB
-  n0["Home"]
-  n1["How does this program start?"]
-  n2["What does docuharnessx do?"]
-  n3["How is this project built and verified?"]
-  n4["How are tests organized?"]
-  n5["How is the public surface used or exten…"]
-  n6["What does analysis do?"]
-  n7["What does assembler do?"]
-  n8["What does composition do?"]
-  n9["What does comprehension do?"]
-  n10["What does javascripts do?"]
-  n0 --> n1
-  n0 --> n2
-  n0 --> n3
-  n0 --> n4
-  n0 --> n5
-  n0 --> n6
-  n0 --> n7
-  n0 --> n8
-  n0 --> n9
-  n0 --> n10
+  subgraph start["Start here"]
+    s0["How does this program start?"]
+    s1["What does docuharnessx do?"]
+    s2["How is this project built and verif…"]
+    s3["How are tests organized?"]
+    s4["How is the public surface used or e…"]
+  end
+  s0 --> s1
+  s1 --> s2
+  s2 --> s3
+  s3 --> s4
+  subgraph more["Further questions"]
+    m0["What does analysis do?"]
+    m1["What does assembler do?"]
+    m2["What does composition do?"]
+    m3["What does comprehension do?"]
+    m4["What does deployer do?"]
+    m5["What does javascripts do?"]
+    m6["What does mcp do?"]
+  end
+  s4 -.-> m0
+  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
+  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
+  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
+  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
+  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
 ```
 
 ## Lineage
@@ -139,45 +222,36 @@ On [Home](index.md) at depth 5.
 
 ```mermaid
 flowchart LR
-  s0["input"]
-  t0["docuharnessx/cli.py"]
-  s0 -->|1| t0
-  s1["docuharnessx/cli.py"]
-  t1["javascripts"]
-  s1 -->|1| t1
-  s2["javascripts"]
-  t2["output"]
-  s2 -->|1| t2
-  s3["docuharnessx/cli.py"]
-  t3["docuharnessx"]
-  s3 -->|1| t3
-  s4["docuharnessx"]
-  t4["output"]
-  s4 -->|1| t4
-  s5["docuharnessx/cli.py"]
-  t5["analysis"]
-  s5 -->|1| t5
-  s6["analysis"]
-  t6["output"]
-  s6 -->|1| t6
-  s7["docuharnessx/cli.py"]
-  t7["assembler"]
-  s7 -->|1| t7
-  s8["assembler"]
-  t8["output"]
-  s8 -->|1| t8
-  s9["docuharnessx/cli.py"]
-  t9["composition"]
-  s9 -->|1| t9
-  s10["composition"]
-  t10["output"]
-  s10 -->|1| t10
-  s11["docuharnessx/cli.py"]
-  t11["comprehension"]
-  s11 -->|1| t11
-  s12["comprehension"]
-  t12["output"]
-  s12 -->|1| t12
+  subgraph ginput["Inputs"]
+    n0(["Inputs"])
+  end
+  subgraph gtransform["This system"]
+    n1["cli.py"]
+    n2["docuharnessx"]
+    n4["analysis"]
+    n5["assembler"]
+    n6["composition"]
+    n7["comprehension"]
+  end
+  subgraph goutput["Outputs"]
+    n3[("Outputs")]
+  end
+  n0 --> n1
+  n1 --> n2
+  n2 --> n3
+  n1 --> n4
+  n4 --> n3
+  n1 --> n5
+  n5 --> n3
+  n1 --> n6
+  n6 --> n3
+  n1 --> n7
+  n7 --> n3
+  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
+  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
+  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
+  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
+  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
 ```
 
 ## Pipeline
@@ -188,9 +262,17 @@ On [Home](index.md) at depth 5.
 
 ```mermaid
 flowchart LR
-  docs["docs"]
-  evolve["evolve"]
+  subgraph pipe["Pipeline"]
+    docs["docs"]
+    evolve["evolve"]
+  end
   docs --> evolve
+  class docs,evolve container
+  classDef actor fill:#0F172A,stroke:#020617,color:#FFFFFF
+  classDef system fill:#1E3A8A,stroke:#1E3A8A,color:#FFFFFF
+  classDef container fill:#EEF2FF,stroke:#1E3A8A,color:#0F172A
+  classDef external fill:#F8FAFC,stroke:#64748B,color:#0F172A
+  classDef store fill:#E2E8F0,stroke:#334155,color:#0F172A
 ```
 
 ## Public surface
@@ -200,32 +282,46 @@ flowchart LR
 On [How is the public surface used or extended?](public-surface-init-py-a3934091.md) at depth 4.
 
 ```mermaid
-flowchart TB
-  api["Public surface"]
-  p0["__version__"]
-  api --> p0
-  p1["ADOPTION_RELPATH"]
-  api --> p1
-  p2["AdoptionRecord"]
-  api --> p2
-  p3["declare_sufficient"]
-  api --> p3
-  p4["load_adoption"]
-  api --> p4
-  p5["mark_stale"]
-  api --> p5
-  p6["save_adoption"]
-  api --> p6
-  p7["AnalysisError"]
-  api --> p7
-  p8["AnalyzeError"]
-  api --> p8
-  p9["Artifact"]
-  api --> p9
-  p10["BuildFile"]
-  api --> p10
-  p11["CIWorkflow"]
-  api --> p11
+classDiagram
+  direction LR
+  class CLI {
+    <<command>>
+    ci()
+    evolve()
+    hook()
+    init()
+    install_ci()
+    install_hooks()
+    mcp()
+    run()
+    status()
+    sufficient()
+  }
+  class Cadoption {
+    <<module>>
+    AdoptionRecord()
+    declare_sufficient()
+    load_adoption()
+    mark_stale()
+    save_adoption()
+  }
+  class Canalyzer {
+    <<module>>
+    analyze()
+  }
+  class Cdetectors {
+    <<module>>
+    detect_artifacts()
+    detect_build_files()
+    detect_ci()
+    detect_docs()
+    detect_entrypoints()
+    detect_public_surface()
+  }
+  class Cenrich {
+    <<module>>
+    enrich()
+  }
 ```
 
 ## Per question
@@ -911,6 +1007,92 @@ flowchart TB
   page --> e7
 ```
 
+<h3 id="what-does-deployer-do-question-and-files">What does deployer do? · Question and files</h3>
+
+On [What does deployer do?](component-deployer-f8b1b75f.md) at depth 5.
+
+```mermaid
+flowchart TB
+  n0["What does deployer do?"]
+  n1["__init__.py"]
+  n2["deploy.py"]
+  n3["deploy.py"]
+  n4["model.py"]
+  n5["mode.py"]
+  n6["workflow.py"]
+  n7["tree.py"]
+  n8["commands.py"]
+  n0 --> n1
+  n0 --> n2
+  n0 --> n3
+  n0 --> n4
+  n0 --> n5
+  n0 --> n6
+  n0 --> n7
+  n0 --> n8
+```
+
+<h3 id="what-does-deployer-do-structure">What does deployer do? · Structure</h3>
+
+On [What does deployer do?](component-deployer-f8b1b75f.md) at depth 5.
+
+```mermaid
+flowchart TB
+  n0["What does deployer do?"]
+  n1["deployer"]
+  n2["__init__.py"]
+  n3["commands.py"]
+  n4["deploy.py"]
+  n5["mode.py"]
+  n6["model.py"]
+  n7["deploy.py"]
+  n8["workflow.py"]
+  n9["tree.py"]
+  n0 --> n1
+  n1 --> n2
+  n1 --> n3
+  n1 --> n4
+  n1 --> n5
+  n1 --> n6
+  n0 --> n2
+  n0 --> n7
+  n0 --> n4
+  n0 --> n6
+  n0 --> n5
+  n0 --> n8
+  n0 --> n9
+  n0 --> n3
+```
+
+<h3 id="what-does-deployer-do-files-by-directory">What does deployer do? · Files by directory</h3>
+
+On [What does deployer do?](component-deployer-f8b1b75f.md) at depth 5.
+
+```mermaid
+flowchart TB
+  page["What does deployer do?"]
+  subgraph d0["docuharnessx/deployer"]
+    e0["__init__.py"]
+    e1["deploy.py"]
+    e2["model.py"]
+    e3["mode.py"]
+    e4["workflow.py"]
+    e5["tree.py"]
+    e6["commands.py"]
+  end
+  subgraph d1["docuharnessx/stages"]
+    e7["deploy.py"]
+  end
+  page --> e0
+  page --> e1
+  page --> e2
+  page --> e3
+  page --> e4
+  page --> e5
+  page --> e6
+  page --> e7
+```
+
 <h3 id="what-does-javascripts-do-question-and-files">What does javascripts do? · Question and files</h3>
 
 On [What does javascripts do?](component-javascripts-2aa9650e.md) at depth 5.
@@ -997,6 +1179,56 @@ flowchart TB
   page --> e5
   page --> e6
   page --> e7
+```
+
+<h3 id="what-does-mcp-do-question-and-files">What does mcp do? · Question and files</h3>
+
+On [What does mcp do?](component-mcp-bdf519de.md) at depth 5.
+
+```mermaid
+flowchart TB
+  n0["What does mcp do?"]
+  n1["__init__.py"]
+  n2["server.py"]
+  n3["session.py"]
+  n4["schemas.py"]
+  n5["overview.py"]
+  n6["planned.py"]
+  n0 --> n1
+  n0 --> n2
+  n0 --> n3
+  n0 --> n4
+  n0 --> n5
+  n0 --> n6
+```
+
+<h3 id="what-does-mcp-do-structure">What does mcp do? · Structure</h3>
+
+On [What does mcp do?](component-mcp-bdf519de.md) at depth 5.
+
+```mermaid
+flowchart TB
+  n0["What does mcp do?"]
+  n1["mcp"]
+  n2["__init__.py"]
+  n3["handlers.py"]
+  n4["overview.py"]
+  n5["planned.py"]
+  n6["schemas.py"]
+  n7["server.py"]
+  n8["session.py"]
+  n0 --> n1
+  n1 --> n2
+  n1 --> n3
+  n1 --> n4
+  n1 --> n5
+  n1 --> n6
+  n0 --> n2
+  n0 --> n7
+  n0 --> n8
+  n0 --> n6
+  n0 --> n4
+  n0 --> n5
 ```
 
 <h2 id="glossary-related-term-graphs">Glossary related-term graphs</h2>
