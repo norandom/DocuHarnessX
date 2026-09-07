@@ -69,6 +69,8 @@ _CONCEPTUAL_JS = r"""(function () {
             var link = document.createElement("a");
             link.className = "dhx-jit__link";
             link.href = siteHref(href);
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
             link.textContent = node.name;
             link.addEventListener("click", function (ev) {
               ev.stopPropagation();

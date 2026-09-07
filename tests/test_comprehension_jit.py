@@ -162,6 +162,8 @@ def test_tree_hrefs_point_at_component_pages() -> None:
     assert "dhx-jit__reset" in js
     assert "siteHref" in js
     assert "ht.onClick(rootId)" in js
+    assert 'target = "_blank"' in js
+    assert "noopener" in js
 
 
 def test_assemble_ships_jit_and_hypertree(tmp_path: Path) -> None:
