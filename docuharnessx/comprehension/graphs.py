@@ -857,9 +857,14 @@ def render_page_extras(
 
     model = signals.model if signals is not None else None
     if is_system_overview(page, accepted, identity):
-        from docuharnessx.comprehension.jit import render_conceptual_hypertree
+        from docuharnessx.comprehension.jit import (
+            hrefs_from_pages,
+            render_conceptual_hypertree,
+        )
 
-        conceptual = render_conceptual_hypertree(model)
+        conceptual = render_conceptual_hypertree(
+            model, hrefs_from_pages(accepted, identity)
+        )
         if conceptual:
             blocks.append((1, conceptual))
         context = view_context(model) or render_c4_context(analysis, identity)
@@ -935,9 +940,14 @@ def render_home_extras(
     if pie:
         blocks.append((2, pie))
     model = signals.model if signals is not None else None
-    from docuharnessx.comprehension.jit import render_conceptual_hypertree
+    from docuharnessx.comprehension.jit import (
+        hrefs_from_pages,
+        render_conceptual_hypertree,
+    )
 
-    conceptual = render_conceptual_hypertree(model)
+    conceptual = render_conceptual_hypertree(
+        model, hrefs_from_pages(pages, identity)
+    )
     if conceptual:
         blocks.append((1, conceptual))
     styles = list(model.styles if model is not None else ())
@@ -1039,9 +1049,14 @@ def collect_diagram_figures(
         page_filename(primary.id) if primary is not None else HOME_PAGE_PATH
     )
     src_title = primary.title if primary is not None else "Home"
-    from docuharnessx.comprehension.jit import render_conceptual_hypertree
+    from docuharnessx.comprehension.jit import (
+        hrefs_from_pages,
+        render_conceptual_hypertree,
+    )
 
-    conceptual = render_conceptual_hypertree(model)
+    conceptual = render_conceptual_hypertree(
+        model, hrefs_from_pages(pages, identity)
+    )
     if conceptual:
         add("Conceptual map", "Architecture", src_title, href, 1, conceptual)
     context = view_context(model) or render_c4_context(analysis, identity) or render_mindmap(analysis)

@@ -42,10 +42,32 @@ a.dhx-term, a[href*="glossary.md"] {
 .dhx-jit {
   margin: 0.5rem 0 1rem;
 }
+.dhx-jit__bar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 0 0.4rem;
+}
 .dhx-jit__hint {
   font-size: 0.8rem;
   color: var(--md-default-fg-color--light);
-  margin: 0 0 0.4rem;
+  margin: 0;
+  flex: 1;
+}
+.dhx-jit__reset {
+  font: inherit;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  color: var(--md-typeset-a-color, var(--md-default-fg-color));
+  background: transparent;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 4px;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+}
+.dhx-jit__reset:hover {
+  border-color: var(--md-default-fg-color--light);
 }
 .dhx-jit__stage {
   position: relative;
@@ -58,6 +80,11 @@ a.dhx-term, a[href*="glossary.md"] {
 .dhx-jit__stage .node {
   background: transparent;
   font-family: var(--md-text-font-family, Roboto, sans-serif);
+}
+.dhx-jit__stage a.dhx-jit__link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
 }
 /* Dual-theme mermaid: light chips, dark ink. Mermaid's slate theme
    paints labels black; a dark-blue fill then becomes unreadable. */
